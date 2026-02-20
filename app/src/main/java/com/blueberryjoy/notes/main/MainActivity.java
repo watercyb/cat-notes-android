@@ -3,6 +3,7 @@ package com.blueberryjoy.notes.main;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Handler;
@@ -12,6 +13,7 @@ import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ListView;
@@ -24,7 +26,9 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
@@ -71,7 +75,6 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private ImageButton imageButtonAvatar;
 
-    private OAuthViewModel viewModel;
     private RecyclerViewAdapter recyclerViewAdapter;
     private ActivityResultLauncher<Intent> editorLauncher;
 
@@ -85,6 +88,8 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+        getWindow().setNavigationBarColor(Color.parseColor("#F9E4FF"));
+
 
         initializeViews();
         initializeViewModel();
@@ -320,7 +325,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initializeViewModel() {
-        viewModel = new ViewModelProvider(MainActivity.this).get(OAuthViewModel.class);
+        OAuthViewModel viewModel = new ViewModelProvider(MainActivity.this).get(OAuthViewModel.class);
     }
 
     private void initializeAuthManager() {
@@ -328,7 +333,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void updateAvatar() {
                 if (AuthManager.type == AuthType.GOOGLE) {
-                    String url = ClerkAuth.INSTANCE.getAvatar();
+                    String url = AuthManager.getAvatar();
                     if (!url.isEmpty()) {
                         new Handler(Looper.getMainLooper()).post(new Runnable() {
                             @Override
@@ -345,7 +350,7 @@ public class MainActivity extends AppCompatActivity {
                     if (username != null) {
                         int size = (int) TypedValue.applyDimension(
                                 TypedValue.COMPLEX_UNIT_DIP,
-                                48,
+                                35,
                                 getResources().getDisplayMetrics()
                         );
 

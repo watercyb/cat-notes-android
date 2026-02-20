@@ -21,11 +21,10 @@ class OAuthViewModel : ViewModel() {
                 !isInitialized -> UiState.Loading
                 user != null -> UiState.Authenticated
                 else -> UiState.SignedOut
-            } to user  // return a Pair<UiState, User?> so we can access user later
+            } to user  // return a Pair<UiState, User?>
         }.onEach { (state, user) ->
-            //Log.w("testLog", "isInitialized: ${state != UiState.Loading}")
-            //Log.w("testLog", "user: $user")
-            //Log.w("testLog", "state: $state")
+            Log.w("testLog", "user: $user")
+            Log.w("testLog", "state: $state")
 
             if (state != UiState.Loading) {
                 if (user != null) {

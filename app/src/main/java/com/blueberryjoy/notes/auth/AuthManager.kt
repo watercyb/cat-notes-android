@@ -6,11 +6,11 @@ import android.util.Log
 import com.blueberryjoy.notes.App.Companion.getInstance
 import com.blueberryjoy.notes.auth.utils.AuthType
 import com.blueberryjoy.notes.auth.utils.OnAuthChangeHandler
-import com.blueberryjoy.notes.clerk.ClerkAuth.isLogin
 import androidx.core.content.edit
 import androidx.lifecycle.ViewModelProvider
 import com.blueberryjoy.notes.clerk.ClerkAuth
 import com.blueberryjoy.notes.clerk.OAuthViewModel
+import com.clerk.api.Clerk
 
 object AuthManager {
     private var token: String? = ""
@@ -72,7 +72,6 @@ object AuthManager {
 
     @JvmStatic
     fun setGoogleLogin(): Boolean {
-        if (!isLogin()) return false
         type = AuthType.GOOGLE
         username = ""
         if (onAuthChangeHandler != null) onAuthChangeHandler!!.updateAvatar()
@@ -112,9 +111,9 @@ object AuthManager {
 
     @JvmStatic
     val avatar: String
-        get() = ClerkAuth.getAvatar()
+        get() = Clerk.user?.imageUrl ?: ""
 
     @JvmStatic
     val isLogin: Boolean
-        get() = ClerkAuth.isLogin()
+        get() = Clerk.user != null
 }

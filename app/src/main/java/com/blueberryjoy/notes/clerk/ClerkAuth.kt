@@ -36,14 +36,6 @@ object ClerkAuth {
         return false
     }
 
-    fun getAvatar(): String {
-        return Clerk.user?.imageUrl ?: ""
-    }
-
-    fun isLogin(): Boolean {
-        return Clerk.user != null
-    }
-
     suspend fun login(provider: OAuthProvider): String {
         SignIn.authenticateWithRedirect(
             SignIn.AuthenticateWithRedirectParams.OAuth(
