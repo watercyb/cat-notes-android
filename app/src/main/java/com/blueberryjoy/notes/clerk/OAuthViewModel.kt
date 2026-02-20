@@ -3,19 +3,13 @@ package com.blueberryjoy.notes.clerk
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.blueberryjoy.notes.auth.AuthManager
 import com.clerk.api.Clerk
-import com.clerk.api.network.serialization.errorMessage
-import com.clerk.api.network.serialization.onFailure
-import com.clerk.api.network.serialization.onSuccess
-import com.clerk.api.signin.SignIn
-import com.clerk.api.signup.SignUp
-import com.clerk.api.sso.OAuthProvider
-import com.clerk.api.sso.ResultType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.onEach
 
 class OAuthViewModel : ViewModel() {
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
@@ -23,54 +17,31 @@ class OAuthViewModel : ViewModel() {
 
     init {
         combine(Clerk.isInitialized, Clerk.userFlow) { isInitialized, user ->
-            _uiState.value = when {
+            when {
                 !isInitialized -> UiState.Loading
                 user != null -> UiState.Authenticated
                 else -> UiState.SignedOut
-            }
-        }.launchIn(viewModelScope)
-    }
+            } to user  // return a Pair<UiState, User?> so we can access user later
+        }.onEach { (state, user) ->
+            //Log.w("testLog", "isInitialized: ${state != UiState.Loading}")
+            //Log.w("testLog", "user: $user")
+            //Log.w("testLog", "state: $state")
 
-    fun signInWithOAuth(provider: OAuthProvider) {
-        viewModelScope.launch {
-            SignIn.Companion.authenticateWithRedirect(SignIn.AuthenticateWithRedirectParams.OAuth(provider))
-                .onSuccess {
-                    when (it.resultType) {
-                        ResultType.SIGN_IN -> {
-                            // The OAuth flow resulted in a sign in
-                            if (it.signIn?.status == SignIn.Status.COMPLETE) {
-                                _uiState.value = UiState.Authenticated
-                            } else {
-                                // If the status is not complete, check why. User may need to
-                                // complete further steps.
-                            }
-                        }
-
-                        ResultType.SIGN_UP -> {
-                            // The OAuth flow resulted in a sign up
-                            if (it.signUp?.status == SignUp.Status.COMPLETE) {
-                                _uiState.value = UiState.Authenticated
-                            } else {
-                                // If the status is not complete, check why. User may need to
-                                // complete further steps.
-                            }
-                        }
-
-                        else -> {}
-                    }
-                }.onFailure {
-                    // See https://clerk.com/docs/guides/development/custom-flows/error-handling
-                    // for more info on error handling
-                    Log.e("OAuthViewModel", it.errorMessage, it.throwable)
+            if (state != UiState.Loading) {
+                if (user != null) {
+                    AuthManager.setGoogleLogin()
+                } else {
+                    AuthManager.setLogout()
                 }
-        }
+            }
+
+            _uiState.value = state
+        }.launchIn(viewModelScope)
     }
 
     sealed interface UiState {
         data object Loading : UiState
-
         data object SignedOut : UiState
-
         data object Authenticated : UiState
     }
 }

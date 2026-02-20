@@ -5,6 +5,8 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Rect;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.MotionEvent;
@@ -52,9 +54,12 @@ import com.clerk.api.sso.OAuthProvider;
 
 import java.util.List;
 
+import kotlin.Unit;
 import kotlin.coroutines.Continuation;
 import kotlin.coroutines.CoroutineContext;
 import kotlin.coroutines.EmptyCoroutineContext;
+import kotlinx.coroutines.Dispatchers;
+import kotlinx.coroutines.GlobalScope;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -82,8 +87,8 @@ public class MainActivity extends AppCompatActivity {
         });
 
         initializeViews();
+        initializeViewModel();
         initializeAuthManager();
-        initializeClerk();
         Notes.initialize();
         initializeListView();
         initializeRecyclerView();
@@ -155,7 +160,7 @@ public class MainActivity extends AppCompatActivity {
         RequestQueue queue = Volley.newRequestQueue(MainActivity.this);
 
         // Main thread: update TextView safely
-        JsonRequest request = new JsonRequest(Request.Method.GET, url, null, // GET request usually has no body
+        JsonRequest request = new JsonRequest(Request.Method.GET, url, null,
                 response -> {
                     Toast.makeText(MainActivity.this, "Valid user", Toast.LENGTH_SHORT).show();
                 }, error -> {
@@ -180,7 +185,19 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void gLogin() {
-        viewModel.signInWithOAuth(OAuthProvider.GOOGLE);
+        //viewModel.signInWithOAuth(OAuthProvider.GOOGLE);
+        ClerkAuth.INSTANCE.login(OAuthProvider.GOOGLE, new Continuation<>() {
+            @NotNull
+            @Override
+            public CoroutineContext getContext() {
+                return EmptyCoroutineContext.INSTANCE;
+            }
+
+            @Override
+            public void resumeWith(@NotNull Object o) {
+                Log.w("testLog", "gLogin: " + o);
+            }
+        });
     }
 
     private void gCheckAuth() {
@@ -302,23 +319,28 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void initializeClerk() {
+    private void initializeViewModel() {
         viewModel = new ViewModelProvider(MainActivity.this).get(OAuthViewModel.class);
     }
 
     private void initializeAuthManager() {
-        AuthManager.setOnAuthChangeHandler(new OnAuthChangeHandler() {
+        AuthManager.initialize(new OnAuthChangeHandler() {
             @Override
             public void updateAvatar() {
-                if (AuthManager.getType() == AuthType.GOOGLE) {
+                if (AuthManager.type == AuthType.GOOGLE) {
                     String url = ClerkAuth.INSTANCE.getAvatar();
                     if (!url.isEmpty()) {
-                        Glide.with(MainActivity.this)
-                                .load(url)
-                                .circleCrop()
-                                .into(imageButtonAvatar);
+                        new Handler(Looper.getMainLooper()).post(new Runnable() {
+                            @Override
+                            public void run() {
+                                Glide.with(MainActivity.this)
+                                        .load(url)
+                                        .circleCrop()
+                                        .into(imageButtonAvatar);
+                            }
+                        });
                     }
-                } else if (AuthManager.getType() == AuthType.EMAIL) {
+                } else if (AuthManager.type == AuthType.EMAIL) {
                     String username = AuthManager.getUsername();
                     if (username != null) {
                         int size = (int) TypedValue.applyDimension(
@@ -328,7 +350,12 @@ public class MainActivity extends AppCompatActivity {
                         );
 
                         Bitmap bmp = Avatar.createLetterAvatar(username, size);
-                        imageButtonAvatar.setImageBitmap(bmp);
+                        new Handler(Looper.getMainLooper()).post(new Runnable() {
+                            @Override
+                            public void run() {
+                                imageButtonAvatar.setImageBitmap(bmp);
+                            }
+                        });
                     }
                 }
             }

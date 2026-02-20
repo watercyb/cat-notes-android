@@ -1,54 +1,120 @@
-package com.blueberryjoy.notes.auth;
+package com.blueberryjoy.notes.auth
 
-import com.blueberryjoy.notes.auth.utils.AuthType;
-import com.blueberryjoy.notes.auth.utils.OnAuthChangeHandler;
+import android.content.Context
+import android.content.SharedPreferences
+import android.util.Log
+import com.blueberryjoy.notes.App.Companion.getInstance
+import com.blueberryjoy.notes.auth.utils.AuthType
+import com.blueberryjoy.notes.auth.utils.OnAuthChangeHandler
+import com.blueberryjoy.notes.clerk.ClerkAuth.isLogin
+import androidx.core.content.edit
+import androidx.lifecycle.ViewModelProvider
+import com.blueberryjoy.notes.clerk.ClerkAuth
+import com.blueberryjoy.notes.clerk.OAuthViewModel
 
-public class AuthManager {
-    private static String token = "";
-    private static AuthType type = AuthType.NULL;
-    private static String username = "";
-    private static OnAuthChangeHandler onAuthChangeHandler;
+object AuthManager {
+    private var token: String? = ""
 
-    public static void setToken(String token) {
-        AuthManager.token = token;
+    @JvmField
+    var type: AuthType? = AuthType.NULL
+    private var username: String? = ""
+    var onAuthChangeHandler: OnAuthChangeHandler? = null
+    private var sharedPref: SharedPreferences? = null
+
+    @JvmStatic
+    fun initialize(onAuthChangeHandler: OnAuthChangeHandler?) {
+        AuthManager.onAuthChangeHandler = onAuthChangeHandler
+        sharedPref =
+            getInstance().getContext().getSharedPreferences("APP_DATA", Context.MODE_PRIVATE)
+        token = sharedPref!!.getString("TOKEN", "")
+        val typeCode = sharedPref!!.getInt("TYPE", 0)
+        type = when (typeCode) {
+            1 -> {
+                AuthType.EMAIL
+            }
+
+            2 -> {
+                AuthType.GOOGLE
+            }
+
+            else -> {
+                AuthType.NULL
+            }
+        }
+        username = sharedPref!!.getString("NAME", "")
     }
 
-    public static void setClerkToken(String token) {
-        AuthManager.token = "Bearer " + token;
+    @JvmStatic
+    fun setToken(token: String?) {
+        AuthManager.token = token
+        sharedPref!!.edit { putString("TOKEN", token) }
     }
 
-    public static String getToken() {
-        return token;
+    fun setClerkToken(token: String?) {
+        AuthManager.token = "Bearer $token"
     }
 
-    public static String getUser() {
-        return username;
+    @JvmStatic
+    fun getToken(): String? {
+        return token
     }
 
-    public static void setEmailLogin(String username) {
-        AuthManager.type = AuthType.EMAIL;
-        AuthManager.username = username;
-        if (onAuthChangeHandler != null) onAuthChangeHandler.updateAvatar();
+    @JvmStatic
+    fun setEmailLogin(username: String?) {
+        type = AuthType.EMAIL
+        AuthManager.username = username
+        if (onAuthChangeHandler != null) onAuthChangeHandler!!.updateAvatar()
+        sharedPref!!.edit {
+            putInt("TYPE", 1)
+            putString("NAME", username)
+        }
     }
 
-    public static void setUsername(String username) {
-        AuthManager.username = username;
+    @JvmStatic
+    fun setGoogleLogin(): Boolean {
+        if (!isLogin()) return false
+        type = AuthType.GOOGLE
+        username = ""
+        if (onAuthChangeHandler != null) onAuthChangeHandler!!.updateAvatar()
+        sharedPref!!.edit {
+            putInt("TYPE", 2)
+            putString("NAME", "")
+        }
+        return true
     }
 
-    public static String getUsername() {
-        if (type == AuthType.NULL) return null;
-        return username;
+    @JvmStatic
+    fun setLogout() {
+        type = AuthType.NULL
+        username = ""
+        token = ""
+        if (onAuthChangeHandler != null) onAuthChangeHandler!!.updateAvatar()
+        sharedPref!!.edit {
+            putInt("TYPE", 0)
+            putString("NAME", "")
+            putString("TOKEN", "")
+        }
     }
 
-    public static void setType(AuthType type) {
-        AuthManager.type = type;
+    fun setUsername(username: String?) {
+        AuthManager.username = username
     }
 
-    public static AuthType getType() {
-        return type;
+    @JvmStatic
+    fun getUsername(): String? {
+        if (type == AuthType.NULL) return null
+        return username
     }
 
-    public static void setOnAuthChangeHandler(OnAuthChangeHandler onAuthChangeHandler) {
-        AuthManager.onAuthChangeHandler = onAuthChangeHandler;
+    fun updateAvatar() {
+        if (onAuthChangeHandler != null) onAuthChangeHandler!!.updateAvatar()
     }
+
+    @JvmStatic
+    val avatar: String
+        get() = ClerkAuth.getAvatar()
+
+    @JvmStatic
+    val isLogin: Boolean
+        get() = ClerkAuth.isLogin()
 }
