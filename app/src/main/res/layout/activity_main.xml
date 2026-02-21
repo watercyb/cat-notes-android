@@ -56,7 +56,7 @@
         android:translationZ="1dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:srcCompat="@mipmap/plus" />
+        app:srcCompat="@mipmap/menu" />
 
     <ListView
         android:id="@+id/listViewSetting"

@@ -1,5 +1,7 @@
 package com.blueberryjoy.notes.volley;
 
+import android.util.Log;
+
 import com.android.volley.NetworkResponse;
 import com.android.volley.Response;
 import com.android.volley.toolbox.JsonObjectRequest;
@@ -35,12 +37,6 @@ public class JsonRequest extends JsonObjectRequest {
 
     @Override
     protected Response<JSONObject> parseNetworkResponse(NetworkResponse response) {
-        if (response.headers != null) {
-            String newToken = response.headers.get("Authorization");
-            if (newToken != null) {
-                AuthManager.setToken(newToken);
-            }
-        }
         return super.parseNetworkResponse(response);
     }
 }

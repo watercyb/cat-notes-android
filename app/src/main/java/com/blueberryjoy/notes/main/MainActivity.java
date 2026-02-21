@@ -90,7 +90,6 @@ public class MainActivity extends AppCompatActivity {
         });
         getWindow().setNavigationBarColor(getColor(R.color.background));
 
-
         initializeViews();
         initializeViewModel();
         initializeAuthManager();
@@ -332,7 +331,7 @@ public class MainActivity extends AppCompatActivity {
         AuthManager.initialize(new OnAuthChangeHandler() {
             @Override
             public void updateAvatar() {
-                if (AuthManager.type == AuthType.GOOGLE) {
+                if (AuthManager.getType() == AuthType.GOOGLE) {
                     String url = AuthManager.getAvatar();
                     if (!url.isEmpty()) {
                         new Handler(Looper.getMainLooper()).post(new Runnable() {
@@ -345,7 +344,7 @@ public class MainActivity extends AppCompatActivity {
                             }
                         });
                     }
-                } else if (AuthManager.type == AuthType.EMAIL) {
+                } else if (AuthManager.getType() == AuthType.EMAIL) {
                     String username = AuthManager.getUsername();
                     if (username != null) {
                         int size = (int) TypedValue.applyDimension(

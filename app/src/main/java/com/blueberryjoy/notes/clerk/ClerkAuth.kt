@@ -19,6 +19,7 @@ import com.clerk.api.sso.ResultType
 
 object ClerkAuth {
     suspend fun getToken(): Boolean {
+        if (Clerk.session == null) return false
         val session = Clerk.client.sessions.firstOrNull()
         if (session == null) {
             AuthManager.setToken(null)

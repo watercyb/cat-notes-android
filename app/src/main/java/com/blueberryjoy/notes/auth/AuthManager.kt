@@ -15,10 +15,9 @@ import com.clerk.api.Clerk
 object AuthManager {
     private var token: String? = ""
 
-    @JvmField
-    var type: AuthType? = AuthType.NULL
+    private var type: AuthType? = AuthType.NULL
     private var username: String? = ""
-    var onAuthChangeHandler: OnAuthChangeHandler? = null
+    private var onAuthChangeHandler: OnAuthChangeHandler? = null
     private var sharedPref: SharedPreferences? = null
 
     @JvmStatic
@@ -116,4 +115,9 @@ object AuthManager {
     @JvmStatic
     val isLogin: Boolean
         get() = Clerk.user != null
+
+    @JvmStatic
+    fun getType(): AuthType? {
+        return type
+    }
 }
