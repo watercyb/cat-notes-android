@@ -1,16 +1,28 @@
+# Gradle
+.gradle/
+build/
+
+# Android Studio
+.idea/
 *.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
-/build
-/captures
+local.properties
 .externalNativeBuild
 .cxx
-local.properties
+
+# Build outputs
+/app/release/
+*.apk
+*.aab
+
+# OS files
+.DS_Store
+
+# Folders
+/captures
+/HTML
+/Js
+/adblock
+/app-ads
+/logo
+/font
 /gradle/gradle-daemon-jvm.properties
