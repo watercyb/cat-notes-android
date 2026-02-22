@@ -1,4 +1,4 @@
-package com.blueberryjoy.notes.auth.utils;
+package com.blueberryjoy.notes.utils;
 
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -6,8 +6,11 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Rect;
 
+import androidx.annotation.NonNull;
+
 public class Avatar {
-    public static Bitmap createLetterAvatar(String name, int size) {
+    @NonNull
+    public static Bitmap createLetterAvatar(@NonNull String name, int size) {
 
         String letter = name.substring(0, 1).toUpperCase();
 
@@ -42,7 +45,7 @@ public class Avatar {
         return bitmap;
     }
 
-    private static int pickColor(String letter) {
+    private static int pickColor(@NonNull String letter) {
 
         int[] colors = {
                 Color.parseColor("#C4FFDD"),

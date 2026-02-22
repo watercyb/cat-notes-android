@@ -1,10 +1,9 @@
 package com.blueberryjoy.notes.sqlite;
 
+import androidx.annotation.Nullable;
 import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.Query;
-
-import com.blueberryjoy.notes.main.RecyclerViewItem;
 
 import java.util.List;
 
@@ -13,6 +12,7 @@ public interface PageDao {
     @Insert
     long insert(Note note);
 
+    @Nullable
     @Query("SELECT * FROM notes")
     List<Note> getAllNotes();
 
@@ -31,8 +31,11 @@ public interface PageDao {
     @Query("UPDATE notes SET version = :version WHERE id = :id")
     void updateVersion(int id, int version);
 
-    @Query("UPDATE notes SET title = :title, content = :content, mongoId = :mongoId, version = :version WHERE id = :id")
-    void updateNote(int id, String title, String content, String mongoId, int version);
+    @Query("UPDATE notes SET idx = :idx WHERE id = :id")
+    void updateIdx(int id, int idx);
+
+    @Query("UPDATE notes SET title = :title, content = :content, mongoId = :mongoId, version = :version, idx = :idx WHERE id = :id")
+    void updateNote(int id, String title, String content, String mongoId, int version, int idx);
 
     @Query("DELETE FROM notes")
     void deleteAllNotes();

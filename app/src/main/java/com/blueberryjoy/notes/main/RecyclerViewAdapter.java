@@ -50,7 +50,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
     }
 
 
-    // stores and recycles views as they are scrolled off screen
+    // stores and recycles views as they are scrolled off-screen
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
         TextView textViewTitle;
         TextView textViewContent;

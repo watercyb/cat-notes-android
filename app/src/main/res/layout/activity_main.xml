@@ -23,8 +23,7 @@
             android:layout_marginEnd="10dp"
             android:background="@null"
             android:contentDescription="@string/user_avatar"
-            android:scaleX="0.9"
-            android:scaleY="0.9"
+            android:scaleType="centerCrop"
             app:srcCompat="@mipmap/avatar" />
 
     </FrameLayout>

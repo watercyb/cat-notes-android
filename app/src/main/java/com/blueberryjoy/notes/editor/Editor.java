@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.graphics.Rect;
 import android.os.Bundle;
 import android.text.Editable;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
@@ -16,6 +15,7 @@ import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -69,6 +69,7 @@ public class Editor extends AppCompatActivity {
 
             return insets;
         });
+        getWindow().setNavigationBarColor(getColor(R.color.background));
 
         Intent intent = getIntent();
         int id = intent.getIntExtra("ID", -1);
@@ -119,7 +120,7 @@ public class Editor extends AppCompatActivity {
 
         editTextTitle.addTextChangedListener(new android.text.TextWatcher() {
             @Override
-            public void afterTextChanged(Editable editable) {
+            public void afterTextChanged(@NonNull Editable editable) {
                 note.title = editable.toString();
             }
 
@@ -136,7 +137,7 @@ public class Editor extends AppCompatActivity {
 
         editTextContent.addTextChangedListener(new android.text.TextWatcher() {
             @Override
-            public void afterTextChanged(Editable editable) {
+            public void afterTextChanged(@NonNull Editable editable) {
                 note.content = editable.toString();
             }
 
@@ -151,23 +152,15 @@ public class Editor extends AppCompatActivity {
             }
         });
 
-        imageButtonBack.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                saveAndFinish();
-            }
-        });
+        imageButtonBack.setOnClickListener(view -> saveAndFinish());
 
-        imageButtonRemove.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                SQLite.delete(note);
-                Notes.remove(note);
-                Intent intent = new Intent();
-                intent.putExtra("POSITION", -idx - 1);
-                setResult(Activity.RESULT_OK, intent);
-                finish();
-            }
+        imageButtonRemove.setOnClickListener(view -> {
+            SQLite.delete(note);
+            Notes.remove(note);
+            Intent intent = new Intent();
+            intent.putExtra("POSITION", -idx - 1);
+            setResult(Activity.RESULT_OK, intent);
+            finish();
         });
     }
 }

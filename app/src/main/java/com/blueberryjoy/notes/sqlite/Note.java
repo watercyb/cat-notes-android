@@ -13,16 +13,18 @@ public class Note {
     final public String content;
     final public String mongoId;
     final public int version;
+    final public int idx;
 
-    public Note(String title, String content, String mongoId, int version) {
+    public Note(String title, String content, String mongoId, int version, int idx) {
         this.title = title;
         this.content = content;
         this.mongoId = mongoId;
         this.version = version;
+        this.idx = idx;
     }
 
     @NonNull
     public String toString() {
-        return "id: " + id + " title: " + title + " mongoId: " + mongoId + " version: " + version + " content: " + content;
+        return "id: " + id + " title: " + title + " mongoId: " + mongoId + " version: " + version + " content: " + content + " idx: " + idx;
     }
 }

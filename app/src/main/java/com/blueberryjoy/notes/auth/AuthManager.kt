@@ -2,15 +2,30 @@ package com.blueberryjoy.notes.auth
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.util.Log
-import com.blueberryjoy.notes.App.Companion.getInstance
-import com.blueberryjoy.notes.auth.utils.AuthType
-import com.blueberryjoy.notes.auth.utils.OnAuthChangeHandler
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.os.Handler
+import android.os.Looper
+import android.util.TypedValue
 import androidx.core.content.edit
-import androidx.lifecycle.ViewModelProvider
-import com.blueberryjoy.notes.clerk.ClerkAuth
-import com.blueberryjoy.notes.clerk.OAuthViewModel
+import com.blueberryjoy.notes.App
+import com.blueberryjoy.notes.App.Companion.getInstance
+import com.blueberryjoy.notes.message.Message
+import com.blueberryjoy.notes.utils.AuthType
+import com.blueberryjoy.notes.utils.Avatar
+import com.blueberryjoy.notes.utils.OnAuthChangeHandler
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
 import com.clerk.api.Clerk
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FileOutputStream
+import java.util.concurrent.Executors
+
 
 object AuthManager {
     private var token: String? = ""
@@ -41,6 +56,12 @@ object AuthManager {
             }
         }
         username = sharedPref!!.getString("NAME", "")
+
+        CoroutineScope(Dispatchers.Main).launch {
+            if (AuthManager.onAuthChangeHandler != null) AuthManager.onAuthChangeHandler!!.updateAvatar(
+                getAvatar()
+            )
+        }
     }
 
     @JvmStatic
@@ -62,7 +83,9 @@ object AuthManager {
     fun setEmailLogin(username: String?) {
         type = AuthType.EMAIL
         AuthManager.username = username
-        if (onAuthChangeHandler != null) onAuthChangeHandler!!.updateAvatar()
+        CoroutineScope(Dispatchers.Main).launch {
+            if (onAuthChangeHandler != null) onAuthChangeHandler!!.updateAvatar(getAvatar())
+        }
         sharedPref!!.edit {
             putInt("TYPE", 1)
             putString("NAME", username)
@@ -73,7 +96,9 @@ object AuthManager {
     fun setGoogleLogin(): Boolean {
         type = AuthType.GOOGLE
         username = ""
-        if (onAuthChangeHandler != null) onAuthChangeHandler!!.updateAvatar()
+        CoroutineScope(Dispatchers.Main).launch {
+            if (onAuthChangeHandler != null) onAuthChangeHandler!!.updateAvatar(getAvatar())
+        }
         sharedPref!!.edit {
             putInt("TYPE", 2)
             putString("NAME", "")
@@ -86,7 +111,9 @@ object AuthManager {
         type = AuthType.NULL
         username = ""
         token = ""
-        if (onAuthChangeHandler != null) onAuthChangeHandler!!.updateAvatar()
+        CoroutineScope(Dispatchers.Main).launch {
+            if (onAuthChangeHandler != null) onAuthChangeHandler!!.updateAvatar(getAvatar())
+        }
         sharedPref!!.edit {
             putInt("TYPE", 0)
             putString("NAME", "")
@@ -104,13 +131,84 @@ object AuthManager {
         return username
     }
 
-    fun updateAvatar() {
-        if (onAuthChangeHandler != null) onAuthChangeHandler!!.updateAvatar()
-    }
-
     @JvmStatic
     val avatar: String
         get() = Clerk.user?.imageUrl ?: ""
+
+    suspend fun getAvatar(): Bitmap? {
+        when (type) {
+            AuthType.GOOGLE -> {
+                val url = Clerk.user?.imageUrl ?: ""
+                if (!url.isEmpty()) {
+                    val image = loadClerkImage(url)
+                    if (image != null) {
+                        saveClerkAvatarToFile(image)
+                        return image
+                    }
+                }
+                return getClerkAvatarFromFile()
+            }
+
+            AuthType.EMAIL -> {
+                val username = getUsername()
+                if (username != null) {
+                    val size = TypedValue.applyDimension(
+                        TypedValue.COMPLEX_UNIT_DIP,
+                        35f,
+                        getInstance().getContext().resources.displayMetrics
+                    ).toInt()
+                    return Avatar.createLetterAvatar(username, size)
+                }
+                return null
+            }
+
+            else -> {
+                return null
+            }
+        }
+    }
+
+    private suspend fun loadClerkImage(url: String): Bitmap? {
+        return try {
+            withContext(Dispatchers.IO) {
+                Glide.with(App.getInstance().getContext()).asBitmap().load(url)
+                    .apply(RequestOptions.circleCropTransform()).submit().get()
+            }
+        } catch (e: Exception) {
+            null;
+        }
+    }
+
+    private fun saveClerkAvatarToFile(bitmap: Bitmap) {
+        Executors.newSingleThreadExecutor().execute {
+            try {
+                val folder = File(getInstance().getContext().filesDir, "avatar")
+                if (!folder.exists())
+                    folder.mkdirs()
+
+                val file = File(getInstance().getContext().filesDir, "google.png")
+                if (!file.exists())
+                    file.createNewFile()
+
+                FileOutputStream(file).use { out ->
+                    bitmap.compress(
+                        Bitmap.CompressFormat.PNG, 100, out
+                    )
+                }
+            } catch (e: Exception) {
+                Message.showFromThread("Save avatar: $e")
+            }
+        }
+    }
+
+    private fun getClerkAvatarFromFile(): Bitmap? {
+        val file = File(getInstance().getContext().filesDir, "google.png")
+        if (file.exists()) {
+            val bitmap: Bitmap = BitmapFactory.decodeFile(file.absolutePath)
+            return bitmap;
+        }
+        return null
+    }
 
     @JvmStatic
     val isLogin: Boolean

@@ -6,19 +6,17 @@ import com.android.volley.VolleyError
 import com.android.volley.toolbox.Volley
 import com.blueberryjoy.notes.App
 import com.blueberryjoy.notes.auth.AuthManager
-import com.blueberryjoy.notes.auth.utils.AuthType
+import com.blueberryjoy.notes.utils.AuthType
 import com.blueberryjoy.notes.clerk.ClerkAuth
 import com.blueberryjoy.notes.message.Message
 import org.json.JSONObject
 
 object SendVolleyRequest {
-    var baseUrl: String = "http://10.0.2.2:5000/api"
-    //var baseUrl: String="https://notes.bbjdev.com/api"
-
     suspend fun checkAuth() {
         if (AuthManager.getType() == AuthType.NULL) return
         if (AuthManager.getType() == AuthType.GOOGLE && !ClerkAuth.getToken()) return
 
+        val baseUrl = App.getInstance().baseUrl
         val url = "$baseUrl/auth/check-auth"
         val queue = Volley.newRequestQueue((App.getInstance()).getContext())
 

@@ -6,6 +6,7 @@ import android.view.View;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -14,9 +15,9 @@ import androidx.core.view.WindowInsetsCompat;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
+import com.blueberryjoy.notes.App;
 import com.blueberryjoy.notes.R;
 import com.blueberryjoy.notes.clerk.ClerkAuth;
-import com.blueberryjoy.notes.main.MainActivity;
 import com.blueberryjoy.notes.message.Message;
 import com.blueberryjoy.notes.volley.JsonRequest;
 import com.clerk.api.sso.OAuthProvider;
@@ -32,8 +33,6 @@ import kotlin.coroutines.CoroutineContext;
 import kotlin.coroutines.EmptyCoroutineContext;
 
 public class Login extends AppCompatActivity {
-    String baseUrl = "http://10.0.2.2:5000/api/";
-    //String baseUrl="https://notes.bbjdev.com/api/";
 
     TextInputEditText emailInput;
     TextInputEditText passwordInput;
@@ -79,7 +78,7 @@ public class Login extends AppCompatActivity {
         String email = emailInput.getText().toString();
         String password = passwordInput.getText().toString();
 
-        String url = baseUrl + "auth/login";
+        String url = App.Companion.getInstance().getUrl() + "auth/login";
 
         RequestQueue queue = Volley.newRequestQueue(Login.this);
 
@@ -162,7 +161,7 @@ public class Login extends AppCompatActivity {
     }
 
 
-    private void JSONError(Exception e) {
+    private void JSONError(@NonNull Exception e) {
         Log.w("testLog", e.toString());
         Toast.makeText(Login.this, "Invalid input (JSON)", Toast.LENGTH_LONG).show();
     }

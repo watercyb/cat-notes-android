@@ -1,6 +1,6 @@
 package com.blueberryjoy.notes.volley;
 
-import android.util.Log;
+import androidx.annotation.NonNull;
 
 import com.android.volley.NetworkResponse;
 import com.android.volley.Response;
@@ -25,6 +25,7 @@ public class JsonRequest extends JsonObjectRequest {
         super(method, url, body, listener, errorListener);
     }
 
+    @NonNull
     @Override
     public Map<String, String> getHeaders() {
         Map<String, String> headers = new HashMap<>();

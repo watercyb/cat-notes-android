@@ -1,11 +1,9 @@
 package com.blueberryjoy.notes.clerk
 
 import android.util.Log
-import android.widget.Toast
-import com.blueberryjoy.notes.App
 import com.blueberryjoy.notes.auth.AuthManager
-import com.blueberryjoy.notes.clerk.OAuthViewModel.UiState
 import com.clerk.api.Clerk
+import com.clerk.api.Clerk.signOut
 import com.clerk.api.network.model.token.TokenResource
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
@@ -57,7 +55,7 @@ object ClerkAuth {
                     }
 
                     ResultType.SIGN_UP -> {
-                        // The OAuth flow resulted in a sign up
+                        // The OAuth flow resulted in a sign-up
                         if (it.signUp?.status == SignUp.Status.COMPLETE) {
                             return "Signed up"
                         } else {
@@ -78,5 +76,13 @@ object ClerkAuth {
                 return it.errorMessage
             }
         return "No response"
+    }
+
+    suspend fun logout() {
+        Clerk.signOut()
+            .onSuccess { Log.w("testLog", "Logout") }
+            .onFailure {
+                Log.e("testLog", it.errorMessage, it.throwable)
+            }
     }
 }
