@@ -1,0 +1,20 @@
+package com.blueberryjoy.notes.utils;
+
+public class ListViewItem {
+    private final String title;
+    private final ListViewAction action;
+
+    public ListViewItem(String title, ListViewAction action) {
+        this.title = title;
+        this.action = action;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void onClick() {
+        if (action != null)
+            action.onClick();
+    }
+}

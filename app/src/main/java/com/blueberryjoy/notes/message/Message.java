@@ -18,6 +18,11 @@ public class Message {
     public static void showFromThread(String str) {
         Handler handler = new Handler(Looper.getMainLooper());
         handler.post(() -> Toast.makeText(App.Companion.getInstance().getContext(), str, Toast.LENGTH_LONG).show());
+    }
+
+    public static void showErrorFromThread(String str) {
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.post(() -> Toast.makeText(App.Companion.getInstance().getContext(), str, Toast.LENGTH_LONG).show());
         logE(str);
     }
 

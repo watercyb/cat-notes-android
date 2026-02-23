@@ -37,6 +37,7 @@ public class Editor extends AppCompatActivity {
     FrameLayout frameLayoutNote;
 
     int idx = -1;
+    private boolean isSaved = false;
 
     RecyclerViewItem note;
 
@@ -92,12 +93,14 @@ public class Editor extends AppCompatActivity {
 
     @Override
     public void onDestroy() {
-        SQLite.saveNote(note);
+        if (!isSaved)
+            SQLite.saveNote(note);
         super.onDestroy();
     }
 
     private void saveAndFinish() {
         SQLite.saveNote(note);
+        isSaved = true;
         Intent intent = new Intent();
         intent.putExtra("POSITION", idx);
         setResult(Activity.RESULT_OK, intent);

@@ -1,168 +1,143 @@
-package com.blueberryjoy.notes.auth;
+package com.blueberryjoy.notes.auth
 
-import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
-import android.widget.Toast;
+import android.os.Bundle
+import android.util.Log
+import android.view.View
+import android.widget.Toast
+import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import com.android.volley.Request
+import com.android.volley.VolleyError
+import com.android.volley.toolbox.Volley
+import com.blueberryjoy.notes.App.Companion.getInstance
+import com.blueberryjoy.notes.R
+import com.blueberryjoy.notes.auth.AuthManager.isLogin
+import com.blueberryjoy.notes.auth.AuthManager.setEmailLogin
+import com.blueberryjoy.notes.clerk.ClerkAuth
+import com.blueberryjoy.notes.volley.JsonRequest
+import com.clerk.api.sso.OAuthProvider
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.textfield.TextInputEditText
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import org.json.JSONException
+import org.json.JSONObject
 
-import androidx.activity.EdgeToEdge;
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
+class Login : AppCompatActivity() {
+    var emailInput: TextInputEditText? = null
+    var passwordInput: TextInputEditText? = null
+    var loginButton: MaterialButton? = null
+    var googleLoginButton: MaterialButton? = null
 
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.Volley;
-import com.blueberryjoy.notes.App;
-import com.blueberryjoy.notes.R;
-import com.blueberryjoy.notes.clerk.ClerkAuth;
-import com.blueberryjoy.notes.message.Message;
-import com.blueberryjoy.notes.volley.JsonRequest;
-import com.clerk.api.sso.OAuthProvider;
-import com.google.android.material.button.MaterialButton;
-import com.google.android.material.textfield.TextInputEditText;
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        this.enableEdgeToEdge()
+        setContentView(R.layout.activity_login)
+        ViewCompat.setOnApplyWindowInsetsListener(
+            findViewById(R.id.main)
+        ) { v: View?, insets: WindowInsetsCompat? ->
+            val systemBars = insets!!.getInsets(WindowInsetsCompat.Type.systemBars())
+            v!!.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
+        }
 
-import org.jetbrains.annotations.NotNull;
-import org.json.JSONException;
-import org.json.JSONObject;
+        emailInput = findViewById(R.id.emailInput)
+        passwordInput = findViewById(R.id.passwordInput)
+        loginButton = findViewById(R.id.loginButton)
+        googleLoginButton = findViewById(R.id.googleLoginButton)
 
-import kotlin.coroutines.Continuation;
-import kotlin.coroutines.CoroutineContext;
-import kotlin.coroutines.EmptyCoroutineContext;
+        loginButton!!.setOnClickListener { loginEmail() }
 
-public class Login extends AppCompatActivity {
-
-    TextInputEditText emailInput;
-    TextInputEditText passwordInput;
-    MaterialButton loginButton;
-    MaterialButton googleLoginButton;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
-        setContentView(R.layout.activity_login);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
-
-        emailInput = findViewById(R.id.emailInput);
-        passwordInput = findViewById(R.id.passwordInput);
-        loginButton = findViewById(R.id.loginButton);
-        googleLoginButton = findViewById(R.id.googleLoginButton);
-
-        loginButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                loginEmail();
+        googleLoginButton!!.setOnClickListener {
+            CoroutineScope(Dispatchers.Main).launch {
+                loginGoogle()
             }
-        });
-
-        googleLoginButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                loginGoogle();
-            }
-        });
+        }
     }
 
-    private void loginEmail() {
-        if (emailInput.getText() == null || passwordInput.getText() == null) {
-            Toast.makeText(Login.this, "Invalid input", Toast.LENGTH_LONG).show();
-            return;
+    private fun loginEmail() {
+        if (emailInput!!.getText() == null || passwordInput!!.getText() == null) {
+            Toast.makeText(this@Login, "Invalid input", Toast.LENGTH_LONG).show()
+            return
         }
-        String email = emailInput.getText().toString();
-        String password = passwordInput.getText().toString();
+        val email = emailInput!!.getText().toString()
+        val password = passwordInput!!.getText().toString()
 
-        String url = App.Companion.getInstance().getUrl() + "auth/login";
+        val url = getInstance().getUrl() + "auth/login"
 
-        RequestQueue queue = Volley.newRequestQueue(Login.this);
+        val queue = Volley.newRequestQueue(this@Login)
 
-        JSONObject jsonBody = new JSONObject();
+        val jsonBody = JSONObject()
         try {
-            jsonBody.put("email", email);
-            jsonBody.put("password", password);
-        } catch (JSONException e) {
-            JSONError(e);
+            jsonBody.put("email", email)
+            jsonBody.put("password", password)
+        } catch (e: JSONException) {
+            JSONError(e)
         }
 
-        JsonRequest request = new JsonRequest(Request.Method.POST, url, jsonBody, response -> {
-            Toast.makeText(Login.this, "Logged in", Toast.LENGTH_SHORT).show();
-            try {
-                boolean success = response.getBoolean("success");
-                if (success) {
-                    JSONObject user = response.getJSONObject("user");
-                    String username = user.getString("name");
-                    AuthManager.setEmailLogin(username);
-                }
-            } catch (JSONException e) {
-                JSONError(e);
-            }
-            Log.w("testLog", response.toString());
-            finish();
-        }, error -> {
-            if (error.networkResponse != null) {
-                int statusCode = error.networkResponse.statusCode;
-                String body = new String(error.networkResponse.data);
+        val request = JsonRequest(
+            Request.Method.POST,
+            url,
+            jsonBody,
+            { response: JSONObject? ->
+                Toast.makeText(this@Login, "Logged in", Toast.LENGTH_SHORT).show()
                 try {
-                    JSONObject json = new JSONObject(body);
-                    String message = json.getString("message");
-                    Log.e("testLog", "Error message: " + message);
-                    Toast.makeText(Login.this, "(" + statusCode + ") " + message, Toast.LENGTH_LONG).show();
-                } catch (Exception e) {
-                    JSONError(e);
+                    val success = response!!.getBoolean("success")
+                    if (success) {
+                        val user = response.getJSONObject("user")
+                        val username = user.getString("name")
+                        setEmailLogin(username)
+                    }
+                } catch (e: JSONException) {
+                    JSONError(e)
                 }
-            } else {
-                Log.w("testLog", error.toString());
-                Toast.makeText(Login.this, "Network error", Toast.LENGTH_LONG).show();
-            }
-        });
-
-        queue.add(request);
-    }
-
-    private void loginGoogle() {
-        enableGoogleLoginButton(false);
-        ClerkAuth.INSTANCE.login(OAuthProvider.GOOGLE, new Continuation<>() {
-            @NotNull
-            @Override
-            public CoroutineContext getContext() {
-                return EmptyCoroutineContext.INSTANCE;
-            }
-
-            @Override
-            public void resumeWith(@NotNull Object o) {
-                try {
-                    String msg = (String) o;
-                    Message.showFromThread(msg);
-                    if (AuthManager.isLogin())
-                        finish();
-                    enableGoogleLoginButton(true);
-                } catch (Exception e) {
-                    Log.w("testLog", e.toString());
-                    enableGoogleLoginButton(true);
+                Log.w("testLog", response.toString())
+                finish()
+            },
+            { error: VolleyError? ->
+                if (error!!.networkResponse != null) {
+                    val statusCode = error.networkResponse.statusCode
+                    val body = String(error.networkResponse.data)
+                    try {
+                        val json = JSONObject(body)
+                        val message = json.getString("message")
+                        Log.e("testLog", "Error message: $message")
+                        Toast.makeText(
+                            this@Login,
+                            "($statusCode) $message",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    } catch (e: Exception) {
+                        JSONError(e)
+                    }
+                } else {
+                    Log.w("testLog", error.toString())
+                    Toast.makeText(this@Login, "Network error", Toast.LENGTH_LONG).show()
                 }
-            }
-        });
+            })
+
+        queue.add(request)
     }
 
-    private void enableGoogleLoginButton(boolean isEnable) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                // Update your view here (e.g., change text, visibility)
-                googleLoginButton.setEnabled(isEnable);
-            }
-        });
+    private suspend fun loginGoogle() {
+        enableGoogleLoginButton(false)
+        ClerkAuth.login(OAuthProvider.GOOGLE)
+        if (isLogin) finish()
+        enableGoogleLoginButton(true)
+    }
+
+    private fun enableGoogleLoginButton(isEnable: Boolean) {
+        runOnUiThread { // Update your view here (e.g., change text, visibility)
+            googleLoginButton!!.isEnabled = isEnable
+        }
     }
 
 
-    private void JSONError(@NonNull Exception e) {
-        Log.w("testLog", e.toString());
-        Toast.makeText(Login.this, "Invalid input (JSON)", Toast.LENGTH_LONG).show();
+    private fun JSONError(e: Exception) {
+        Log.w("testLog", e.toString())
+        Toast.makeText(this@Login, "Invalid input (JSON)", Toast.LENGTH_LONG).show()
     }
 }

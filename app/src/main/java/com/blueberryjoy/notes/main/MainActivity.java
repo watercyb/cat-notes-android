@@ -7,21 +7,17 @@ import android.graphics.Rect;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
-import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
@@ -31,33 +27,23 @@ import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
-import com.android.volley.Request;
-import com.android.volley.RequestQueue;
-import com.android.volley.toolbox.Volley;
-import com.blueberryjoy.notes.App;
 import com.blueberryjoy.notes.R;
 import com.blueberryjoy.notes.message.Message;
-import com.blueberryjoy.notes.utils.AuthType;
 import com.blueberryjoy.notes.auth.Login;
 import com.blueberryjoy.notes.auth.AuthManager;
+import com.blueberryjoy.notes.utils.ListViewItem;
 import com.blueberryjoy.notes.utils.OnAuthChangeHandler;
-import com.blueberryjoy.notes.utils.Avatar;
 import com.blueberryjoy.notes.clerk.ClerkAuth;
 import com.blueberryjoy.notes.clerk.OAuthViewModel;
 import com.blueberryjoy.notes.editor.Editor;
 import com.blueberryjoy.notes.notes.Notes;
-import com.blueberryjoy.notes.volley.JsonRequest;
 import com.blueberryjoy.notes.volley.SendVolleyRequest;
 
 import org.jetbrains.annotations.NotNull;
-import org.json.JSONException;
-import org.json.JSONObject;
 
-import com.bumptech.glide.Glide;
 import com.clerk.api.Clerk;
-import com.clerk.api.sso.OAuthProvider;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
 import kotlin.coroutines.Continuation;
@@ -127,56 +113,52 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void JSONError(@NonNull Exception e) {
-        Log.w("testLog", e.toString());
-        Toast.makeText(MainActivity.this, "Invalid input (JSON)", Toast.LENGTH_LONG).show();
-    }
-
     private void initializeListView() {
         listViewSetting.setTranslationZ(10);
-        List<String> strs = List.of("NEW NOTE", "LOGIN", "CHECK_AUTH", "G-LOGOUT", "TEST2", "SETTING");
-        ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(this, R.layout.listview_item, R.id.textView, strs);
+        List<ListViewItem> list = new ArrayList<>();
+
+        list.add(new ListViewItem("NEW NOTE", () -> {
+            int noteId = Notes.create("", "", null, 0);
+            if (noteId != -1) openEditor(noteId);
+        }));
+        list.add(new ListViewItem("LOGIN", () -> {
+            Intent intent = new Intent(MainActivity.this, Login.class);
+            startActivity(intent);
+        }));
+        list.add(new ListViewItem("CHECK_AUTH", () -> {
+            gCheckAuth();
+        }));
+        list.add(new ListViewItem("G-LOGOUT", () -> {
+            ClerkAuth.INSTANCE.logout(new Continuation<>() {
+                @NotNull
+                @Override
+                public CoroutineContext getContext() {
+                    return EmptyCoroutineContext.INSTANCE;
+                }
+
+                @Override
+                public void resumeWith(@NotNull Object o) {
+                    Message.logW("G-LOGOUT: " + Clerk.INSTANCE.getUser());
+                    AuthManager.setLogout();
+                }
+            });
+        }));
+        list.add(new ListViewItem("TEST", () -> {
+        }));
+        list.add(new ListViewItem("SETTING", () -> {
+        }));
+
+        ListViewAdapter listViewAdapter = new ListViewAdapter(this, list);
         ViewGroup.LayoutParams params = listViewSetting.getLayoutParams();
-        params.height = (int) ((Math.min(arrayAdapter.getCount() * 41, 250) + 15) * MainActivity.this.getResources().getDisplayMetrics().density);
+        params.height = (int) ((Math.min(listViewAdapter.getCount() * 41, 250) + 15) * MainActivity.this.getResources().getDisplayMetrics().density);
         params.width = (int) (175 * MainActivity.this.getResources().getDisplayMetrics().density);
         listViewSetting.setLayoutParams(params);
 
-        listViewSetting.setAdapter(arrayAdapter);
+        listViewSetting.setAdapter(listViewAdapter);
         listViewSetting.setOnItemClickListener((parent, view, position, id) -> {
-            if (parent == null || parent.getItemAtPosition(position) == null) return;
-            switch (parent.getItemAtPosition(position).toString()) {
-                case "NEW NOTE":
-                    int noteId = Notes.create("", "", null, 0);
-                    if (noteId != -1) openEditor(noteId);
-                    break;
-                case "LOGIN":
-                    Intent intent = new Intent(MainActivity.this, Login.class);
-                    startActivity(intent);
-                    break;
-                case "CHECK_AUTH":
-                    gCheckAuth();
-                    break;
-                case "G-LOGOUT":
-                    ClerkAuth.INSTANCE.logout(new Continuation<>() {
-                        @NotNull
-                        @Override
-                        public CoroutineContext getContext() {
-                            return EmptyCoroutineContext.INSTANCE;
-                        }
-
-                        @Override
-                        public void resumeWith(@NotNull Object o) {
-                            Message.logW("G-LOGOUT: " + Clerk.INSTANCE.getUser());
-                            AuthManager.setLogout();
-                        }
-                    });
-                    break;
-                case "TEST2":
-                    break;
-                case "SETTING":
-                    break;
-                default:
-            }
+            if (position >= list.size())
+                return;
+            list.get(position).onClick();
             listViewSetting.setVisibility(View.GONE);
         });
     }
@@ -257,7 +239,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initializeViewModel() {
-        OAuthViewModel viewModel = new ViewModelProvider(MainActivity.this).get(OAuthViewModel.class);
+        new ViewModelProvider(MainActivity.this).get(OAuthViewModel.class);
     }
 
     private void initializeAuthManager() {

@@ -1,9 +1,10 @@
 package com.blueberryjoy.notes.clerk
 
 import android.util.Log
+import androidx.compose.animation.fadeOut
 import com.blueberryjoy.notes.auth.AuthManager
+import com.blueberryjoy.notes.message.Message
 import com.clerk.api.Clerk
-import com.clerk.api.Clerk.signOut
 import com.clerk.api.network.model.token.TokenResource
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.errorMessage
@@ -35,7 +36,7 @@ object ClerkAuth {
         return false
     }
 
-    suspend fun login(provider: OAuthProvider): String {
+    suspend fun login(provider: OAuthProvider) {
         SignIn.authenticateWithRedirect(
             SignIn.AuthenticateWithRedirectParams.OAuth(
                 provider
@@ -46,36 +47,34 @@ object ClerkAuth {
                     ResultType.SIGN_IN -> {
                         // The OAuth flow resulted in a sign in
                         if (it.signIn?.status == SignIn.Status.COMPLETE) {
-                            return "Signed in"
+                            Message.showFromThread("Signed in")
                         } else {
                             // If the status is not complete, check why. User may need to
                             // complete further steps.
-                            return "Cannot sign in"
+                            Message.showErrorFromThread("Cannot sign in")
                         }
                     }
 
                     ResultType.SIGN_UP -> {
                         // The OAuth flow resulted in a sign-up
                         if (it.signUp?.status == SignUp.Status.COMPLETE) {
-                            return "Signed up"
+                            Message.showFromThread("Signed uo")
                         } else {
                             // If the status is not complete, check why. User may need to
                             // complete further steps.
-                            return "Cannot sign up"
+                            Message.showErrorFromThread("Cannot sign up")
                         }
                     }
 
                     else -> {
-                        return "Error"
+                        Message.showErrorFromThread("OAuthViewModel error")
                     }
                 }
             }.onFailure {
                 // See https://clerk.com/docs/guides/development/custom-flows/error-handling
                 // for more info on error handling
-                Log.e("OAuthViewModel error", it.errorMessage, it.throwable)
-                return it.errorMessage
+                Message.showErrorFromThread("OAuthViewModel error: $it.errorMessage")
             }
-        return "No response"
     }
 
     suspend fun logout() {

@@ -4,11 +4,8 @@ import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.os.Handler
-import android.os.Looper
 import android.util.TypedValue
 import androidx.core.content.edit
-import com.blueberryjoy.notes.App
 import com.blueberryjoy.notes.App.Companion.getInstance
 import com.blueberryjoy.notes.message.Message
 import com.blueberryjoy.notes.utils.AuthType
@@ -19,7 +16,6 @@ import com.bumptech.glide.request.RequestOptions
 import com.clerk.api.Clerk
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -131,10 +127,6 @@ object AuthManager {
         return username
     }
 
-    @JvmStatic
-    val avatar: String
-        get() = Clerk.user?.imageUrl ?: ""
-
     suspend fun getAvatar(): Bitmap? {
         when (type) {
             AuthType.GOOGLE -> {
@@ -171,11 +163,11 @@ object AuthManager {
     private suspend fun loadClerkImage(url: String): Bitmap? {
         return try {
             withContext(Dispatchers.IO) {
-                Glide.with(App.getInstance().getContext()).asBitmap().load(url)
+                Glide.with(getInstance().getContext()).asBitmap().load(url)
                     .apply(RequestOptions.circleCropTransform()).submit().get()
             }
-        } catch (e: Exception) {
-            null;
+        } catch (_: Exception) {
+            null
         }
     }
 
@@ -203,10 +195,8 @@ object AuthManager {
 
     private fun getClerkAvatarFromFile(): Bitmap? {
         val file = File(getInstance().getContext().filesDir, "google.png")
-        if (file.exists()) {
-            val bitmap: Bitmap = BitmapFactory.decodeFile(file.absolutePath)
-            return bitmap;
-        }
+        if (file.exists())
+            return BitmapFactory.decodeFile(file.absolutePath)
         return null
     }
 
