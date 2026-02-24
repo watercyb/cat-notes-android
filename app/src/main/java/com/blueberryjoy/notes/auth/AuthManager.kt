@@ -1,5 +1,6 @@
 package com.blueberryjoy.notes.auth
 
+import android.R.attr.password
 import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Bitmap
@@ -8,6 +9,8 @@ import android.util.TypedValue
 import androidx.core.content.edit
 import com.blueberryjoy.notes.App.Companion.getInstance
 import com.blueberryjoy.notes.message.Message
+import com.blueberryjoy.notes.retrofit.RetrofitInstance
+import com.blueberryjoy.notes.retrofit.data_class.LoginUser
 import com.blueberryjoy.notes.utils.AuthType
 import com.blueberryjoy.notes.utils.Avatar
 import com.blueberryjoy.notes.utils.OnAuthChangeHandler
@@ -27,6 +30,7 @@ object AuthManager {
     private var token: String? = ""
 
     private var type: AuthType? = AuthType.NULL
+    private var email: String? = ""
     private var username: String? = ""
     private var onAuthChangeHandler: OnAuthChangeHandler? = null
     private var sharedPref: SharedPreferences? = null
@@ -51,7 +55,12 @@ object AuthManager {
                 AuthType.NULL
             }
         }
+
+        email = sharedPref!!.getString("EMAIL", "")
         username = sharedPref!!.getString("NAME", "")
+
+
+        //Message.logW("Type: " + getType().toString() + " name: " + getUsername())
 
         CoroutineScope(Dispatchers.Main).launch {
             if (AuthManager.onAuthChangeHandler != null) AuthManager.onAuthChangeHandler!!.updateAvatar(
@@ -76,14 +85,17 @@ object AuthManager {
     }
 
     @JvmStatic
-    fun setEmailLogin(username: String?) {
+    fun setEmailLogin(email: String, username: String, token: String) {
         type = AuthType.EMAIL
+        AuthManager.email = email
         AuthManager.username = username
+        setToken(token)
         CoroutineScope(Dispatchers.Main).launch {
             if (onAuthChangeHandler != null) onAuthChangeHandler!!.updateAvatar(getAvatar())
         }
         sharedPref!!.edit {
             putInt("TYPE", 1)
+            putString("EMAIL", "")
             putString("NAME", username)
         }
     }
@@ -105,6 +117,7 @@ object AuthManager {
     @JvmStatic
     fun setLogout() {
         type = AuthType.NULL
+        email = ""
         username = ""
         token = ""
         CoroutineScope(Dispatchers.Main).launch {
@@ -112,19 +125,22 @@ object AuthManager {
         }
         sharedPref!!.edit {
             putInt("TYPE", 0)
+            putString("EMAIL", "")
             putString("NAME", "")
             putString("TOKEN", "")
         }
-    }
-
-    fun setUsername(username: String?) {
-        AuthManager.username = username
     }
 
     @JvmStatic
     fun getUsername(): String? {
         if (type == AuthType.NULL) return null
         return username
+    }
+
+    @JvmStatic
+    fun getEmail(): String? {
+        if (type == AuthType.NULL) return null
+        return email
     }
 
     suspend fun getAvatar(): Bitmap? {
@@ -175,12 +191,10 @@ object AuthManager {
         Executors.newSingleThreadExecutor().execute {
             try {
                 val folder = File(getInstance().getContext().filesDir, "avatar")
-                if (!folder.exists())
-                    folder.mkdirs()
+                if (!folder.exists()) folder.mkdirs()
 
                 val file = File(getInstance().getContext().filesDir, "google.png")
-                if (!file.exists())
-                    file.createNewFile()
+                if (!file.exists()) file.createNewFile()
 
                 FileOutputStream(file).use { out ->
                     bitmap.compress(
@@ -195,8 +209,7 @@ object AuthManager {
 
     private fun getClerkAvatarFromFile(): Bitmap? {
         val file = File(getInstance().getContext().filesDir, "google.png")
-        if (file.exists())
-            return BitmapFactory.decodeFile(file.absolutePath)
+        if (file.exists()) return BitmapFactory.decodeFile(file.absolutePath)
         return null
     }
 
@@ -207,5 +220,89 @@ object AuthManager {
     @JvmStatic
     fun getType(): AuthType? {
         return type
+    }
+
+    suspend fun emailLogin(email: String, password: String): Boolean {
+        val loginUser = LoginUser(email = email, password = password)
+        try {
+            val response = RetrofitInstance.api.emailLogin(loginUser)
+            if (response.isSuccessful) {
+                val res = response.body()
+                if (res?.success == true) {
+                    val token = response.headers()["Authorization"] ?: ""
+                    setEmailLogin(res.user.email, res.user.name, token)
+                    return true
+                }
+                return false
+            } else {
+                if (response.code() == 429) {
+                    Message.showErrorFromThread("Too many requests, please try later.")
+                } else if (response.code() == 400) {
+                    Message.showErrorFromThread("Invalid credentials")
+                } else if (response.code() == 500) {
+                    Message.showErrorFromThread("Server internal error")
+                }
+                return false
+            }
+        } catch (e: Exception) {
+            Message.logW("Exception: $e")
+            Message.showErrorFromThread("Cannot reach the server")
+            return false
+        }
+    }
+
+    suspend fun emailLogout(): Boolean {
+        if (type != AuthType.EMAIL) return false
+        try {
+            val response = RetrofitInstance.api.emailLogout()
+            if (response.isSuccessful) {
+                val res = response.body()
+                if (res?.success == true) {
+                    setLogout()
+                    return true
+                }
+                return false
+            } else {
+                if (response.code() == 429) {
+                    Message.showErrorFromThread("Too many requests, please try later.")
+                } else if (response.code() == 400) {
+                    Message.showErrorFromThread("Invalid credentials")
+                } else if (response.code() == 500) {
+                    Message.showErrorFromThread("Server internal error")
+                }
+                return false
+            }
+        } catch (e: Exception) {
+            Message.logW("Exception: $e")
+            Message.showErrorFromThread("Cannot reach the server")
+            return false
+        }
+    }
+
+    suspend fun checkAuth(): Boolean {
+        try {
+            val response = RetrofitInstance.api.checkAuth()
+            if (response.isSuccessful) {
+                val res = response.body()
+                Message.logW("$res")
+                if (res?.success == true) {
+                    return true
+                }
+                return false
+            } else {
+                if (response.code() == 429) {
+                    Message.showErrorFromThread("Too many requests, please try later.")
+                } else if (response.code() == 400) {
+                    Message.showErrorFromThread("Invalid credentials")
+                } else if (response.code() == 500) {
+                    Message.showErrorFromThread("Server internal error")
+                }
+                return false
+            }
+        } catch (e: Exception) {
+            Message.logW("Exception: $e")
+            Message.showErrorFromThread("Cannot reach the server")
+            return false
+        }
     }
 }

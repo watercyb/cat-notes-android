@@ -1,8 +1,8 @@
 package com.blueberryjoy.notes.clerk
 
 import android.util.Log
-import androidx.compose.animation.fadeOut
 import com.blueberryjoy.notes.auth.AuthManager
+import com.blueberryjoy.notes.auth.AuthManager.setLogout
 import com.blueberryjoy.notes.message.Message
 import com.clerk.api.Clerk
 import com.clerk.api.network.model.token.TokenResource
@@ -77,11 +77,17 @@ object ClerkAuth {
             }
     }
 
-    suspend fun logout() {
+    suspend fun logout(): Boolean {
         Clerk.signOut()
-            .onSuccess { Log.w("testLog", "Logout") }
+            .onSuccess {
+                Log.w("testLog", "Logout")
+                setLogout()
+                return true
+            }
             .onFailure {
                 Log.e("testLog", it.errorMessage, it.throwable)
+                return false
             }
+        return true
     }
 }

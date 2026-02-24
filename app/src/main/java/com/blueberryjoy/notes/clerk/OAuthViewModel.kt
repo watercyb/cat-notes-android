@@ -4,6 +4,8 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.blueberryjoy.notes.auth.AuthManager
+import com.blueberryjoy.notes.message.Message
+import com.blueberryjoy.notes.utils.AuthType
 import com.clerk.api.Clerk
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,13 +25,12 @@ class OAuthViewModel : ViewModel() {
                 else -> UiState.SignedOut
             } to user  // return a Pair<UiState, User?>
         }.onEach { (state, user) ->
-            Log.w("testLog", "user: $user")
-            Log.w("testLog", "state: $state")
+            Message.logW("Clerk user: $user state: $state")
 
             if (state != UiState.Loading) {
                 if (user != null) {
                     AuthManager.setGoogleLogin()
-                } else {
+                } else if (AuthManager.getType() == AuthType.GOOGLE) {
                     AuthManager.setLogout()
                 }
             }

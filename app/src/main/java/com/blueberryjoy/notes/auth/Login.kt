@@ -8,23 +8,16 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.android.volley.Request
-import com.android.volley.VolleyError
-import com.android.volley.toolbox.Volley
-import com.blueberryjoy.notes.App.Companion.getInstance
+import androidx.lifecycle.lifecycleScope
 import com.blueberryjoy.notes.R
 import com.blueberryjoy.notes.auth.AuthManager.isLogin
-import com.blueberryjoy.notes.auth.AuthManager.setEmailLogin
 import com.blueberryjoy.notes.clerk.ClerkAuth
-import com.blueberryjoy.notes.volley.JsonRequest
 import com.clerk.api.sso.OAuthProvider
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import org.json.JSONException
-import org.json.JSONObject
 
 class Login : AppCompatActivity() {
     var emailInput: TextInputEditText? = null
@@ -63,10 +56,35 @@ class Login : AppCompatActivity() {
             Toast.makeText(this@Login, "Invalid input", Toast.LENGTH_LONG).show()
             return
         }
+        loginButton?.isEnabled = false
+        googleLoginButton?.isEnabled = false
+
+        lifecycleScope.launch {
+            if (AuthManager.emailLogin(
+                    emailInput!!.getText().toString(),
+                    passwordInput!!.getText().toString()
+                )
+            ) finish()
+
+            loginButton?.isEnabled = true
+            googleLoginButton?.isEnabled = true
+        }
+    }
+
+    /*
+    private fun loginEmail_volley() {
+        if (emailInput!!.getText() == null || passwordInput!!.getText() == null) {
+            Toast.makeText(this@Login, "Invalid input", Toast.LENGTH_LONG).show()
+            return
+        }
+
+        loginButton?.isEnabled = false
+        googleLoginButton?.isEnabled = false
+
         val email = emailInput!!.getText().toString()
         val password = passwordInput!!.getText().toString()
 
-        val url = getInstance().getUrl() + "auth/login"
+        val url = getInstance().getUrl() + "/auth/login"
 
         val queue = Volley.newRequestQueue(this@Login)
 
@@ -93,6 +111,8 @@ class Login : AppCompatActivity() {
                     }
                 } catch (e: JSONException) {
                     JSONError(e)
+                    loginButton?.isEnabled = true
+                    googleLoginButton?.isEnabled = true
                 }
                 Log.w("testLog", response.toString())
                 finish()
@@ -117,10 +137,13 @@ class Login : AppCompatActivity() {
                     Log.w("testLog", error.toString())
                     Toast.makeText(this@Login, "Network error", Toast.LENGTH_LONG).show()
                 }
+                loginButton?.isEnabled = true
+                googleLoginButton?.isEnabled = true
             })
 
         queue.add(request)
     }
+     */
 
     private suspend fun loginGoogle() {
         enableGoogleLoginButton(false)
