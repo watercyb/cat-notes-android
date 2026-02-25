@@ -10,11 +10,11 @@ import java.util.List;
 @Dao
 public interface PageDao {
     @Insert
-    long insert(Note note);
+    long insert(SQLNote SQLNote);
 
     @Nullable
     @Query("SELECT * FROM notes")
-    List<Note> getAllNotes();
+    List<SQLNote> getAllNotes();
 
     @Query("DELETE FROM notes WHERE id = :id")
     void deleteNote(int id);

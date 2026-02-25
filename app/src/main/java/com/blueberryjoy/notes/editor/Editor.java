@@ -24,6 +24,7 @@ import androidx.core.view.WindowInsetsCompat;
 import com.blueberryjoy.notes.R;
 import com.blueberryjoy.notes.main.RecyclerViewItem;
 import com.blueberryjoy.notes.notes.Notes;
+import com.blueberryjoy.notes.notes.SyncQueue;
 import com.blueberryjoy.notes.sqlite.SQLite;
 
 public class Editor extends AppCompatActivity {
@@ -36,8 +37,9 @@ public class Editor extends AppCompatActivity {
     FrameLayout frameLayoutTitle;
     FrameLayout frameLayoutNote;
 
-    int idx = -1;
-    private boolean isSaved = false;
+    int id = -1;
+    private String title = "";
+    private String content = "";
 
     RecyclerViewItem note;
 
@@ -73,13 +75,15 @@ public class Editor extends AppCompatActivity {
         getWindow().setNavigationBarColor(getColor(R.color.background));
 
         Intent intent = getIntent();
-        int id = intent.getIntExtra("ID", -1);
-        idx = Notes.getNoteByIdx(id);
+        id = intent.getIntExtra("ID", -1);
+        int idx = Notes.getNoteById(id);
         if (idx == -1) {
             Toast.makeText(this, "Note cannot be found", Toast.LENGTH_LONG).show();
             finish();
         }
         note = Notes.getList().get(idx);
+        title = note.title;
+        content = note.content;
 
         initializeViews();
 
@@ -93,18 +97,26 @@ public class Editor extends AppCompatActivity {
 
     @Override
     public void onDestroy() {
-        if (!isSaved)
-            SQLite.saveNote(note);
+        checkAndSave();
         super.onDestroy();
     }
 
     private void saveAndFinish() {
-        SQLite.saveNote(note);
-        isSaved = true;
+        checkAndSave();
         Intent intent = new Intent();
-        intent.putExtra("POSITION", idx);
+        intent.putExtra("POSITION", Notes.getNoteById(id));
         setResult(Activity.RESULT_OK, intent);
         finish();
+    }
+
+    private void checkAndSave() {
+        if (!note.title.equals(title) || !note.content.equals(content)) {
+            note.title = title;
+            note.content = content;
+            note.version++;
+            SQLite.saveNote(note);
+            SyncQueue.INSTANCE.add(note);
+        }
     }
 
     private void initializeViews() {
@@ -117,14 +129,14 @@ public class Editor extends AppCompatActivity {
         frameLayoutTitle = findViewById(R.id.frameLayoutTitle);
         frameLayoutNote = findViewById(R.id.frameLayoutNote);
 
-        editTextTitle.setText(note.title);
-        editTextContent.setText(note.content);
+        editTextTitle.setText(title);
+        editTextContent.setText(content);
 
 
         editTextTitle.addTextChangedListener(new android.text.TextWatcher() {
             @Override
             public void afterTextChanged(@NonNull Editable editable) {
-                note.title = editable.toString();
+                title = editable.toString();
             }
 
             @Override
@@ -141,7 +153,7 @@ public class Editor extends AppCompatActivity {
         editTextContent.addTextChangedListener(new android.text.TextWatcher() {
             @Override
             public void afterTextChanged(@NonNull Editable editable) {
-                note.content = editable.toString();
+                content = editable.toString();
             }
 
             @Override
@@ -158,10 +170,10 @@ public class Editor extends AppCompatActivity {
         imageButtonBack.setOnClickListener(view -> saveAndFinish());
 
         imageButtonRemove.setOnClickListener(view -> {
+            Intent intent = new Intent();
+            intent.putExtra("POSITION", -Notes.getNoteById(id) - 1);
             SQLite.delete(note);
             Notes.remove(note);
-            Intent intent = new Intent();
-            intent.putExtra("POSITION", -idx - 1);
             setResult(Activity.RESULT_OK, intent);
             finish();
         });

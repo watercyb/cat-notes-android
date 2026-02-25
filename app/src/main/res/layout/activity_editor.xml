@@ -92,7 +92,7 @@
             android:layout_height="wrap_content"
             android:background="@color/background"
             android:gravity="top"
-            android:hint="@string/note"
+            android:hint="@string/Note"
             android:importantForAutofill="no"
             android:inputType="textMultiLine"
             android:paddingStart="10dp"

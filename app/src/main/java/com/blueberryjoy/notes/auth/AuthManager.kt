@@ -1,6 +1,5 @@
 package com.blueberryjoy.notes.auth
 
-import android.R.attr.password
 import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Bitmap
@@ -8,12 +7,12 @@ import android.graphics.BitmapFactory
 import android.util.TypedValue
 import androidx.core.content.edit
 import com.blueberryjoy.notes.App.Companion.getInstance
-import com.blueberryjoy.notes.message.Message
+import com.blueberryjoy.notes.clerk.ClerkAuth
+import com.blueberryjoy.notes.utils.Message
+import com.blueberryjoy.notes.notes.Notes
 import com.blueberryjoy.notes.retrofit.RetrofitInstance
-import com.blueberryjoy.notes.retrofit.data_class.LoginUser
-import com.blueberryjoy.notes.utils.AuthType
+import com.blueberryjoy.notes.retrofit.data_class.ApiReq
 import com.blueberryjoy.notes.utils.Avatar
-import com.blueberryjoy.notes.utils.OnAuthChangeHandler
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.clerk.api.Clerk
@@ -44,6 +43,9 @@ object AuthManager {
         val typeCode = sharedPref!!.getInt("TYPE", 0)
         type = when (typeCode) {
             1 -> {
+                CoroutineScope(Dispatchers.Main).launch {
+                    checkAuth()
+                }
                 AuthType.EMAIL
             }
 
@@ -95,7 +97,7 @@ object AuthManager {
         }
         sharedPref!!.edit {
             putInt("TYPE", 1)
-            putString("EMAIL", "")
+            putString("EMAIL", email)
             putString("NAME", username)
         }
     }
@@ -138,9 +140,27 @@ object AuthManager {
     }
 
     @JvmStatic
+    fun setUsername(username: String) {
+        this.username = username
+        sharedPref!!.edit { putString("NAME", username) }
+
+        CoroutineScope(Dispatchers.Main).launch {
+            if (onAuthChangeHandler != null) onAuthChangeHandler!!.updateAvatar(
+                getAvatar()
+            )
+        }
+    }
+
+    @JvmStatic
     fun getEmail(): String? {
         if (type == AuthType.NULL) return null
         return email
+    }
+
+    @JvmStatic
+    fun setEmail(email: String) {
+        this.email = email
+        sharedPref!!.edit { putString("EMAIL", email) }
     }
 
     suspend fun getAvatar(): Bitmap? {
@@ -223,21 +243,23 @@ object AuthManager {
     }
 
     suspend fun emailLogin(email: String, password: String): Boolean {
-        val loginUser = LoginUser(email = email, password = password)
+        val apiReq = ApiReq(email = email, password = password)
         try {
-            val response = RetrofitInstance.api.emailLogin(loginUser)
+            val response = RetrofitInstance.api.emailLogin(apiReq)
             if (response.isSuccessful) {
                 val res = response.body()
-                if (res?.success == true) {
+                if (res?.success == true && res.user?.name != null) {
                     val token = response.headers()["Authorization"] ?: ""
                     setEmailLogin(res.user.email, res.user.name, token)
+                    Notes.updateNote(res.user.notes)
                     return true
                 }
                 return false
             } else {
+                Message.logE("$response")
                 if (response.code() == 429) {
                     Message.showErrorFromThread("Too many requests, please try later.")
-                } else if (response.code() == 400) {
+                } else if (response.code() == 401) {
                     Message.showErrorFromThread("Invalid credentials")
                 } else if (response.code() == 500) {
                     Message.showErrorFromThread("Server internal error")
@@ -263,9 +285,10 @@ object AuthManager {
                 }
                 return false
             } else {
+                Message.logE("$response")
                 if (response.code() == 429) {
                     Message.showErrorFromThread("Too many requests, please try later.")
-                } else if (response.code() == 400) {
+                } else if (response.code() == 401) {
                     Message.showErrorFromThread("Invalid credentials")
                 } else if (response.code() == 500) {
                     Message.showErrorFromThread("Server internal error")
@@ -281,19 +304,25 @@ object AuthManager {
 
     suspend fun checkAuth(): Boolean {
         try {
+            if (!ClerkAuth.getToken()) return false
             val response = RetrofitInstance.api.checkAuth()
             if (response.isSuccessful) {
                 val res = response.body()
                 Message.logW("$res")
-                if (res?.success == true) {
+                if (res?.success == true && res.user != null) {
+                    Notes.updateNote(res.user.notes)
+                    setEmail(res.user.email)
+                    setUsername(res.user.name)
                     return true
                 }
                 return false
             } else {
+                Message.logE("$response")
                 if (response.code() == 429) {
                     Message.showErrorFromThread("Too many requests, please try later.")
-                } else if (response.code() == 400) {
+                } else if (response.code() == 401) {
                     Message.showErrorFromThread("Invalid credentials")
+                    setLogout()
                 } else if (response.code() == 500) {
                     Message.showErrorFromThread("Server internal error")
                 }

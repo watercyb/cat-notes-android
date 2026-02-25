@@ -7,7 +7,7 @@ import androidx.room.Room;
 
 import com.blueberryjoy.notes.App;
 import com.blueberryjoy.notes.main.RecyclerViewItem;
-import com.blueberryjoy.notes.message.Message;
+import com.blueberryjoy.notes.utils.Message;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,16 +21,16 @@ public class SQLite {
     private static final AppDatabase db = Room.databaseBuilder(App.Companion.getInstance().getContext(), AppDatabase.class, "app_db").build();
     private static final ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    public static List<Note> initialize() {
-        List<Note> notes = new ArrayList<>();
-        Future<List<Note>> future = executor.submit(() -> Objects.requireNonNull(db.pageDao()).getAllNotes());
+    public static List<SQLNote> initialize() {
+        List<SQLNote> SQLNotes = new ArrayList<>();
+        Future<List<SQLNote>> future = executor.submit(() -> Objects.requireNonNull(db.pageDao()).getAllNotes());
         try {
-            notes = future.get();
+            SQLNotes = future.get();
         } catch (InterruptedException | ExecutionException e) {
             Message.logE(e.toString());
             Toast.makeText(App.Companion.getInstance(), "error at SQLite initialize: " + e, Toast.LENGTH_LONG).show();
         }
-        return notes;
+        return SQLNotes;
     }
 
     public static void clearAll() {
@@ -47,6 +47,10 @@ public class SQLite {
 
     public static void saveMongoId(int id, String mongoId) {
         executor.submit(() -> Objects.requireNonNull(db.pageDao()).updateMongoId(id, mongoId));
+    }
+
+    public static void saveMongoId(RecyclerViewItem note) {
+        executor.submit(() -> Objects.requireNonNull(db.pageDao()).updateMongoId(note.id, note.mongoId));
     }
 
     public static void saveVersion(int id, int version) {
@@ -66,16 +70,16 @@ public class SQLite {
     }
 
     @NonNull
-    public static Note create(String title, String content, String mongoId, int version, int idx) {
-        Note note = new Note(title, content, mongoId, version, idx);
-        Future<Long> future = executor.submit(() -> Objects.requireNonNull(db.pageDao()).insert(note));
+    public static SQLNote create(String title, String content, String mongoId, int version, int idx) {
+        SQLNote SQLNote = new SQLNote(title, content, mongoId, version, idx);
+        Future<Long> future = executor.submit(() -> Objects.requireNonNull(db.pageDao()).insert(SQLNote));
         try {
             long id = future.get();
-            note.id = (int) id;
+            SQLNote.id = (int) id;
         } catch (InterruptedException | ExecutionException e) {
             Toast.makeText(App.Companion.getInstance(), "error at SQLite create: " + e, Toast.LENGTH_LONG).show();
         }
-        return note;
+        return SQLNote;
     }
 
     public static void delete(int id) {

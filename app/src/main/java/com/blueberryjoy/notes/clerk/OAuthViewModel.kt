@@ -1,11 +1,10 @@
 package com.blueberryjoy.notes.clerk
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.blueberryjoy.notes.auth.AuthManager
-import com.blueberryjoy.notes.message.Message
-import com.blueberryjoy.notes.utils.AuthType
+import com.blueberryjoy.notes.utils.Message
+import com.blueberryjoy.notes.auth.AuthType
 import com.clerk.api.Clerk
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -30,6 +29,7 @@ class OAuthViewModel : ViewModel() {
             if (state != UiState.Loading) {
                 if (user != null) {
                     AuthManager.setGoogleLogin()
+                    AuthManager.checkAuth()
                 } else if (AuthManager.getType() == AuthType.GOOGLE) {
                     AuthManager.setLogout()
                 }

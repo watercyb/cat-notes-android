@@ -1,4 +1,4 @@
-package com.blueberryjoy.notes.utils;
+package com.blueberryjoy.notes.main;
 
 public class ListViewItem {
     private final String title;

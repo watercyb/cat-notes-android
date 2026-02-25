@@ -5,7 +5,7 @@ import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
 @Entity(tableName = "notes")
-public class Note {
+public class SQLNote {
     @PrimaryKey(autoGenerate = true)
     public int id;
 
@@ -15,7 +15,7 @@ public class Note {
     final public int version;
     final public int idx;
 
-    public Note(String title, String content, String mongoId, int version, int idx) {
+    public SQLNote(String title, String content, String mongoId, int version, int idx) {
         this.title = title;
         this.content = content;
         this.mongoId = mongoId;

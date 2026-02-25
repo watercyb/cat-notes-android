@@ -2,7 +2,8 @@ package com.blueberryjoy.notes.main;
 
 import androidx.annotation.NonNull;
 
-import com.blueberryjoy.notes.sqlite.Note;
+import com.blueberryjoy.notes.retrofit.data_class.ApiNote;
+import com.blueberryjoy.notes.sqlite.SQLNote;
 
 public class RecyclerViewItem {
     public int id;
@@ -21,12 +22,16 @@ public class RecyclerViewItem {
         this.idx = idx;
     }
 
-    public RecyclerViewItem(@NonNull Note note) {
-        id = note.id;
-        title = note.title;
-        content = note.content;
-        mongoId = note.mongoId;
-        version = note.version;
-        idx = note.idx;
+    public RecyclerViewItem(@NonNull SQLNote SQLNote) {
+        id = SQLNote.id;
+        title = SQLNote.title;
+        content = SQLNote.content;
+        mongoId = SQLNote.mongoId;
+        version = SQLNote.version;
+        idx = SQLNote.idx;
+    }
+
+    public boolean equals(ApiNote note) {
+        return note.getTitle().equals(title) && note.getContent().equals(content) && note.getMongoId().equals(mongoId) && note.getVersion() == version;
     }
 }

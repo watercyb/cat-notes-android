@@ -1,4 +1,4 @@
-package com.blueberryjoy.notes.message;
+package com.blueberryjoy.notes.utils;
 
 
 import android.os.Handler;

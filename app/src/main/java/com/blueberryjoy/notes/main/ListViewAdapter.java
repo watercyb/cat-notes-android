@@ -10,7 +10,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 
 import com.blueberryjoy.notes.R;
-import com.blueberryjoy.notes.utils.ListViewItem;
 
 import java.util.List;
 

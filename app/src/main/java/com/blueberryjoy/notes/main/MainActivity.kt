@@ -32,8 +32,8 @@ import com.blueberryjoy.notes.auth.Login
 import com.blueberryjoy.notes.clerk.OAuthViewModel
 import com.blueberryjoy.notes.editor.Editor
 import com.blueberryjoy.notes.notes.Notes
-import com.blueberryjoy.notes.utils.AuthType
-import com.blueberryjoy.notes.utils.ListViewItem
+import com.blueberryjoy.notes.notes.OnNoteChangeHandler
+import com.blueberryjoy.notes.auth.AuthType
 import kotlinx.coroutines.launch
 import kotlin.math.min
 
@@ -65,7 +65,7 @@ class MainActivity : AppCompatActivity() {
         initializeViews()
         initializeViewModel()
         initializeAuthManager()
-        Notes.initialize()
+        initializeNote()
         initializeListView()
         initializeRecyclerView()
         initializeEditorLauncher()
@@ -124,7 +124,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initializeRecyclerView() {
-        val list = Notes.getList()
+        val list = Notes.list
 
         val spanCount = getResources().getInteger(R.integer.grid_span)
         recyclerView!!.setLayoutManager(
@@ -134,7 +134,7 @@ class MainActivity : AppCompatActivity() {
         )
         recyclerViewAdapter = RecyclerViewAdapter(this, list)
         recyclerViewAdapter!!.setClickListener { _: View?, position: Int ->
-            openEditor(list[position]!!.id)
+            openEditor(list[position].id)
         }
         recyclerView!!.setAdapter(recyclerViewAdapter)
 
@@ -232,5 +232,28 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun initializeNote() {
+        val handler = object : OnNoteChangeHandler {
+            override fun onChange(idx: Int) {
+                Handler(Looper.getMainLooper()).post {
+                    recyclerViewAdapter?.notifyItemChanged(idx)
+                }
+            }
+
+            override fun onAdd(idx: Int) {
+                Handler(Looper.getMainLooper()).post {
+                    recyclerViewAdapter?.notifyItemInserted(idx)
+                }
+            }
+
+            override fun onRemove(idx: Int) {
+                Handler(Looper.getMainLooper()).post {
+                    recyclerViewAdapter?.notifyItemRemoved(idx)
+                }
+            }
+        }
+        Notes.initialize(handler)
     }
 }

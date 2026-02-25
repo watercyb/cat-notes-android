@@ -3,7 +3,7 @@ package com.blueberryjoy.notes.clerk
 import android.util.Log
 import com.blueberryjoy.notes.auth.AuthManager
 import com.blueberryjoy.notes.auth.AuthManager.setLogout
-import com.blueberryjoy.notes.message.Message
+import com.blueberryjoy.notes.utils.Message
 import com.clerk.api.Clerk
 import com.clerk.api.network.model.token.TokenResource
 import com.clerk.api.network.serialization.ClerkResult

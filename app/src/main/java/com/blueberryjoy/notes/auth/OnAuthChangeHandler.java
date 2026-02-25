@@ -1,4 +1,4 @@
-package com.blueberryjoy.notes.utils;
+package com.blueberryjoy.notes.auth;
 
 import android.graphics.Bitmap;
 

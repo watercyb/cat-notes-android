@@ -1,8 +1,7 @@
 <resources>
-    <string name="app_name">notes</string>
-    <string name="title_activity_main2">MainActivity2</string>
+    <string name="app_name">Notes</string>
     <string name="setting">setting</string>
-    <string name="note">Note</string>
+    <string name="Note">Note</string>
     <string name="title">Title</string>
     <string name="logout_from_google">Logout from Google</string>
 </resources>
