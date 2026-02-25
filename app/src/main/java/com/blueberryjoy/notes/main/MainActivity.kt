@@ -1,13 +1,23 @@
 package com.blueberryjoy.notes.main
 
+import android.R.attr.startY
+import android.content.Context
 import android.content.Intent
 import android.graphics.Rect
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.os.Message
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
 import android.widget.AdapterView
+import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ListView
 import androidx.activity.enableEdgeToEdge
@@ -17,11 +27,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
+import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.blueberryjoy.notes.R
 import com.blueberryjoy.notes.auth.AuthManager
 import com.blueberryjoy.notes.auth.AuthManager.getType
@@ -34,6 +46,8 @@ import com.blueberryjoy.notes.editor.Editor
 import com.blueberryjoy.notes.notes.Notes
 import com.blueberryjoy.notes.notes.OnNoteChangeHandler
 import com.blueberryjoy.notes.auth.AuthType
+import com.blueberryjoy.notes.retrofit.RetrofitInstance
+import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.launch
 import kotlin.math.min
 
@@ -60,7 +74,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         //window.navigationBarColor = getColor(R.color.background)
-        window.isNavigationBarContrastEnforced = false
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            window.isNavigationBarContrastEnforced = false
+        }
 
         initializeViews()
         initializeViewModel()
@@ -188,6 +204,7 @@ class MainActivity : AppCompatActivity() {
         listViewSetting = findViewById(R.id.listViewSetting)
         recyclerView = findViewById(R.id.recyclerView)
         imageButtonAvatar = findViewById(R.id.imageButtonAvatar)
+        val swipeRefresh: SwipeRefreshLayout = findViewById(R.id.swipeRefresh)
 
         imageButtonSetting!!.setOnClickListener { v: View? ->
             v!!.animate().scaleX(0.85f).scaleY(0.85f).setDuration(80)
@@ -208,6 +225,18 @@ class MainActivity : AppCompatActivity() {
             } else {
                 val intent = Intent(this@MainActivity, Login::class.java)
                 startActivity(intent)
+            }
+        }
+
+        swipeRefresh.setOnRefreshListener {
+            // Trigger your refresh logic
+            com.blueberryjoy.notes.utils.Message.logW("aaaaaaaaaaaaaaaa")
+            Handler(Looper.getMainLooper()).postDelayed({
+                swipeRefresh.isRefreshing = false
+            }, 5000)
+            lifecycleScope.launch {
+                AuthManager.checkAuth()
+                swipeRefresh.isRefreshing = false
             }
         }
     }

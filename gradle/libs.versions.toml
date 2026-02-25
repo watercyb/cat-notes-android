@@ -13,6 +13,7 @@ constraintlayout = "2.2.1"
 materialVersion = "1.11.0"
 retrofit = "3.0.0"
 roomRuntimeVersion = "2.8.4"
+swiperefreshlayout = "latest"
 volley = "1.2.1"
 lifecycleViewmodelKtx = "2.10.0"
 lifecycleRuntimeKtx = "2.10.0"
@@ -25,6 +26,7 @@ roomCommonJvm = "2.8.4"
 roomRuntimeJvm = "2.8.4"
 roomCompiler = "2.8.4"
 roomRuntime = "2.8.4"
+swiperefreshlayoutVersion = "1.2.0"
 
 [libraries]
 accompanist-systemuicontroller = { module = "com.google.accompanist:accompanist-systemuicontroller", version.ref = "accompanistSystemuicontroller" }
@@ -43,6 +45,7 @@ material-v1110 = { module = "com.google.android.material:material", version.ref 
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomRuntimeVersion" }
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntimeVersion" }
+swiperefreshlayout = { module = "androidx.swiperefreshlayout:swiperefreshlayout", version.ref = "swiperefreshlayout" }
 volley = { group = "com.android.volley", name = "volley", version.ref = "volley" }
 lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "lifecycleViewmodelKtx" }
 lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
@@ -55,6 +58,7 @@ ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview
 ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 material3 = { group = "androidx.compose.material3", name = "material3" }
+androidx-swiperefreshlayout = { group = "androidx.swiperefreshlayout", name = "swiperefreshlayout", version.ref = "swiperefreshlayoutVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
