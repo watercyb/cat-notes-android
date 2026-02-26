@@ -5,4 +5,14 @@
     <string name="title">Title</string>
     <string name="logout_from_google">Logout from Google</string>
     <string name="REMOVED_FROM_SERVER">REMOVED FROM SERVER</string>
+    <string name="profile">Profile</string>
+    <string name="email">Email</string>
+    <string name="name">Name</string>
+    <string name="update_profile">Update Profile</string>
+    <string name="logout">Logout</string>
+    <string name="account">Account</string>
+    <string name="login">Login</string>
+    <string name="password">Password</string>
+    <string name="or">OR</string>
+    <string name="login_with_google">Login with Google</string>
 </resources>

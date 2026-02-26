@@ -5,6 +5,8 @@ import androidx.annotation.NonNull;
 import com.blueberryjoy.notes.retrofit.data_class.ApiNote;
 import com.blueberryjoy.notes.sqlite.SQLNote;
 
+import java.util.Objects;
+
 public class RecyclerViewItem {
     public int id;
     public String title;
@@ -32,7 +34,7 @@ public class RecyclerViewItem {
     }
 
     public boolean equals(ApiNote note) {
-        return note.getTitle().equals(title) && note.getContent().equals(content) && note.getMongoId().equals(mongoId) && note.getVersion() == version;
+        return Objects.equals(note.getTitle(), title) && Objects.equals(note.getContent(), content) && note.getMongoId().equals(mongoId) && note.getVersion() == version;
     }
 
     @NonNull

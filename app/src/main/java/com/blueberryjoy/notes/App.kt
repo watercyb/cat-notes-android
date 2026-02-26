@@ -3,7 +3,6 @@ package com.blueberryjoy.notes
 import android.app.Application
 import android.content.Context
 import com.clerk.api.Clerk
-import com.clerk.api.Clerk.publishableKey
 
 class App : Application() {
     val publishableKey: String = "pk_test_b3Blbi1ib2FyLTc0LmNsZXJrLmFjY291bnRzLmRldiQ"

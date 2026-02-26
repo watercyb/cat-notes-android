@@ -35,6 +35,7 @@ import com.blueberryjoy.notes.clerk.OAuthViewModel
 import com.blueberryjoy.notes.editor.Editor
 import com.blueberryjoy.notes.notes.Notes
 import com.blueberryjoy.notes.notes.OnNoteChangeHandler
+import com.blueberryjoy.notes.notes.SyncQueue
 import com.blueberryjoy.notes.utils.Message
 import kotlinx.coroutines.launch
 import kotlin.math.min
@@ -105,14 +106,13 @@ class MainActivity : AppCompatActivity() {
             val noteId = Notes.create("", "", null, 0)
             if (noteId != -1) openEditor(noteId)
         })
-        list.add(ListViewItem("LOGIN") {
-            val intent = Intent(this@MainActivity, Login::class.java)
-            startActivity(intent)
-        })
         list.add(ListViewItem("REFRESH") {
             lifecycleScope.launch {
                 Notes.getNotesFromApi()
             }
+        })
+        list.add(ListViewItem("CHECK QUEUE") {
+            Message.show("${SyncQueue.getSize()}")
         })
         list.add(ListViewItem("G-LOGOUT") {})
         list.add(ListViewItem("TEST") {})

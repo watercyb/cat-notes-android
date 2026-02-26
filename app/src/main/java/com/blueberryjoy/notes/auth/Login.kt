@@ -1,7 +1,6 @@
 package com.blueberryjoy.notes.auth
 
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -156,11 +155,5 @@ class Login : AppCompatActivity() {
         runOnUiThread { // Update your view here (e.g., change text, visibility)
             googleLoginButton!!.isEnabled = isEnable
         }
-    }
-
-
-    private fun JSONError(e: Exception) {
-        Log.w("testLog", e.toString())
-        Toast.makeText(this@Login, "Invalid input (JSON)", Toast.LENGTH_LONG).show()
     }
 }

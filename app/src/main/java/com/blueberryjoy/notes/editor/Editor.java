@@ -26,7 +26,6 @@ import com.blueberryjoy.notes.main.RecyclerViewItem;
 import com.blueberryjoy.notes.notes.Notes;
 import com.blueberryjoy.notes.notes.SyncQueue;
 import com.blueberryjoy.notes.sqlite.SQLite;
-import com.blueberryjoy.notes.utils.Message;
 
 public class Editor extends AppCompatActivity {
     FrameLayout frameLayoutBottom;

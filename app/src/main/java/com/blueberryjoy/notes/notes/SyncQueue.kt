@@ -26,7 +26,7 @@ object SyncQueue {
             }
             val mongoId = HM[id]
             try {
-                var success = false
+                var success: Boolean
                 if (id < 0) {
                     success = mongoId == null || Notes.getNoteFromApi(mongoId)
                 } else {
@@ -75,7 +75,8 @@ object SyncQueue {
     fun add(mongoId: String) {
         var id = -1
         while (id >= -1000) {
-            if (!HM.containsKey(id--)) break
+            if (!HM.containsKey(id)) break
+            id--
         }
         Message.logW("Add to queue (mongoId): $mongoId")
         HM[id] = mongoId
@@ -90,5 +91,9 @@ object SyncQueue {
         CoroutineScope(Dispatchers.Main).launch {
             startQueue()
         }
+    }
+
+    fun getSize(): Int {
+        return queue.size
     }
 }

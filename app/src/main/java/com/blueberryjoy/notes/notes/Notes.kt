@@ -399,7 +399,7 @@ object Notes {
                 if (res?.success == true) {
                     //If note is not on the server, return true.
                     val apiNote = res.note ?: return true
-                    val idx = getNoteByMongoId(apiNote.mongoId ?: "")
+                    val idx = getNoteByMongoId(apiNote.mongoId)
                     if (idx >= 0) {
                         val recNote = list[idx]
                         compareNoteAndUpdateWithSameMongoId(recNote, apiNote)
