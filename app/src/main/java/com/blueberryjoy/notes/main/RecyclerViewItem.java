@@ -34,4 +34,9 @@ public class RecyclerViewItem {
     public boolean equals(ApiNote note) {
         return note.getTitle().equals(title) && note.getContent().equals(content) && note.getMongoId().equals(mongoId) && note.getVersion() == version;
     }
+
+    @NonNull
+    public String toString() {
+        return "id: " + id + ", mongoId: " + mongoId;
+    }
 }

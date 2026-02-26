@@ -27,20 +27,24 @@ object SyncQueue {
             val mongoId = HM[id]
             try {
                 var success = false
-                val idx = Notes.getNoteById(id)
-                if (idx == -1) {
-                    success = mongoId == null || Notes.deleteNodeFromApi(mongoId)
+                if (id < 0) {
+                    success = mongoId == null || Notes.getNoteFromApi(mongoId)
                 } else {
-                    val note: RecyclerViewItem = Notes.list[idx]
-                    if (note.mongoId == null || note.mongoId.isEmpty()) {
-                        Message.logW("Run createNote: $note " + note.title)
-                        success = Notes.createNoteOnApi(note)
-                    } else if (note.mongoId.equals("REMOVED FROM SERVER")) {
-                        Message.logW("Run createNote on server removed: $note " + note.title)
-                        success = Notes.createNoteOnApi(note)
+                    val idx = Notes.getNoteById(id)
+                    if (idx == -1) {
+                        success = mongoId == null || Notes.deleteNodeFromApi(mongoId)
                     } else {
-                        Message.logW("Run updateNote: $note " + note.title)
-                        success = Notes.updateNoteToApi(note)
+                        val note: RecyclerViewItem = Notes.list[idx]
+                        if (note.mongoId == null || note.mongoId.isEmpty()) {
+                            Message.logW("Run createNote: $note " + note.title)
+                            success = Notes.createNoteOnApi(note)
+                        } else if (note.mongoId.equals("REMOVED FROM SERVER")) {
+                            Message.logW("Run createNote on server removed: $note " + note.title)
+                            success = Notes.createNoteOnApi(note)
+                        } else {
+                            Message.logW("Run updateNote: $note " + note.title)
+                            success = Notes.updateNoteToApi(note)
+                        }
                     }
                 }
                 if (!success) {
@@ -64,6 +68,20 @@ object SyncQueue {
             CoroutineScope(Dispatchers.Main).launch {
                 startQueue()
             }
+        }
+    }
+
+
+    fun add(mongoId: String) {
+        var id = -1
+        while (id >= -1000) {
+            if (!HM.containsKey(id--)) break
+        }
+        Message.logW("Add to queue (mongoId): $mongoId")
+        HM[id] = mongoId
+        queue.offerLast(id)
+        CoroutineScope(Dispatchers.Main).launch {
+            startQueue()
         }
     }
 

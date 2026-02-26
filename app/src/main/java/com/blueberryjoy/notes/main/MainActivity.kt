@@ -1,23 +1,14 @@
 package com.blueberryjoy.notes.main
 
-import android.R.attr.startY
-import android.content.Context
 import android.content.Intent
 import android.graphics.Rect
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.os.Message
-import android.text.Editable
-import android.text.TextWatcher
-import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
-import android.view.inputmethod.EditorInfo
-import android.view.inputmethod.InputMethodManager
 import android.widget.AdapterView
-import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ListView
 import androidx.activity.enableEdgeToEdge
@@ -27,7 +18,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
-import androidx.core.widget.addTextChangedListener
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ItemTouchHelper
@@ -35,9 +25,9 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.blueberryjoy.notes.R
-import com.blueberryjoy.notes.auth.AuthManager
 import com.blueberryjoy.notes.auth.AuthManager.getType
 import com.blueberryjoy.notes.auth.AuthManager.initialize
+import com.blueberryjoy.notes.auth.AuthType
 import com.blueberryjoy.notes.auth.EmailUser
 import com.blueberryjoy.notes.auth.GoogleUser
 import com.blueberryjoy.notes.auth.Login
@@ -45,9 +35,7 @@ import com.blueberryjoy.notes.clerk.OAuthViewModel
 import com.blueberryjoy.notes.editor.Editor
 import com.blueberryjoy.notes.notes.Notes
 import com.blueberryjoy.notes.notes.OnNoteChangeHandler
-import com.blueberryjoy.notes.auth.AuthType
-import com.blueberryjoy.notes.retrofit.RetrofitInstance
-import com.google.android.material.textfield.TextInputEditText
+import com.blueberryjoy.notes.utils.Message
 import kotlinx.coroutines.launch
 import kotlin.math.min
 
@@ -60,6 +48,8 @@ class MainActivity : AppCompatActivity() {
 
     private var recyclerViewAdapter: RecyclerViewAdapter? = null
     private lateinit var editorLauncher: ActivityResultLauncher<Intent>
+
+    private var lastActiveTime: Long = -1L
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -80,15 +70,19 @@ class MainActivity : AppCompatActivity() {
 
         initializeViews()
         initializeViewModel()
-        initializeAuthManager()
         initializeNote()
         initializeListView()
         initializeRecyclerView()
+        //Should after the initialization of recyclerView to avoid changing list during that process.
+        initializeAuthManager()
         initializeEditorLauncher()
+
+        checkTime()
     }
 
     public override fun onResume() {
         super.onResume()
+        checkTime()
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
@@ -115,9 +109,9 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this@MainActivity, Login::class.java)
             startActivity(intent)
         })
-        list.add(ListViewItem("CHECK_AUTH") {
+        list.add(ListViewItem("REFRESH") {
             lifecycleScope.launch {
-                AuthManager.checkAuth()
+                Notes.getNotesFromApi()
             }
         })
         list.add(ListViewItem("G-LOGOUT") {})
@@ -230,12 +224,11 @@ class MainActivity : AppCompatActivity() {
 
         swipeRefresh.setOnRefreshListener {
             // Trigger your refresh logic
-            com.blueberryjoy.notes.utils.Message.logW("aaaaaaaaaaaaaaaa")
             Handler(Looper.getMainLooper()).postDelayed({
                 swipeRefresh.isRefreshing = false
             }, 5000)
             lifecycleScope.launch {
-                AuthManager.checkAuth()
+                Notes.getNotesFromApi()
                 swipeRefresh.isRefreshing = false
             }
         }
@@ -284,5 +277,18 @@ class MainActivity : AppCompatActivity() {
             }
         }
         Notes.initialize(handler)
+    }
+
+    private fun checkTime() {
+        val now = System.currentTimeMillis()
+
+        if (lastActiveTime != -1L && now - lastActiveTime >= 5 * 60 * 1000) {
+            Message.show("sync")
+            lifecycleScope.launch {
+                Notes.getNotesFromApi()
+            }
+        }
+
+        lastActiveTime = now
     }
 }

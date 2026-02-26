@@ -35,4 +35,12 @@ interface ApiService {
     suspend fun updateNote(
         @Body note: ApiReq
     ): Response<ApiRes>
+
+    @GET("note/getNotesIdAndVersion")
+    suspend fun getNotesIdAndVersion(): Response<ApiRes>
+
+    @GET("note/{mongoId}")
+    suspend fun getNote(
+        @Path("mongoId") mongoId: String
+    ): Response<ApiRes>
 }

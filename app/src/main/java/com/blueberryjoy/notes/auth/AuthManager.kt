@@ -304,7 +304,7 @@ object AuthManager {
 
     suspend fun checkAuth(): Boolean {
         try {
-            if (!ClerkAuth.getToken()) return false
+            ClerkAuth.getToken()
             val response = RetrofitInstance.api.checkAuth()
             if (response.isSuccessful) {
                 val res = response.body()

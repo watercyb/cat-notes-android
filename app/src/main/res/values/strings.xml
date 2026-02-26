@@ -4,4 +4,5 @@
     <string name="Note">Note</string>
     <string name="title">Title</string>
     <string name="logout_from_google">Logout from Google</string>
+    <string name="REMOVED_FROM_SERVER">REMOVED FROM SERVER</string>
 </resources>
