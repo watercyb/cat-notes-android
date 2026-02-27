@@ -43,4 +43,9 @@ interface ApiService {
     suspend fun getNote(
         @Path("mongoId") mongoId: String
     ): Response<ApiRes>
+
+    @POST("auth/signup")
+    suspend fun signup(
+        @Body user: ApiReq
+    ): Response<ApiRes>
 }

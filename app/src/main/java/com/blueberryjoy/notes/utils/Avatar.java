@@ -28,7 +28,7 @@ public class Avatar {
         canvas.drawCircle(size / 2f, size / 2f, size / 2f, paint);
 
         // Draw text
-        paint.setColor(Color.parseColor("#673AB7"));
+        paint.setColor(pickTextColor(color));
         paint.setTextSize((float) size / 2);
         paint.setTextAlign(Paint.Align.CENTER);
 
@@ -58,5 +58,17 @@ public class Avatar {
         };
 
         return colors[Math.abs(letter.hashCode()) % colors.length];
+    }
+
+    private static int pickTextColor(int backgroundColor) {
+
+        int r = Color.red(backgroundColor);
+        int g = Color.green(backgroundColor);
+        int b = Color.blue(backgroundColor);
+
+        double brightness = (0.299 * r + 0.587 * g + 0.114 * b);
+
+        //Color.parseColor("#673AB7") or Color.BLACK
+        return brightness > 186 ? Color.parseColor("#673AB7") : Color.WHITE;
     }
 }

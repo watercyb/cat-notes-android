@@ -2,10 +2,12 @@ package com.blueberryjoy.notes.auth
 
 import android.os.Bundle
 import android.widget.EditText
+import android.widget.ImageView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import com.blueberryjoy.notes.R
 import com.blueberryjoy.notes.clerk.ClerkAuth
 import com.clerk.api.Clerk
@@ -29,6 +31,7 @@ class GoogleUser : AppCompatActivity() {
         val nameInput = findViewById<EditText>(R.id.nameInput)
         val emailInput = findViewById<EditText>(R.id.emailInput)
         val googleLogoutButton = findViewById<MaterialButton>(R.id.googleLogoutButton)
+        val avatarImage = findViewById<ImageView>(R.id.avatarImage)
 
         val user = Clerk.user
         val name = user?.firstName + " " + user?.lastName
@@ -43,6 +46,10 @@ class GoogleUser : AppCompatActivity() {
                     googleLogoutButton.isEnabled = true
                 }
             }
+        }
+
+        lifecycleScope.launch {
+            avatarImage.setImageBitmap(AuthManager.getAvatar())
         }
     }
 }

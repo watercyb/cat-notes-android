@@ -17,11 +17,26 @@
         android:text="@string/login"
         android:textSize="28sp"
         android:textStyle="bold"
-        app:layout_constraintBottom_toTopOf="@id/emailLayout"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <!-- Email Input -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/signUpButton"
+        style="@style/Widget.MaterialComponents.Button.TextButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="0dp"
+        android:layout_marginBottom="0dp"
+        android:minWidth="0dp"
+        android:minHeight="0dp"
+        android:paddingHorizontal="8dp"
+        android:paddingVertical="4dp"
+        android:text="@string/sign_up"
+        android:textSize="12sp"
+        app:layout_constraintBottom_toTopOf="@id/emailLayout"
+        app:layout_constraintEnd_toEndOf="@id/emailLayout" />
+
     <com.google.android.material.textfield.TextInputLayout
         android:id="@+id/emailLayout"
         android:layout_width="0dp"
@@ -105,4 +120,5 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/orText"
         app:strokeWidth="1dp" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

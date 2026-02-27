@@ -87,13 +87,24 @@ object SyncQueue {
     }
 
     fun setIsUpdatingNotesFromApi(isUpdatingNotesFromApi: Boolean) {
-        SyncQueue.isUpdatingNotesFromApi = isUpdatingNotesFromApi
-        CoroutineScope(Dispatchers.Main).launch {
-            startQueue()
+        if (isUpdatingNotesFromApi) {
+            SyncQueue.isUpdatingNotesFromApi = true
+            clear()
+        } else {
+            SyncQueue.isUpdatingNotesFromApi = false
+            CoroutineScope(Dispatchers.Main).launch {
+                startQueue()
+            }
         }
     }
 
     fun getSize(): Int {
         return queue.size
+    }
+
+    fun clear() {
+        queue.clear()
+        HM.clear()
+        isRunning = false
     }
 }

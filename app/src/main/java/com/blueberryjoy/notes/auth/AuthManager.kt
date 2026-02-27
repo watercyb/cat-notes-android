@@ -31,6 +31,7 @@ object AuthManager {
     private var type: AuthType? = AuthType.NULL
     private var email: String? = ""
     private var username: String? = ""
+    private var isVerified: Boolean = false
     private var onAuthChangeHandler: OnAuthChangeHandler? = null
     private var sharedPref: SharedPreferences? = null
 
@@ -60,7 +61,7 @@ object AuthManager {
 
         email = sharedPref!!.getString("EMAIL", "")
         username = sharedPref!!.getString("NAME", "")
-
+        isVerified = sharedPref!!.getBoolean("VERIFY", false)
 
         //Message.logW("Type: " + getType().toString() + " name: " + getUsername())
 
@@ -87,10 +88,11 @@ object AuthManager {
     }
 
     @JvmStatic
-    fun setEmailLogin(email: String, username: String, token: String) {
+    fun setEmailLogin(email: String, username: String, token: String, isVerified: Boolean) {
         type = AuthType.EMAIL
         AuthManager.email = email
         AuthManager.username = username
+        AuthManager.isVerified = isVerified
         setToken(token)
         CoroutineScope(Dispatchers.Main).launch {
             if (onAuthChangeHandler != null) onAuthChangeHandler!!.updateAvatar(getAvatar())
@@ -99,6 +101,7 @@ object AuthManager {
             putInt("TYPE", 1)
             putString("EMAIL", email)
             putString("NAME", username)
+            putBoolean("VERIFY", isVerified)
         }
     }
 
@@ -130,6 +133,7 @@ object AuthManager {
             putString("EMAIL", "")
             putString("NAME", "")
             putString("TOKEN", "")
+            putBoolean("VERIFY", false)
         }
     }
 
@@ -149,6 +153,17 @@ object AuthManager {
                 getAvatar()
             )
         }
+    }
+
+    @JvmStatic
+    fun getIsVerified(): Boolean {
+        return type != AuthType.EMAIL || isVerified
+    }
+
+    @JvmStatic
+    fun setIsVerified(isVerified: Boolean) {
+        this.isVerified = isVerified
+        sharedPref!!.edit { putBoolean("VERIFY", isVerified) }
     }
 
     @JvmStatic
@@ -182,7 +197,7 @@ object AuthManager {
                 if (username != null) {
                     val size = TypedValue.applyDimension(
                         TypedValue.COMPLEX_UNIT_DIP,
-                        35f,
+                        128f,
                         getInstance().getContext().resources.displayMetrics
                     ).toInt()
                     return Avatar.createLetterAvatar(username, size)
@@ -250,7 +265,7 @@ object AuthManager {
                 val res = response.body()
                 if (res?.success == true && res.user?.name != null) {
                     val token = response.headers()["Authorization"] ?: ""
-                    setEmailLogin(res.user.email, res.user.name, token)
+                    setEmailLogin(res.user.email, res.user.name, token, res.user.isVerified)
                     Notes.updateNote(res.user.notes)
                     return true
                 }
@@ -313,6 +328,7 @@ object AuthManager {
                     Notes.updateNote(res.user.notes)
                     setEmail(res.user.email)
                     setUsername(res.user.name)
+                    setIsVerified(res.user.isVerified)
                     return true
                 }
                 return false
@@ -323,6 +339,41 @@ object AuthManager {
                 } else if (response.code() == 401) {
                     Message.showErrorFromThread("Invalid credentials")
                     setLogout()
+                } else if (response.code() == 500) {
+                    Message.showErrorFromThread("Server internal error")
+                }
+                return false
+            }
+        } catch (e: Exception) {
+            Message.logW("Exception: $e")
+            Message.showErrorFromThread("Cannot reach the server")
+            return false
+        }
+    }
+
+    suspend fun emailSignup(name: String, email: String, password: String): Boolean {
+        val apiReq = ApiReq(name = name, email = email, password = password)
+        try {
+            val response = RetrofitInstance.api.signup(apiReq)
+            if (response.isSuccessful) {
+                val res = response.body()
+                if (res?.success == true && res.user?.name != null) {
+                    val token = response.headers()["Authorization"] ?: ""
+                    setEmailLogin(res.user.email, res.user.name, token, res.user.isVerified)
+                    Notes.updateNote(res.user.notes)
+                    return true
+                }
+                return false
+            } else {
+                Message.logE("$response")
+                if (response.code() == 429) {
+                    Message.showErrorFromThread("Too many requests, please try later.")
+                } else if (response.code() == 401) {
+                    Message.showErrorFromThread("Invalid credentials")
+                } else if (response.code() == 409) {
+                    Message.showErrorFromThread("User already exists")
+                } else if (response.code() == 422) {
+                    Message.showErrorFromThread("All fields are required")
                 } else if (response.code() == 500) {
                     Message.showErrorFromThread("Server internal error")
                 }

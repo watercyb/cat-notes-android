@@ -10,7 +10,7 @@
         android:paddingStart="10dp"
         android:paddingEnd="10dp"
         android:textSize="22sp"
-        android:fontFamily="@font/cat"
+        android:fontFamily="@font/menu"
         android:gravity="center_vertical"
         android:textColor="@color/blue" />
 

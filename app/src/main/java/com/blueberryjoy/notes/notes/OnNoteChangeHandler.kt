@@ -4,4 +4,7 @@ interface OnNoteChangeHandler {
     fun onChange(idx: Int)
     fun onAdd(idx: Int)
     fun onRemove(idx: Int)
+
+    //IsKeeping
+    suspend fun onRemovedFromServer(title: String): Boolean
 }

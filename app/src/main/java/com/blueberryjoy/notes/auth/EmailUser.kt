@@ -2,6 +2,7 @@ package com.blueberryjoy.notes.auth
 
 import android.os.Bundle
 import android.widget.EditText
+import android.widget.ImageView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -17,6 +18,7 @@ class EmailUser : AppCompatActivity() {
     private lateinit var emailInput: EditText
     private lateinit var updateButton: MaterialButton
     private lateinit var logoutButton: MaterialButton
+    private lateinit var avatarImage: ImageView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,10 +30,11 @@ class EmailUser : AppCompatActivity() {
             insets
         }
 
-        nameInput = findViewById<EditText>(R.id.nameInput)
-        emailInput = findViewById<EditText>(R.id.emailInput)
-        updateButton = findViewById<MaterialButton>(R.id.updateButton)
-        logoutButton = findViewById<MaterialButton>(R.id.logoutButton)
+        nameInput = findViewById(R.id.nameInput)
+        emailInput = findViewById(R.id.emailInput)
+        updateButton = findViewById(R.id.updateButton)
+        logoutButton = findViewById(R.id.logoutButton)
+        avatarImage = findViewById(R.id.avatarImage)
 
         emailInput.setText(AuthManager.getEmail())
         nameInput.setText(AuthManager.getUsername())
@@ -39,7 +42,6 @@ class EmailUser : AppCompatActivity() {
         updateButton.setOnClickListener {
             updateButton.isEnabled = false
             lifecycleScope.launch {
-
                 updateButton.isEnabled = true
             }
         }
@@ -51,13 +53,9 @@ class EmailUser : AppCompatActivity() {
                 logoutButton.isEnabled = true
             }
         }
-    }
 
-    private fun update() {
-
-    }
-
-    private fun logout() {
-
+        lifecycleScope.launch {
+            avatarImage.setImageBitmap(AuthManager.getAvatar())
+        }
     }
 }

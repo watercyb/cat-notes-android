@@ -1,11 +1,13 @@
 package com.blueberryjoy.notes.main
 
 import android.content.Intent
+import android.graphics.Color
 import android.graphics.Rect
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.text.Html
 import android.view.MotionEvent
 import android.view.View
 import android.widget.AdapterView
@@ -14,6 +16,7 @@ import android.widget.ListView
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -25,6 +28,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import com.blueberryjoy.notes.R
+import com.blueberryjoy.notes.auth.AuthManager
 import com.blueberryjoy.notes.auth.AuthManager.getType
 import com.blueberryjoy.notes.auth.AuthManager.initialize
 import com.blueberryjoy.notes.auth.AuthType
@@ -37,7 +41,11 @@ import com.blueberryjoy.notes.notes.Notes
 import com.blueberryjoy.notes.notes.OnNoteChangeHandler
 import com.blueberryjoy.notes.notes.SyncQueue
 import com.blueberryjoy.notes.utils.Message
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
+import kotlin.coroutines.resume
 import kotlin.math.min
 
 
@@ -46,6 +54,7 @@ class MainActivity : AppCompatActivity() {
     private var listViewSetting: ListView? = null
     private var recyclerView: RecyclerView? = null
     private var imageButtonAvatar: ImageButton? = null
+    private var viewNotificationDot: View? = null
 
     private var recyclerViewAdapter: RecyclerViewAdapter? = null
     private lateinit var editorLauncher: ActivityResultLauncher<Intent>
@@ -77,13 +86,17 @@ class MainActivity : AppCompatActivity() {
         //Should after the initialization of recyclerView to avoid changing list during that process.
         initializeAuthManager()
         initializeEditorLauncher()
-
         checkTime()
     }
 
     public override fun onResume() {
         super.onResume()
         checkTime()
+        if (!AuthManager.getIsVerified()) {
+            setNotificationDotVisible(View.VISIBLE)
+        } else {
+            setNotificationDotVisible(View.GONE)
+        }
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
@@ -198,6 +211,8 @@ class MainActivity : AppCompatActivity() {
         listViewSetting = findViewById(R.id.listViewSetting)
         recyclerView = findViewById(R.id.recyclerView)
         imageButtonAvatar = findViewById(R.id.imageButtonAvatar)
+        viewNotificationDot = findViewById(R.id.viewNotificationDot)
+
         val swipeRefresh: SwipeRefreshLayout = findViewById(R.id.swipeRefresh)
 
         imageButtonSetting!!.setOnClickListener { v: View? ->
@@ -254,6 +269,8 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+
+        if (!AuthManager.getIsVerified()) setNotificationDotVisible(View.VISIBLE)
     }
 
     private fun initializeNote() {
@@ -275,6 +292,44 @@ class MainActivity : AppCompatActivity() {
                     recyclerViewAdapter?.notifyItemRemoved(idx)
                 }
             }
+
+            override suspend fun onRemovedFromServer(title: String): Boolean {
+                return withContext(Dispatchers.Main) {
+                    suspendCancellableCoroutine { continuation ->
+                        val message =
+                            "The note \"<b>$title</b>\" was removed from the server. " +
+                                    "Do you want to delete your local copy as well?"
+
+                        val builder = AlertDialog.Builder(this@MainActivity)
+                        builder.setTitle("Note removed from server")
+                        builder.setMessage(Html.fromHtml(message, Html.FROM_HTML_MODE_LEGACY))
+
+                        //val input = EditText(this@MainActivity)
+                        //builder.setView(input)
+
+                        builder.setPositiveButton("Delete") { _, _ ->
+                            if (continuation.isActive) continuation.resume(true)
+                        }
+                        builder.setNegativeButton("Keep") { _, _ ->
+                            if (continuation.isActive) continuation.resume(false)
+                        }
+                        builder.setOnCancelListener {
+                            if (continuation.isActive) continuation.resume(false)
+                        }
+
+                        val dialog = builder.create()
+
+                        dialog.setOnShowListener {
+                            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.RED)
+                        }
+
+                        // Handle coroutine cancellation (dismiss dialog if scope is cancelled)
+                        continuation.invokeOnCancellation { dialog.dismiss() }
+
+                        dialog.show()
+                    }
+                }
+            }
         }
         Notes.initialize(handler)
     }
@@ -290,5 +345,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         lastActiveTime = now
+    }
+
+    private fun setNotificationDotVisible(visible: Int) {
+        viewNotificationDot?.visibility = visible
     }
 }

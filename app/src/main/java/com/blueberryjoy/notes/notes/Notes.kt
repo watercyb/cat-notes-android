@@ -14,6 +14,9 @@ import com.blueberryjoy.notes.retrofit.data_class.ApiNote
 import com.blueberryjoy.notes.retrofit.data_class.ApiReq
 import com.blueberryjoy.notes.sqlite.SQLite
 import com.blueberryjoy.notes.utils.Message
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.util.function.ToIntFunction
 
 object Notes {
@@ -83,7 +86,7 @@ object Notes {
     }
 
     @JvmStatic
-    fun remove(note: RecyclerViewItem) {
+    fun remove(note: RecyclerViewItem): Int {
         for (i in list.indices) {
             if (list[i].id == note.id) {
                 list.removeAt(i)
@@ -92,9 +95,10 @@ object Notes {
                     )
                 )
                     SyncQueue.add(note)
-                break
+                return i
             }
         }
+        return -1
     }
 
     fun swap(i: Int, j: Int) {
@@ -164,10 +168,9 @@ object Notes {
         }
 
         for (note in mongoIdToNotes.values) {
-            note.title += " (Removed from server)"
-            note.mongoId = getInstance().getContext().getString(R.string.REMOVED_FROM_SERVER)
-            SQLite.saveNote(note)
-            onNoteChangeHandler?.onChange(getNoteById(note.id))
+            CoroutineScope(Dispatchers.Default).launch {
+                setNoteAsRemovedOnServer(note)
+            }
         }
         SyncQueue.setIsUpdatingNotesFromApi(false)
     }
@@ -380,10 +383,9 @@ object Notes {
         }
 
         for (note in mongoIdToNotes.values) {
-            note.title += " (Removed from server)"
-            note.mongoId = getInstance().getContext().getString(R.string.REMOVED_FROM_SERVER)
-            SQLite.saveNote(note)
-            onNoteChangeHandler?.onChange(getNoteById(note.id))
+            CoroutineScope(Dispatchers.Default).launch {
+                setNoteAsRemovedOnServer(note)
+            }
         }
         SyncQueue.setIsUpdatingNotesFromApi(false)
     }
@@ -435,6 +437,23 @@ object Notes {
             Message.logW("Exception: $e")
             Message.showErrorFromThread("Cannot reach the server")
             return false
+        }
+    }
+
+    private suspend fun setNoteAsRemovedOnServer(note: RecyclerViewItem) {
+        val isRemove = onNoteChangeHandler?.onRemovedFromServer(note.title)
+        if (isRemove != null && isRemove) {
+            note.mongoId = getInstance().getContext().getString(R.string.REMOVED_FROM_SERVER)
+            SQLite.delete(note)
+            onNoteChangeHandler?.onChange(remove(note))
+        } else {
+            //note.title += " (Removed from server)"
+            //getInstance().getContext().getString(R.string.REMOVED_FROM_SERVER)
+            //SQLite.saveNote(note)
+            //onNoteChangeHandler?.onChange(getNoteById(note.id))
+            note.mongoId = ""
+            SQLite.saveMongoId(note)
+            SyncQueue.add(note)
         }
     }
 }
