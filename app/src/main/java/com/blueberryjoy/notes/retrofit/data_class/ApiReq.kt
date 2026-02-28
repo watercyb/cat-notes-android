@@ -7,5 +7,8 @@ data class ApiReq(
     val noteId: String? = null,
     val title: String? = null,
     val content: String? = null,
-    val version: Int? = null
+    val version: Int? = null,
+    val oldPassword: String? = null,
+    val newPassword: String? = null,
+    val code: String? = null
 )

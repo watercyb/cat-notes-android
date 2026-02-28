@@ -1,5 +1,7 @@
 package com.blueberryjoy.notes.auth
 
+import android.R.attr.name
+import android.R.attr.password
 import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Bitmap
@@ -276,8 +278,11 @@ object AuthManager {
                     Message.showErrorFromThread("Too many requests, please try later.")
                 } else if (response.code() == 401) {
                     Message.showErrorFromThread("Invalid credentials")
+                    setLogout()
                 } else if (response.code() == 500) {
                     Message.showErrorFromThread("Server internal error")
+                } else {
+                    Message.showErrorFromThread("Unexpected error")
                 }
                 return false
             }
@@ -305,8 +310,11 @@ object AuthManager {
                     Message.showErrorFromThread("Too many requests, please try later.")
                 } else if (response.code() == 401) {
                     Message.showErrorFromThread("Invalid credentials")
+                    setLogout()
                 } else if (response.code() == 500) {
                     Message.showErrorFromThread("Server internal error")
+                } else {
+                    Message.showErrorFromThread("Unexpected error")
                 }
                 return false
             }
@@ -339,8 +347,11 @@ object AuthManager {
                 } else if (response.code() == 401) {
                     Message.showErrorFromThread("Invalid credentials")
                     setLogout()
+                    setLogout()
                 } else if (response.code() == 500) {
                     Message.showErrorFromThread("Server internal error")
+                } else {
+                    Message.showErrorFromThread("Unexpected error")
                 }
                 return false
             }
@@ -370,12 +381,194 @@ object AuthManager {
                     Message.showErrorFromThread("Too many requests, please try later.")
                 } else if (response.code() == 401) {
                     Message.showErrorFromThread("Invalid credentials")
+                    setLogout()
                 } else if (response.code() == 409) {
                     Message.showErrorFromThread("User already exists")
                 } else if (response.code() == 422) {
                     Message.showErrorFromThread("All fields are required")
                 } else if (response.code() == 500) {
                     Message.showErrorFromThread("Server internal error")
+                } else {
+                    Message.showErrorFromThread("Unexpected error")
+                }
+                return false
+            }
+        } catch (e: Exception) {
+            Message.logW("Exception: $e")
+            Message.showErrorFromThread("Cannot reach the server")
+            return false
+        }
+    }
+
+    suspend fun changeUsername(name: String): Boolean {
+        val apiReq = ApiReq(name = name)
+        try {
+            val response = RetrofitInstance.api.changeUsername(apiReq)
+            if (response.isSuccessful) {
+                val res = response.body()
+                if (res?.success == true) {
+                    setUsername(name)
+                    Message.showFromThread("Username changed")
+                    return true
+                }
+                return false
+            } else {
+                Message.logE("$response")
+                if (response.code() == 429) {
+                    Message.showErrorFromThread("Too many requests, please try later.")
+                } else if (response.code() == 401) {
+                    Message.showErrorFromThread("Invalid credentials")
+                    setLogout()
+                } else if (response.code() == 403) {
+                    Message.showErrorFromThread("Username change isn't enabled for this account")
+                } else if (response.code() == 422) {
+                    Message.showErrorFromThread("All fields are required")
+                } else if (response.code() == 500) {
+                    Message.showErrorFromThread("Server internal error")
+                } else {
+                    Message.showErrorFromThread("Unexpected error")
+                }
+                return false
+            }
+        } catch (e: Exception) {
+            Message.logW("Exception: $e")
+            Message.showErrorFromThread("Cannot reach the server")
+            return false
+        }
+    }
+
+    suspend fun changePassword(oldPassword: String, newPassword: String): Boolean {
+        val apiReq = ApiReq(oldPassword = oldPassword, newPassword = newPassword)
+        try {
+            val response = RetrofitInstance.api.changePassword(apiReq)
+            if (response.isSuccessful) {
+                val res = response.body()
+                if (res?.success == true) {
+                    Message.showFromThread("Password changed")
+                    return true
+                }
+                return false
+            } else {
+                Message.logE("$response")
+                if (response.code() == 429) {
+                    Message.showErrorFromThread("Too many requests, please try later.")
+                } else if (response.code() == 401) {
+                    Message.showErrorFromThread("Invalid credentials")
+                    setLogout()
+                } else if (response.code() == 403) {
+                    Message.showErrorFromThread("Password change isn't enabled for this account")
+                } else if (response.code() == 422) {
+                    Message.showErrorFromThread("All fields are required")
+                } else if (response.code() == 500) {
+                    Message.showErrorFromThread("Server internal error")
+                } else {
+                    Message.showErrorFromThread("Unexpected error")
+                }
+                return false
+            }
+        } catch (e: Exception) {
+            Message.logW("Exception: $e")
+            Message.showErrorFromThread("Cannot reach the server")
+            return false
+        }
+    }
+
+    suspend fun verifyEmail(code: String): Boolean {
+        val apiReq = ApiReq(code = code)
+        try {
+            val response = RetrofitInstance.api.verifyEmail(apiReq)
+            if (response.isSuccessful) {
+                val res = response.body()
+                if (res?.success == true) {
+                    Message.showFromThread("Email verified")
+                    setIsVerified(true)
+                    return true
+                }
+                return false
+            } else {
+                Message.logE("$response")
+                if (response.code() == 429) {
+                    Message.showErrorFromThread("Too many requests, please try later.")
+                } else if (response.code() == 401) {
+                    Message.showErrorFromThread("Invalid credentials")
+                    setLogout()
+                } else if (response.code() == 403) {
+                    Message.showErrorFromThread("Invalid or expired verification code")
+                } else if (response.code() == 422) {
+                    Message.showErrorFromThread("All fields are required")
+                } else if (response.code() == 500) {
+                    Message.showErrorFromThread("Server internal error")
+                } else {
+                    Message.showErrorFromThread("Unexpected error")
+                }
+                return false
+            }
+        } catch (e: Exception) {
+            Message.logW("Exception: $e")
+            Message.showErrorFromThread("Cannot reach the server")
+            return false
+        }
+    }
+
+    suspend fun resendVerifyEmail(): Boolean {
+        try {
+            val response = RetrofitInstance.api.resendVerifyEmail()
+            if (response.isSuccessful) {
+                val res = response.body()
+                if (res?.success == true) {
+                    Message.showFromThread("Code is resent")
+                    return true
+                }
+                return false
+            } else {
+                Message.logE("$response")
+                if (response.code() == 429) {
+                    Message.showErrorFromThread("Too many requests, please try later.")
+                } else if (response.code() == 401) {
+                    Message.showErrorFromThread("Invalid credentials")
+                    setLogout()
+                } else if (response.code() == 403) {
+                    Message.showErrorFromThread("Invalid or email already verified")
+                } else if (response.code() == 422) {
+                    Message.showErrorFromThread("All fields are required")
+                } else if (response.code() == 500) {
+                    Message.showErrorFromThread("Server internal error")
+                } else {
+                    Message.showErrorFromThread("Unexpected error")
+                }
+                return false
+            }
+        } catch (e: Exception) {
+            Message.logW("Exception: $e")
+            Message.showErrorFromThread("Cannot reach the server")
+            return false
+        }
+    }
+
+    suspend fun forgotPassword(email: String): Boolean {
+        val apiReq = ApiReq(email = email)
+        try {
+            val response = RetrofitInstance.api.forgotPassword(apiReq)
+            if (response.isSuccessful) {
+                val res = response.body()
+                if (res?.success == true) {
+                    Message.showFromThread("If an account with that email exists, a verification code has been sent.")
+                    return true
+                }
+                return false
+            } else {
+                Message.logE("$response")
+                if (response.code() == 429) {
+                    Message.showErrorFromThread("Too many requests, please try later.")
+                } else if (response.code() == 401) {
+                    Message.showErrorFromThread("Invalid credentials")
+                    setLogout()
+                } else if (response.code() == 422) {
+                    Message.showErrorFromThread("All fields are required")
+                } else if (response.code() == 500) {
+                    Message.showErrorFromThread("Server internal error")
+                } else {
+                    Message.showErrorFromThread("Unexpected error")
                 }
                 return false
             }

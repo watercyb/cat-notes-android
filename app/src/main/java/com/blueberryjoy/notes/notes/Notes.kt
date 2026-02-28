@@ -224,6 +224,8 @@ object Notes {
                     setLogout()
                 } else if (response.code() == 500) {
                     Message.showErrorFromThread("Server internal error")
+                }else {
+                    Message.showErrorFromThread("Unexpected error")
                 }
                 return false
             }
@@ -256,6 +258,8 @@ object Notes {
                     setLogout()
                 } else if (response.code() == 500) {
                     Message.showErrorFromThread("Server internal error")
+                }else {
+                    Message.showErrorFromThread("Unexpected error")
                 }
                 return false
             }
@@ -310,6 +314,8 @@ object Notes {
                     setLogout()
                 } else if (response.code() == 500) {
                     Message.showErrorFromThread("Server internal error")
+                }else {
+                    Message.showErrorFromThread("Unexpected error")
                 }
                 return false
             }
@@ -344,6 +350,8 @@ object Notes {
                     setLogout()
                 } else if (response.code() == 500) {
                     Message.showErrorFromThread("Server internal error")
+                }else {
+                    Message.showErrorFromThread("Unexpected error")
                 }
                 return false
             }
@@ -430,6 +438,8 @@ object Notes {
                     setLogout()
                 } else if (response.code() == 500) {
                     Message.showErrorFromThread("Server internal error")
+                }else {
+                    Message.showErrorFromThread("Unexpected error")
                 }
                 return false
             }

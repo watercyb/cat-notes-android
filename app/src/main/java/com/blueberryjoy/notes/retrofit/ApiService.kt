@@ -48,4 +48,27 @@ interface ApiService {
     suspend fun signup(
         @Body user: ApiReq
     ): Response<ApiRes>
+
+    @POST("auth/username")
+    suspend fun changeUsername(
+        @Body user: ApiReq
+    ): Response<ApiRes>
+
+    @POST("auth/password")
+    suspend fun changePassword(
+        @Body user: ApiReq
+    ): Response<ApiRes>
+
+    @POST("auth/verify-email")
+    suspend fun verifyEmail(
+        @Body user: ApiReq
+    ): Response<ApiRes>
+
+    @POST("auth/resend-email")
+    suspend fun resendVerifyEmail(): Response<ApiRes>
+
+    @POST("auth/forgot-password")
+    suspend fun forgotPassword(
+        @Body user: ApiReq
+    ): Response<ApiRes>
 }

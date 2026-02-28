@@ -1,8 +1,12 @@
 package com.blueberryjoy.notes.auth
 
+import android.R.attr.dial
+import android.app.AlertDialog
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import android.view.View
+import android.widget.Button
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -72,7 +76,30 @@ class Login : AppCompatActivity() {
                     emailInput!!.getText().toString(),
                     passwordInput!!.getText().toString()
                 )
-            ) finish()
+            ) {
+                finish()
+            } else {
+                val dialog = AlertDialog.Builder(this@Login)
+                    .setTitle("Login Error")
+                    .setMessage("Invalid email or password")
+                    .setPositiveButton("OK") { dialogInterface, _ ->
+                        dialogInterface.dismiss()
+                    }
+                    .setNegativeButton("Reset Password") { dialogInterface, _ ->
+                        lifecycleScope.launch {
+                            if (AuthManager.forgotPassword(
+                                    emailInput!!.getText().toString()
+                                )
+                            ) dialogInterface.dismiss()
+                        }
+                    }
+                    .create()
+
+                dialog.show()
+
+                val resetButton: Button = dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
+                resetButton.setTextColor(Color.RED)
+            }
 
             loginButton?.isEnabled = true
             googleLoginButton?.isEnabled = true

@@ -1,18 +1,25 @@
 package com.blueberryjoy.notes.main
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Rect
 import android.os.Build
 import android.os.Bundle
+import android.os.CountDownTimer
 import android.os.Handler
 import android.os.Looper
+import android.text.Editable
 import android.text.Html
+import android.text.TextWatcher
 import android.view.MotionEvent
 import android.view.View
 import android.widget.AdapterView
+import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ListView
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
@@ -60,6 +67,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var editorLauncher: ActivityResultLauncher<Intent>
 
     private var lastActiveTime: Long = -1L
+    private var resendAvailableAt: Long = 0L
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -127,7 +135,7 @@ class MainActivity : AppCompatActivity() {
         list.add(ListViewItem("CHECK QUEUE") {
             Message.show("${SyncQueue.getSize()}")
         })
-        list.add(ListViewItem("G-LOGOUT") {})
+        list.add(ListViewItem("VERIFY EMAIL") { showVerifyEmailDialog() })
         list.add(ListViewItem("TEST") {})
         list.add(ListViewItem("SETTING") {})
 
@@ -349,5 +357,112 @@ class MainActivity : AppCompatActivity() {
 
     private fun setNotificationDotVisible(visible: Int) {
         viewNotificationDot?.visibility = visible
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    fun showVerifyEmailDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.main_verify_email, null)
+
+        val digits = arrayOf(
+            dialogView.findViewById<EditText>(R.id.etDigit1),
+            dialogView.findViewById<EditText>(R.id.etDigit2),
+            dialogView.findViewById<EditText>(R.id.etDigit3),
+            dialogView.findViewById<EditText>(R.id.etDigit4),
+            dialogView.findViewById<EditText>(R.id.etDigit5),
+            dialogView.findViewById<EditText>(R.id.etDigit6)
+        )
+
+        // Auto move cursor to next digit
+        digits.forEachIndexed { index, editText ->
+            editText.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(
+                    s: CharSequence?,
+                    start: Int,
+                    count: Int,
+                    after: Int
+                ) {
+                }
+
+                override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+                }
+
+                override fun afterTextChanged(s: Editable?) {
+                    if (s?.length == 1 && index < digits.size - 1) {
+                        digits[index + 1].requestFocus()
+                    }
+                }
+            })
+            editText.setOnFocusChangeListener { v, hasFocus ->
+                if (hasFocus && editText.text.isNotEmpty()) {
+                    editText.selectAll()
+                }
+            }
+            editText.setOnTouchListener { v, event ->
+                if (!editText.hasFocus()) {
+                    editText.requestFocus()
+                    editText.post { editText.selectAll() }
+                }
+                true
+            }
+        }
+
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("Verify Your Email")
+            .setView(dialogView)
+            .create()
+
+        val btnVerify = dialogView.findViewById<Button>(R.id.btnVerify)
+        val btnResend = dialogView.findViewById<Button>(R.id.btnResend)
+
+        fun startResendTimer(endTime: Long) {
+            val remaining = endTime - System.currentTimeMillis()
+            if (remaining <= 0) {
+                btnResend.isEnabled = true
+                btnResend.text = "Resend"
+                return
+            }
+
+            btnResend.isEnabled = false
+            object : CountDownTimer(remaining, 1_000) {
+                override fun onTick(millisUntilFinished: Long) {
+                    btnResend.text = "Resend (${millisUntilFinished / 1000}s)"
+                }
+
+                override fun onFinish() {
+                    btnResend.isEnabled = true
+                    btnResend.text = "Resend"
+                }
+            }.start()
+        }
+
+        btnVerify.setOnClickListener {
+            lifecycleScope.launch {
+                val code = digits.joinToString("") { it.text.toString() }
+                if (code.length != 6) {
+                    Message.showErrorFromThread("Enter complete 6-digit code sent to your email address")
+                } else {
+                    if (AuthManager.verifyEmail(code)) {
+                        setNotificationDotVisible(View.GONE)
+                        dialog.dismiss()
+                    }
+                }
+            }
+        }
+
+        btnResend.setOnClickListener {
+            lifecycleScope.launch {
+                if (AuthManager.resendVerifyEmail()) {
+                    btnResend.isEnabled = false
+                    resendAvailableAt = System.currentTimeMillis() + 60_000L
+
+                    // Start the countdown
+                    startResendTimer(resendAvailableAt)
+                }
+            }
+        }
+
+        dialog.show()
+
+        startResendTimer(resendAvailableAt)
     }
 }

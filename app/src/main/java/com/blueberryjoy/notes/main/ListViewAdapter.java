@@ -25,7 +25,7 @@ public class ListViewAdapter extends ArrayAdapter<ListViewItem> {
 
         if (convertView == null) {
             convertView = LayoutInflater.from(getContext())
-                    .inflate(R.layout.listview_item, parent, false);
+                    .inflate(R.layout.main_listview_item, parent, false);
         }
 
         ListViewItem item = getItem(position);

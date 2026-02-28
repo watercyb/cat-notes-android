@@ -18,4 +18,10 @@
     <string name="avatar">Avatar</string>
     <string name="sign_up">Sign up</string>
     <string name="create_account">Create Account</string>
+    <string name="update_password">Update Password</string>
+    <string name="old_password">Old Password</string>
+    <string name="new_password">New Password</string>
+    <string name="enter_6_digit_code_sent_to_your_email_address">Enter 6-digit code sent to your email address</string>
+    <string name="verify">Verify</string>
+    <string name="resend">Resend</string>
 </resources>

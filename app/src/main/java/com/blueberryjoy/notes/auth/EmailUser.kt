@@ -1,6 +1,9 @@
 package com.blueberryjoy.notes.auth
 
+import android.app.Activity
+import android.app.AlertDialog
 import android.os.Bundle
+import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.ImageView
 import androidx.activity.enableEdgeToEdge
@@ -9,7 +12,9 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.lifecycleScope
 import com.blueberryjoy.notes.R
+import com.blueberryjoy.notes.auth.AuthManager.changePassword
 import com.blueberryjoy.notes.auth.AuthManager.emailLogout
+import com.blueberryjoy.notes.utils.Message
 import com.google.android.material.button.MaterialButton
 import kotlinx.coroutines.launch
 
@@ -19,6 +24,7 @@ class EmailUser : AppCompatActivity() {
     private lateinit var updateButton: MaterialButton
     private lateinit var logoutButton: MaterialButton
     private lateinit var avatarImage: ImageView
+    private lateinit var changePasswordButton: MaterialButton
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,15 +41,53 @@ class EmailUser : AppCompatActivity() {
         updateButton = findViewById(R.id.updateButton)
         logoutButton = findViewById(R.id.logoutButton)
         avatarImage = findViewById(R.id.avatarImage)
+        changePasswordButton = findViewById(R.id.changePasswordButton)
 
         emailInput.setText(AuthManager.getEmail())
         nameInput.setText(AuthManager.getUsername())
 
         updateButton.setOnClickListener {
             updateButton.isEnabled = false
+            val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+            val view = currentFocus ?: EditText(this@EmailUser) // fallback view
+            imm.hideSoftInputFromWindow(view.windowToken, 0)
+            nameInput.isFocusable = false
+
             lifecycleScope.launch {
+                val newName = nameInput.text.toString()
+                if (newName == AuthManager.getUsername()) {
+                    Message.show("New name is same as the old one.")
+                } else {
+                    if (AuthManager.changeUsername(newName)) avatarImage.setImageBitmap(AuthManager.getAvatar())
+                }
                 updateButton.isEnabled = true
             }
+        }
+
+        changePasswordButton.setOnClickListener {
+            val dialogView = layoutInflater.inflate(R.layout.email_user_update_password, null)
+            val etOldPassword = dialogView.findViewById<EditText>(R.id.etOldPassword)
+            val etNewPassword = dialogView.findViewById<EditText>(R.id.etNewPassword)
+
+            val dialog = AlertDialog.Builder(this)
+                .setTitle("Update Password")
+                .setView(dialogView)
+                .setPositiveButton("Update") { _, _ ->
+                    val oldPassword = etOldPassword.text.toString()
+                    val newPassword = etNewPassword.text.toString()
+
+                    if (oldPassword.isEmpty() || newPassword.isEmpty()) {
+                        Message.showErrorFromThread("Please fill both fields")
+                    } else {
+                        lifecycleScope.launch {
+                            changePassword(oldPassword, newPassword)
+                        }
+                    }
+                }
+                .setNegativeButton("Cancel", null)
+                .create()
+
+            dialog.show()
         }
 
         logoutButton.setOnClickListener {
