@@ -14,12 +14,11 @@ import android.text.Html
 import android.text.TextWatcher
 import android.view.MotionEvent
 import android.view.View
+import android.view.inputmethod.InputMethodManager
 import android.widget.AdapterView
 import android.widget.Button
-import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.ListView
-import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
@@ -364,13 +363,22 @@ class MainActivity : AppCompatActivity() {
         val dialogView = layoutInflater.inflate(R.layout.main_verify_email, null)
 
         val digits = arrayOf(
-            dialogView.findViewById<EditText>(R.id.etDigit1),
-            dialogView.findViewById<EditText>(R.id.etDigit2),
-            dialogView.findViewById<EditText>(R.id.etDigit3),
-            dialogView.findViewById<EditText>(R.id.etDigit4),
-            dialogView.findViewById<EditText>(R.id.etDigit5),
-            dialogView.findViewById<EditText>(R.id.etDigit6)
+            dialogView.findViewById(R.id.etDigit1),
+            dialogView.findViewById(R.id.etDigit2),
+            dialogView.findViewById(R.id.etDigit3),
+            dialogView.findViewById(R.id.etDigit4),
+            dialogView.findViewById(R.id.etDigit5),
+            dialogView.findViewById<VerifyEmailEditText>(R.id.etDigit6)
         )
+
+        fun handleOnPaste(text: String) {
+            if (text.length == 6 && text.all { it.isDigit() }) {
+                text.forEachIndexed { index, c ->
+                    digits[index].setText(c.toString())
+                }
+                digits.last().requestFocus()
+            }
+        }
 
         // Auto move cursor to next digit
         digits.forEachIndexed { index, editText ->
@@ -392,17 +400,26 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             })
-            editText.setOnFocusChangeListener { v, hasFocus ->
-                if (hasFocus && editText.text.isNotEmpty()) {
+            editText.setOnFocusChangeListener { _, hasFocus ->
+                if (hasFocus && editText.text!!.isNotEmpty()) {
                     editText.selectAll()
                 }
             }
-            editText.setOnTouchListener { v, event ->
+            editText.setOnTouchListener { _, _ ->
                 if (!editText.hasFocus()) {
                     editText.requestFocus()
                     editText.post { editText.selectAll() }
                 }
+                val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+                imm.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT)
+
                 true
+            }
+            editText.setOnPasteHandler { code ->
+                Handler(Looper.getMainLooper()).post {
+                    Message.logW(code)
+                    handleOnPaste(code)
+                }
             }
         }
 
@@ -418,19 +435,20 @@ class MainActivity : AppCompatActivity() {
             val remaining = endTime - System.currentTimeMillis()
             if (remaining <= 0) {
                 btnResend.isEnabled = true
-                btnResend.text = "Resend"
+                btnResend.text = getString(R.string.resend)
                 return
             }
 
             btnResend.isEnabled = false
             object : CountDownTimer(remaining, 1_000) {
                 override fun onTick(millisUntilFinished: Long) {
-                    btnResend.text = "Resend (${millisUntilFinished / 1000}s)"
+                    val t = millisUntilFinished / 1000
+                    btnResend.text = getString(R.string.resend_time, t)
                 }
 
                 override fun onFinish() {
                     btnResend.isEnabled = true
-                    btnResend.text = "Resend"
+                    btnResend.text = getString(R.string.resend)
                 }
             }.start()
         }

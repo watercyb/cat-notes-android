@@ -22,7 +22,7 @@
         android:orientation="horizontal"
         android:weightSum="6">
 
-        <EditText
+        <com.blueberryjoy.notes.main.VerifyEmailEditText
             android:id="@+id/etDigit1"
             style="@android:style/Widget.Material.EditText"
             android:layout_width="0dp"
@@ -36,7 +36,7 @@
             android:textSize="24sp"
             tools:ignore="LabelFor" />
 
-        <EditText
+        <com.blueberryjoy.notes.main.VerifyEmailEditText
             android:id="@+id/etDigit2"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -49,7 +49,7 @@
             android:textSize="24sp"
             tools:ignore="LabelFor" />
 
-        <EditText
+        <com.blueberryjoy.notes.main.VerifyEmailEditText
             android:id="@+id/etDigit3"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -62,7 +62,7 @@
             android:textSize="24sp"
             tools:ignore="LabelFor" />
 
-        <EditText
+        <com.blueberryjoy.notes.main.VerifyEmailEditText
             android:id="@+id/etDigit4"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -75,7 +75,7 @@
             android:textSize="24sp"
             tools:ignore="LabelFor" />
 
-        <EditText
+        <com.blueberryjoy.notes.main.VerifyEmailEditText
             android:id="@+id/etDigit5"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
@@ -88,7 +88,7 @@
             android:textSize="24sp"
             tools:ignore="LabelFor" />
 
-        <EditText
+        <com.blueberryjoy.notes.main.VerifyEmailEditText
             android:id="@+id/etDigit6"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
