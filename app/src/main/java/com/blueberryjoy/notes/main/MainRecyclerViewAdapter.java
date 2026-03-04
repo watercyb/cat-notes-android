@@ -10,17 +10,18 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.blueberryjoy.notes.R;
+import com.blueberryjoy.notes.utils.RecyclerViewItem;
 
 import java.util.List;
 
-public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
+public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerViewAdapter.ViewHolder> {
 
     private final List<RecyclerViewItem> list;
     private final LayoutInflater layoutInflater;
     private ItemClickListener itemclickListener;
 
 
-    RecyclerViewAdapter(Context context, List<RecyclerViewItem> list) {
+    MainRecyclerViewAdapter(Context context, List<RecyclerViewItem> list) {
         this.layoutInflater = LayoutInflater.from(context);
         this.list = list;
     }

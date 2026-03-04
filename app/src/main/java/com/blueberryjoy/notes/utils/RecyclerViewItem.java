@@ -1,10 +1,11 @@
-package com.blueberryjoy.notes.main;
+package com.blueberryjoy.notes.utils;
 
 import androidx.annotation.NonNull;
 
 import com.blueberryjoy.notes.retrofit.data_class.ApiNote;
 import com.blueberryjoy.notes.sqlite.SQLNote;
 
+import java.time.ZoneId;
 import java.util.Objects;
 
 public class RecyclerViewItem {
@@ -14,15 +15,8 @@ public class RecyclerViewItem {
     public String mongoId;
     public int version;
     public int idx;
-
-    public RecyclerViewItem(int id, String title, String content, String mongoId, int version, int idx) {
-        this.id = id;
-        this.title = title;
-        this.content = content;
-        this.mongoId = mongoId;
-        this.version = version;
-        this.idx = idx;
-    }
+    public long removeTime;
+    public boolean isRemovedFromServer;
 
     public RecyclerViewItem(@NonNull SQLNote SQLNote) {
         id = SQLNote.id;
@@ -31,6 +25,13 @@ public class RecyclerViewItem {
         mongoId = SQLNote.mongoId;
         version = SQLNote.version;
         idx = SQLNote.idx;
+        removeTime = SQLNote.removeTime;
+        isRemovedFromServer = SQLNote.isRemovedFromServer;
+    }
+
+    public void toRemovedNote(long removeTime, boolean isRemovedFromServer) {
+        this.removeTime = removeTime;
+        this.isRemovedFromServer = isRemovedFromServer;
     }
 
     public boolean equals(ApiNote note) {
@@ -39,6 +40,14 @@ public class RecyclerViewItem {
 
     @NonNull
     public String toString() {
-        return "id: " + id + ", mongoId: " + mongoId;
+        if (removeTime == 0) {
+            return "id: " + id + ", mongoId: " + mongoId;
+        } else {
+            return "id: " + id + ", mongoId: " + mongoId + ", removeTime: " + getDate() + ", isRemovedFromServer: " + isRemovedFromServer;
+        }
+    }
+
+    public String getDate() {
+        return java.time.Instant.ofEpochMilli(removeTime).atZone(ZoneId.systemDefault()).toLocalDateTime().toString();
     }
 }

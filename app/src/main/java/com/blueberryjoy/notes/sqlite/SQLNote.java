@@ -15,16 +15,22 @@ public class SQLNote {
     final public int version;
     final public int idx;
 
-    public SQLNote(String title, String content, String mongoId, int version, int idx) {
+    // New fields
+    public long removeTime;             // default 0
+    public boolean isRemovedFromServer;  // default false
+
+    public SQLNote(String title, String content, String mongoId, int version, int idx, long removeTime, boolean isRemovedFromServer) {
         this.title = title;
         this.content = content;
         this.mongoId = mongoId;
         this.version = version;
         this.idx = idx;
+        this.removeTime = removeTime;
+        this.isRemovedFromServer = isRemovedFromServer;
     }
 
     @NonNull
     public String toString() {
-        return "id: " + id + " title: " + title + " mongoId: " + mongoId + " version: " + version + " content: " + content + " idx: " + idx;
+        return "id: " + id + " title: " + title + " mongoId: " + mongoId + " version: " + version + " content: " + content + " idx: " + idx + " removeTime: " + removeTime + " isRemovedFromServer: " + isRemovedFromServer;
     }
 }

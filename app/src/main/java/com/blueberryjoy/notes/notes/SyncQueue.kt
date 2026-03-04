@@ -1,6 +1,6 @@
 package com.blueberryjoy.notes.notes
 
-import com.blueberryjoy.notes.main.RecyclerViewItem
+import com.blueberryjoy.notes.utils.RecyclerViewItem
 import com.blueberryjoy.notes.utils.Message
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

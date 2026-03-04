@@ -16,6 +16,9 @@
         android:theme="@style/Theme.Notes"
         android:usesCleartextTraffic="true">
         <activity
+            android:name=".trash_can.TrashCan"
+            android:exported="false" />
+        <activity
             android:name=".auth.SignUp"
             android:exported="false" />
         <activity

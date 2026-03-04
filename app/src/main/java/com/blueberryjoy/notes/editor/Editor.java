@@ -3,6 +3,7 @@ package com.blueberryjoy.notes.editor;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Rect;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.view.View;
@@ -22,7 +23,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.blueberryjoy.notes.R;
-import com.blueberryjoy.notes.main.RecyclerViewItem;
+import com.blueberryjoy.notes.utils.RecyclerViewItem;
 import com.blueberryjoy.notes.notes.Notes;
 import com.blueberryjoy.notes.notes.SyncQueue;
 import com.blueberryjoy.notes.sqlite.SQLite;
@@ -72,7 +73,13 @@ public class Editor extends AppCompatActivity {
 
             return insets;
         });
-        getWindow().setNavigationBarColor(getColor(R.color.background));
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            getWindow().setNavigationBarContrastEnforced(false);
+        } else {
+            getWindow().setNavigationBarColor(getColor(R.color.background));
+        }
+
 
         Intent intent = getIntent();
         id = intent.getIntExtra("ID", -1);
@@ -174,8 +181,7 @@ public class Editor extends AppCompatActivity {
         imageButtonRemove.setOnClickListener(view -> {
             Intent intent = new Intent();
             intent.putExtra("POSITION", -Notes.getNoteById(id) - 1);
-            SQLite.delete(note);
-            Notes.remove(note);
+            Notes.moveToTrashCan(note);
             setResult(Activity.RESULT_OK, intent);
             finish();
         });

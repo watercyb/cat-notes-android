@@ -3,17 +3,16 @@ package com.blueberryjoy.notes.notes
 import android.util.Log
 import android.widget.Toast
 import com.blueberryjoy.notes.App.Companion.getInstance
-import com.blueberryjoy.notes.R
 import com.blueberryjoy.notes.auth.AuthManager
 import com.blueberryjoy.notes.auth.AuthManager.setLogout
 import com.blueberryjoy.notes.auth.AuthType
 import com.blueberryjoy.notes.clerk.ClerkAuth
-import com.blueberryjoy.notes.main.RecyclerViewItem
 import com.blueberryjoy.notes.retrofit.RetrofitInstance
 import com.blueberryjoy.notes.retrofit.data_class.ApiNote
 import com.blueberryjoy.notes.retrofit.data_class.ApiReq
 import com.blueberryjoy.notes.sqlite.SQLite
 import com.blueberryjoy.notes.utils.Message
+import com.blueberryjoy.notes.utils.RecyclerViewItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -23,13 +22,25 @@ object Notes {
     @JvmStatic
     var list: MutableList<RecyclerViewItem> = ArrayList()
         private set
+    var removedList: MutableList<RecyclerViewItem> = ArrayList()
     private var onNoteChangeHandler: OnNoteChangeHandler? = null
 
     fun initialize(onNoteChangeHandler: OnNoteChangeHandler) {
         val notes = SQLite.initialize()
         list = ArrayList()
         for (note in notes) {
-            list.add(RecyclerViewItem(note))
+            if (note.removeTime == 0L) {
+                list.add(RecyclerViewItem(note))
+                Message.logW("${list[list.size - 1]}")
+            } else {
+                val recNote = RecyclerViewItem(note)
+                if (recNote.removeTime < System.currentTimeMillis() && recNote.isRemovedFromServer) {
+                    SQLite.delete(recNote)
+                } else {
+                    removedList.add(recNote)
+                }
+                Message.logW("${removedList[removedList.size - 1]}")
+            }
         }
         list.sortWith(Comparator.comparingInt(ToIntFunction { a: RecyclerViewItem? -> a!!.idx }))
         for (i in list.indices) {
@@ -53,10 +64,19 @@ object Notes {
         return -1
     }
 
-    fun create(title: String?, content: String?, mongoId: String?, version: Int): Int {
+    fun create(
+        title: String?,
+        content: String?,
+        mongoId: String?,
+        version: Int,
+        removeTime: Int,
+        isRemovedFromServer: Boolean
+    ): Int {
         try {
             val idx = (if (list.isEmpty()) 0 else list[list.size - 1].idx) + 10000
-            val note = SQLite.create(title, content, mongoId, version, idx)
+            val note = SQLite.create(
+                title, content, mongoId, version, idx, removeTime, isRemovedFromServer
+            )
             val item = RecyclerViewItem(note)
             list.add(item)
             return item.id
@@ -74,7 +94,7 @@ object Notes {
         val version = note.version
         try {
             val idx = (if (list.isEmpty()) 0 else list[list.size - 1].idx) + 10000
-            val note = SQLite.create(title, content, mongoId, version, idx)
+            val note = SQLite.create(title, content, mongoId, version, idx, 0, false)
             val item = RecyclerViewItem(note)
             list.add(item)
             return item.id
@@ -86,15 +106,10 @@ object Notes {
     }
 
     @JvmStatic
-    fun remove(note: RecyclerViewItem): Int {
+    fun removeFromList(note: RecyclerViewItem): Int {
         for (i in list.indices) {
             if (list[i].id == note.id) {
                 list.removeAt(i)
-                if (!note.mongoId.equals(
-                        getInstance().getContext().getString(R.string.REMOVED_FROM_SERVER)
-                    )
-                )
-                    SyncQueue.add(note)
                 return i
             }
         }
@@ -141,12 +156,13 @@ object Notes {
         for (note in list) {
             if (note.mongoId == null || note.mongoId.isEmpty()) {
                 SyncQueue.add(note)
-            } else if (!note.mongoId.equals(
-                    getInstance().getContext().getString(R.string.REMOVED_FROM_SERVER)
-                )
-            ) {
+            } else {
                 mongoIdToNotes[note.mongoId] = note
             }
+        }
+
+        for (note in removedList) {
+            if (note.mongoId != null && !note.mongoId.isEmpty()) mongoIdToNotes[note.mongoId] = note
         }
 
         for (note in notes) {
@@ -160,7 +176,9 @@ object Notes {
                     note.content,
                     note.mongoId,
                     note.version,
-                    if (list.isEmpty()) 0 else list[list.size - 1].idx + 10000
+                    if (list.isEmpty()) 0 else list[list.size - 1].idx + 10000,
+                    0,
+                    false
                 )
                 list.add(RecyclerViewItem(newNote))
                 onNoteChangeHandler?.onAdd(list.size - 1)
@@ -168,15 +186,23 @@ object Notes {
         }
 
         for (note in mongoIdToNotes.values) {
-            CoroutineScope(Dispatchers.Default).launch {
-                setNoteAsRemovedOnServer(note)
+            if (note.removeTime == 0L) {
+                CoroutineScope(Dispatchers.Default).launch {
+                    setNoteAsRemovedOnServer(note)
+                }
+            } else {
+                note.mongoId = ""
+                note.isRemovedFromServer = true
+                SQLite.saveRemoval(note)
             }
         }
         SyncQueue.setIsUpdatingNotesFromApi(false)
     }
 
     fun compareNoteAndUpdateWithSameMongoId(note: RecyclerViewItem, apiNote: ApiNote) {
-        if (note.version > apiNote.version) {
+        if (note.removeTime != 0L) {
+            SyncQueue.add(note)
+        } else if (note.version > apiNote.version) {
             SyncQueue.add(note)
         } else if (note.version < apiNote.version) {
             note.title = apiNote.title
@@ -190,7 +216,9 @@ object Notes {
                 apiNote.content,
                 apiNote.mongoId,
                 apiNote.version,
-                if (list.isEmpty()) 0 else list[list.size - 1].idx + 10000
+                if (list.isEmpty()) 0 else list[list.size - 1].idx + 10000,
+                0,
+                false
             )
             list.add(RecyclerViewItem(newNote))
             onNoteChangeHandler?.onAdd(list.size - 1)
@@ -224,7 +252,7 @@ object Notes {
                     setLogout()
                 } else if (response.code() == 500) {
                     Message.showErrorFromThread("Server internal error")
-                }else {
+                } else {
                     Message.showErrorFromThread("Unexpected error")
                 }
                 return false
@@ -246,6 +274,7 @@ object Notes {
                 val res = response.body()
                 if (res?.success == true) {
                     Message.logW("Note deleted: $res")
+                    findAndSaveAsRemoved(mongoId)
                     return true
                 }
                 return false
@@ -258,7 +287,7 @@ object Notes {
                     setLogout()
                 } else if (response.code() == 500) {
                     Message.showErrorFromThread("Server internal error")
-                }else {
+                } else {
                     Message.showErrorFromThread("Unexpected error")
                 }
                 return false
@@ -314,7 +343,7 @@ object Notes {
                     setLogout()
                 } else if (response.code() == 500) {
                     Message.showErrorFromThread("Server internal error")
-                }else {
+                } else {
                     Message.showErrorFromThread("Unexpected error")
                 }
                 return false
@@ -350,7 +379,7 @@ object Notes {
                     setLogout()
                 } else if (response.code() == 500) {
                     Message.showErrorFromThread("Server internal error")
-                }else {
+                } else {
                     Message.showErrorFromThread("Unexpected error")
                 }
                 return false
@@ -371,18 +400,21 @@ object Notes {
         for (note in list) {
             if (note.mongoId == null || note.mongoId.isEmpty()) {
                 SyncQueue.add(note)
-            } else if (!note.mongoId.equals(
-                    getInstance().getContext().getString(R.string.REMOVED_FROM_SERVER)
-                )
-            ) {
+            } else {
                 mongoIdToNotes[note.mongoId] = note
             }
+        }
+
+        for (note in removedList) {
+            if (note.mongoId != null && !note.mongoId.isEmpty()) mongoIdToNotes[note.mongoId] = note
         }
 
         for (note in notes) {
             val recNote = mongoIdToNotes[note.mongoId]
             if (recNote != null) {
-                if (recNote.version != note.version) SyncQueue.add(recNote)
+                if (recNote.version != note.version || recNote.removeTime != 0L) SyncQueue.add(
+                    recNote
+                )
                 mongoIdToNotes.remove(recNote.mongoId)
             } else {
                 Message.logW(note.toString())
@@ -391,8 +423,14 @@ object Notes {
         }
 
         for (note in mongoIdToNotes.values) {
-            CoroutineScope(Dispatchers.Default).launch {
-                setNoteAsRemovedOnServer(note)
+            if (note.removeTime == 0L) {
+                CoroutineScope(Dispatchers.Default).launch {
+                    setNoteAsRemovedOnServer(note)
+                }
+            } else {
+                note.mongoId = ""
+                note.isRemovedFromServer = true
+                SQLite.saveRemoval(note)
             }
         }
         SyncQueue.setIsUpdatingNotesFromApi(false)
@@ -419,7 +457,9 @@ object Notes {
                             apiNote.content,
                             apiNote.mongoId,
                             apiNote.version,
-                            if (list.isEmpty()) 0 else list[list.size - 1].idx + 10000
+                            if (list.isEmpty()) 0 else list[list.size - 1].idx + 10000,
+                            0,
+                            false
                         )
                         list.add(RecyclerViewItem(newNote))
                         onNoteChangeHandler?.onAdd(list.size - 1)
@@ -438,7 +478,7 @@ object Notes {
                     setLogout()
                 } else if (response.code() == 500) {
                     Message.showErrorFromThread("Server internal error")
-                }else {
+                } else {
                     Message.showErrorFromThread("Unexpected error")
                 }
                 return false
@@ -451,19 +491,64 @@ object Notes {
     }
 
     private suspend fun setNoteAsRemovedOnServer(note: RecyclerViewItem) {
-        val isRemove = onNoteChangeHandler?.onRemovedFromServer(note.title)
-        if (isRemove != null && isRemove) {
-            note.mongoId = getInstance().getContext().getString(R.string.REMOVED_FROM_SERVER)
-            SQLite.delete(note)
-            onNoteChangeHandler?.onChange(remove(note))
+        val isConfirmedToRemove = onNoteChangeHandler?.onRemovedFromServer(note.title)
+        if (isConfirmedToRemove != null && isConfirmedToRemove) {
+            moveToTrashCan(note)
+            onNoteChangeHandler?.onChange(removeFromList(note))
         } else {
-            //note.title += " (Removed from server)"
-            //getInstance().getContext().getString(R.string.REMOVED_FROM_SERVER)
-            //SQLite.saveNote(note)
-            //onNoteChangeHandler?.onChange(getNoteById(note.id))
             note.mongoId = ""
             SQLite.saveMongoId(note)
             SyncQueue.add(note)
         }
+    }
+
+    @JvmStatic
+    fun moveToTrashCan(note: RecyclerViewItem) {
+        removeFromList(note)
+        val isRemovedFromServer = note.mongoId == null || note.mongoId.isEmpty()
+        val time = System.currentTimeMillis() + 7L * 24 * 60 * 60 * 1000
+        note.toRemovedNote(time, isRemovedFromServer)
+        SQLite.saveRemoval(note)
+        if (!isRemovedFromServer) SyncQueue.add(note)
+        removedList.add(note)
+    }
+
+    private fun findAndSaveAsRemoved(mongoId: String) {
+        for (note in removedList) {
+            if (note.mongoId == mongoId) {
+                note.mongoId = ""
+                note.isRemovedFromServer = true
+                SQLite.saveRemoval(note)
+                break
+            }
+        }
+    }
+
+    fun removeFromTrashCan(note: RecyclerViewItem) {
+        note.removeTime -= 8 * 24 * 60 * 60 * 1000
+        if (note.isRemovedFromServer) {
+            for (i in removedList.indices) {
+                if (removedList[i].id == note.id) {
+                    removedList.removeAt(i)
+                    SQLite.delete(note)
+                    break
+                }
+            }
+        }
+    }
+
+    fun restoreFromTrashCan(note: RecyclerViewItem) {
+        note.removeTime = 0
+        note.isRemovedFromServer = false
+        SQLite.saveRemoval(note)
+        for (i in removedList.indices) {
+            if (removedList[i].id == note.id) {
+                removedList.removeAt(i)
+                break
+            }
+        }
+        list.add(note)
+        SyncQueue.add(note)
+        onNoteChangeHandler?.onAdd(list.size - 1)
     }
 }

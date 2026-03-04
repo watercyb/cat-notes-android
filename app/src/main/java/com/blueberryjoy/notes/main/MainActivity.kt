@@ -46,6 +46,7 @@ import com.blueberryjoy.notes.editor.Editor
 import com.blueberryjoy.notes.notes.Notes
 import com.blueberryjoy.notes.notes.OnNoteChangeHandler
 import com.blueberryjoy.notes.notes.SyncQueue
+import com.blueberryjoy.notes.trash_can.TrashCan
 import com.blueberryjoy.notes.utils.Message
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -62,7 +63,7 @@ class MainActivity : AppCompatActivity() {
     private var imageButtonAvatar: ImageButton? = null
     private var viewNotificationDot: View? = null
 
-    private var recyclerViewAdapter: RecyclerViewAdapter? = null
+    private var recyclerViewAdapter: MainRecyclerViewAdapter? = null
     private lateinit var editorLauncher: ActivityResultLauncher<Intent>
 
     private var lastActiveTime: Long = -1L
@@ -80,9 +81,11 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-        //window.navigationBarColor = getColor(R.color.background)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             window.isNavigationBarContrastEnforced = false
+        } else {
+            @Suppress("DEPRECATION")
+            window.navigationBarColor = getColor(R.color.background)
         }
 
         initializeViews()
@@ -123,7 +126,7 @@ class MainActivity : AppCompatActivity() {
         val list: MutableList<ListViewItem?> = ArrayList()
 
         list.add(ListViewItem("NEW NOTE") {
-            val noteId = Notes.create("", "", null, 0)
+            val noteId = Notes.create("", "", null, 0, 0, false)
             if (noteId != -1) openEditor(noteId)
         })
         list.add(ListViewItem("REFRESH") {
@@ -134,7 +137,10 @@ class MainActivity : AppCompatActivity() {
         list.add(ListViewItem("CHECK QUEUE") {
             Message.show("${SyncQueue.getSize()}")
         })
-        list.add(ListViewItem("VERIFY EMAIL") { showVerifyEmailDialog() })
+        list.add(ListViewItem("TRASH CAN") {
+            val intent = Intent(this@MainActivity, TrashCan::class.java)
+            startActivity(intent)
+        })
         list.add(ListViewItem("TEST") {})
         list.add(ListViewItem("SETTING") {})
 
@@ -162,7 +168,7 @@ class MainActivity : AppCompatActivity() {
                 spanCount, StaggeredGridLayoutManager.VERTICAL
             )
         )
-        recyclerViewAdapter = RecyclerViewAdapter(this, list)
+        recyclerViewAdapter = MainRecyclerViewAdapter(this, list)
         recyclerViewAdapter!!.setClickListener { _: View?, position: Int ->
             openEditor(list[position].id)
         }
@@ -232,7 +238,9 @@ class MainActivity : AppCompatActivity() {
             }
         }
         imageButtonAvatar!!.setOnClickListener {
-            if (getType() == AuthType.EMAIL) {
+            if (!AuthManager.getIsVerified()) {
+                showVerifyEmailDialog()
+            } else if (getType() == AuthType.EMAIL) {
                 val intent = Intent(this@MainActivity, EmailUser::class.java)
                 startActivity(intent)
             } else if (getType() == AuthType.GOOGLE) {

@@ -4,7 +4,6 @@
     <string name="Note">Note</string>
     <string name="title">Title</string>
     <string name="logout_from_google">Logout from Google</string>
-    <string name="REMOVED_FROM_SERVER">REMOVED FROM SERVER</string>
     <string name="profile">Profile</string>
     <string name="email">Email</string>
     <string name="name">Name</string>
@@ -25,4 +24,5 @@
     <string name="verify">Verify</string>
     <string name="resend">Resend</string>
     <string name="resend_time">Resend (%1$ds)</string>
+    <string name="trash_can">Trash Can</string>
 </resources>
