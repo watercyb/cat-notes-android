@@ -40,6 +40,9 @@ public interface PageDao {
     @Query("UPDATE notes SET removeTime = :removeTime, mongoId = :mongoId, isRemovedFromServer = :isRemovedFromServer WHERE id = :id")
     void updateRemoval(int id, String mongoId, long removeTime, boolean isRemovedFromServer);
 
+    @Query("UPDATE notes SET userId = :userId WHERE id = :id")
+    void updateUserId(int id, String userId);
+
     @Query("UPDATE notes SET title = :title, content = :content, mongoId = :mongoId, version = :version, idx = :idx WHERE id = :id")
     void updateNote(int id, String title, String content, String mongoId, int version, int idx);
 

@@ -1,6 +1,7 @@
 package com.blueberryjoy.notes.sqlite;
 
 import static com.blueberryjoy.notes.sqlite.AppDatabase.MIGRATION_1_2;
+import static com.blueberryjoy.notes.sqlite.AppDatabase.MIGRATION_2_3;
 
 import android.widget.Toast;
 
@@ -20,7 +21,11 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 public class SQLite {
-    private static final AppDatabase db = Room.databaseBuilder(App.Companion.getInstance().getContext(), AppDatabase.class, "app_db").addMigrations(MIGRATION_1_2).build();
+    private static final AppDatabase db = Room
+            .databaseBuilder(App.Companion.getInstance().getContext(), AppDatabase.class, "app_db")
+            .addMigrations(MIGRATION_1_2)
+            .addMigrations(MIGRATION_2_3)
+            .build();
     private static final ExecutorService executor = Executors.newSingleThreadExecutor();
 
     public static List<SQLNote> initialize() {
@@ -75,9 +80,14 @@ public class SQLite {
         executor.submit(() -> Objects.requireNonNull(db.pageDao()).updateNote(note.id, note.title, note.content, note.mongoId, note.version, note.idx));
     }
 
+    public static void saveUserId(RecyclerViewItem note) {
+        executor.submit(() -> Objects.requireNonNull(db.pageDao()).updateUserId(note.id, note.userId));
+    }
+
+
     @NonNull
-    public static SQLNote create(String title, String content, String mongoId, int version, int idx, int removeTime, boolean isRemovedFromServer) {
-        SQLNote SQLNote = new SQLNote(title, content, mongoId, version, idx, removeTime, isRemovedFromServer);
+    public static SQLNote create(String title, String content, String mongoId, int version, int idx, int removeTime, boolean isRemovedFromServer, String userId) {
+        SQLNote SQLNote = new SQLNote(title, content, mongoId, version, idx, removeTime, isRemovedFromServer, userId);
         Future<Long> future = executor.submit(() -> Objects.requireNonNull(db.pageDao()).insert(SQLNote));
         try {
             long id = future.get();

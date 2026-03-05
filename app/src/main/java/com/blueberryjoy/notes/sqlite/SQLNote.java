@@ -1,6 +1,7 @@
 package com.blueberryjoy.notes.sqlite;
 
 import androidx.annotation.NonNull;
+import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.PrimaryKey;
 
@@ -15,11 +16,18 @@ public class SQLNote {
     final public int version;
     final public int idx;
 
-    // New fields
-    public long removeTime;             // default 0
-    public boolean isRemovedFromServer;  // default false
+    // New fields #2
+    @ColumnInfo(defaultValue = "0")
+    public long removeTime;
+    @ColumnInfo(defaultValue = "0")
+    public boolean isRemovedFromServer;
 
-    public SQLNote(String title, String content, String mongoId, int version, int idx, long removeTime, boolean isRemovedFromServer) {
+    // New fields #3
+    @NonNull
+    @ColumnInfo(defaultValue = "")
+    final public String userId;
+
+    public SQLNote(String title, String content, String mongoId, int version, int idx, long removeTime, boolean isRemovedFromServer, String userId) {
         this.title = title;
         this.content = content;
         this.mongoId = mongoId;
@@ -27,10 +35,11 @@ public class SQLNote {
         this.idx = idx;
         this.removeTime = removeTime;
         this.isRemovedFromServer = isRemovedFromServer;
+        this.userId = userId;
     }
 
     @NonNull
     public String toString() {
-        return "id: " + id + " title: " + title + " mongoId: " + mongoId + " version: " + version + " content: " + content + " idx: " + idx + " removeTime: " + removeTime + " isRemovedFromServer: " + isRemovedFromServer;
+        return "id: " + id + " title: " + title + " mongoId: " + mongoId + " version: " + version + " content: " + content + " idx: " + idx + " removeTime: " + removeTime + " isRemovedFromServer: " + isRemovedFromServer + " userId: " + userId;
     }
 }

@@ -93,7 +93,6 @@ class MainActivity : AppCompatActivity() {
         initializeNote()
         initializeListView()
         initializeRecyclerView()
-        //Should after the initialization of recyclerView to avoid changing list during that process.
         initializeAuthManager()
         initializeEditorLauncher()
         checkTime()
@@ -126,7 +125,7 @@ class MainActivity : AppCompatActivity() {
         val list: MutableList<ListViewItem?> = ArrayList()
 
         list.add(ListViewItem("NEW NOTE") {
-            val noteId = Notes.create("", "", null, 0, 0, false)
+            val noteId = Notes.create("", "", null, 0, 0, false, AuthManager.getUserId())
             if (noteId != -1) openEditor(noteId)
         })
         list.add(ListViewItem("REFRESH") {
@@ -352,6 +351,7 @@ class MainActivity : AppCompatActivity() {
     private fun checkTime() {
         val now = System.currentTimeMillis()
 
+        //Do not sync at the first time when app opened since it maybe before the auth check.
         if (lastActiveTime != -1L && now - lastActiveTime >= 5 * 60 * 1000) {
             Message.show("sync")
             lifecycleScope.launch {

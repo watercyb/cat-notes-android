@@ -70,15 +70,17 @@ object Notes {
         mongoId: String?,
         version: Int,
         removeTime: Int,
-        isRemovedFromServer: Boolean
+        isRemovedFromServer: Boolean,
+        userId: String
     ): Int {
         try {
             val idx = (if (list.isEmpty()) 0 else list[list.size - 1].idx) + 10000
             val note = SQLite.create(
-                title, content, mongoId, version, idx, removeTime, isRemovedFromServer
+                title, content, mongoId, version, idx, removeTime, isRemovedFromServer, userId
             )
             val item = RecyclerViewItem(note)
             list.add(item)
+            onNoteChangeHandler?.onAdd(list.size - 1)
             return item.id
         } catch (e: Exception) {
             Toast.makeText(getInstance(), "error in Notes create: $e", Toast.LENGTH_LONG).show()
@@ -87,22 +89,17 @@ object Notes {
         }
     }
 
+    //Create Note from the API result.
     fun create(note: ApiNote): Int {
-        val title = note.title
-        val content = note.content
-        val mongoId = note.mongoId
-        val version = note.version
-        try {
-            val idx = (if (list.isEmpty()) 0 else list[list.size - 1].idx) + 10000
-            val note = SQLite.create(title, content, mongoId, version, idx, 0, false)
-            val item = RecyclerViewItem(note)
-            list.add(item)
-            return item.id
-        } catch (e: Exception) {
-            Toast.makeText(getInstance(), "error in Notes create: $e", Toast.LENGTH_LONG).show()
-            Log.e("testLog", e.toString())
-            return -1
-        }
+        return create(
+            note.title,
+            note.content,
+            note.mongoId,
+            note.version,
+            0,
+            false,
+            AuthManager.getUserId()
+        )
     }
 
     @JvmStatic
@@ -154,6 +151,10 @@ object Notes {
         val mongoIdToNotes: HashMap<String, RecyclerViewItem> = HashMap()
 
         for (note in list) {
+            if (note.userId.isEmpty()) {
+                note.userId = AuthManager.getUserId()
+                SQLite.saveUserId(note)
+            }
             if (note.mongoId == null || note.mongoId.isEmpty()) {
                 SyncQueue.add(note)
             } else {
@@ -171,17 +172,7 @@ object Notes {
                 compareNoteAndUpdateWithSameMongoId(recNote, note)
                 mongoIdToNotes.remove(note.mongoId)
             } else {
-                val newNote = SQLite.create(
-                    note.title,
-                    note.content,
-                    note.mongoId,
-                    note.version,
-                    if (list.isEmpty()) 0 else list[list.size - 1].idx + 10000,
-                    0,
-                    false
-                )
-                list.add(RecyclerViewItem(newNote))
-                onNoteChangeHandler?.onAdd(list.size - 1)
+                create(note)
             }
         }
 
@@ -211,17 +202,7 @@ object Notes {
             SQLite.saveNote(note)
             onNoteChangeHandler?.onChange(getNoteById(note.id))
         } else if (!note.equals(apiNote)) {
-            val newNote = SQLite.create(
-                apiNote.title,
-                apiNote.content,
-                apiNote.mongoId,
-                apiNote.version,
-                if (list.isEmpty()) 0 else list[list.size - 1].idx + 10000,
-                0,
-                false
-            )
-            list.add(RecyclerViewItem(newNote))
-            onNoteChangeHandler?.onAdd(list.size - 1)
+            create(apiNote)
             note.mongoId = ""
             SyncQueue.add(note)
             SQLite.saveMongoId(note)
@@ -229,7 +210,7 @@ object Notes {
     }
 
     suspend fun createNoteOnApi(note: RecyclerViewItem): Boolean {
-        if (AuthManager.getType() == AuthType.GOOGLE && !ClerkAuth.getToken()) return false
+        if (checkAndGetToken()) return false
 
         val apiReq = ApiReq(title = note.title, content = note.content, version = note.version)
         try {
@@ -265,7 +246,7 @@ object Notes {
     }
 
     suspend fun deleteNodeFromApi(mongoId: String): Boolean {
-        if (AuthManager.getType() == AuthType.GOOGLE && !ClerkAuth.getToken()) return false
+        if (checkAndGetToken()) return false
 
         try {
             val response = RetrofitInstance.api.deleteNote(mongoId)
@@ -300,7 +281,7 @@ object Notes {
     }
 
     suspend fun updateNoteToApi(note: RecyclerViewItem): Boolean {
-        if (AuthManager.getType() == AuthType.GOOGLE && !ClerkAuth.getToken()) return false
+        if (checkAndGetToken()) return false
 
         val apiReq = ApiReq(
             noteId = note.mongoId,
@@ -356,7 +337,7 @@ object Notes {
     }
 
     suspend fun getNotesFromApi(): Boolean {
-        if (AuthManager.getType() == AuthType.GOOGLE && !ClerkAuth.getToken()) return false
+        if (checkAndGetToken()) return false
 
         try {
             val response = RetrofitInstance.api.getNotesIdAndVersion()
@@ -398,6 +379,10 @@ object Notes {
         val mongoIdToNotes: HashMap<String, RecyclerViewItem> = HashMap()
 
         for (note in list) {
+            if (note.userId.isEmpty()) {
+                note.userId = AuthManager.getUserId()
+                SQLite.saveUserId(note)
+            }
             if (note.mongoId == null || note.mongoId.isEmpty()) {
                 SyncQueue.add(note)
             } else {
@@ -437,7 +422,7 @@ object Notes {
     }
 
     suspend fun getNoteFromApi(mongoId: String): Boolean {
-        if (AuthManager.getType() == AuthType.GOOGLE && !ClerkAuth.getToken()) return false
+        if (checkAndGetToken()) return false
 
         try {
             val response = RetrofitInstance.api.getNote(mongoId)
@@ -452,17 +437,7 @@ object Notes {
                         val recNote = list[idx]
                         compareNoteAndUpdateWithSameMongoId(recNote, apiNote)
                     } else {
-                        val newNote = SQLite.create(
-                            apiNote.title,
-                            apiNote.content,
-                            apiNote.mongoId,
-                            apiNote.version,
-                            if (list.isEmpty()) 0 else list[list.size - 1].idx + 10000,
-                            0,
-                            false
-                        )
-                        list.add(RecyclerViewItem(newNote))
-                        onNoteChangeHandler?.onAdd(list.size - 1)
+                        create(apiNote)
                     }
                     return true
                 } else {
@@ -550,5 +525,10 @@ object Notes {
         list.add(note)
         SyncQueue.add(note)
         onNoteChangeHandler?.onAdd(list.size - 1)
+    }
+
+    private suspend fun checkAndGetToken(): Boolean {
+        return (AuthManager.getType() == AuthType.GOOGLE && ClerkAuth.getToken()) || (AuthManager.getType() == AuthType.EMAIL && !AuthManager.getToken()
+            .isNullOrEmpty())
     }
 }

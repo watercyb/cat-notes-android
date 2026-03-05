@@ -1,7 +1,5 @@
 package com.blueberryjoy.notes.auth
 
-import android.R.attr.name
-import android.R.attr.password
 import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Bitmap
@@ -31,7 +29,7 @@ object AuthManager {
     private var token: String? = ""
 
     private var type: AuthType? = AuthType.NULL
-    private var email: String? = ""
+    private var email: String? = "" //Email will be the clerk id when login with Google.
     private var username: String? = ""
     private var isVerified: Boolean = false
     private var onAuthChangeHandler: OnAuthChangeHandler? = null
@@ -46,6 +44,7 @@ object AuthManager {
         val typeCode = sharedPref!!.getInt("TYPE", 0)
         type = when (typeCode) {
             1 -> {
+                //CheckAuth when it is email login immediately.
                 CoroutineScope(Dispatchers.Main).launch {
                     checkAuth()
                 }
@@ -53,6 +52,7 @@ object AuthManager {
             }
 
             2 -> {
+                //CheckAuth will be call when clerk login automatically.
                 AuthType.GOOGLE
             }
 
@@ -401,6 +401,7 @@ object AuthManager {
     }
 
     suspend fun changeUsername(name: String): Boolean {
+        if (type != AuthType.EMAIL) return false
         val apiReq = ApiReq(name = name)
         try {
             val response = RetrofitInstance.api.changeUsername(apiReq)
@@ -438,6 +439,7 @@ object AuthManager {
     }
 
     suspend fun changePassword(oldPassword: String, newPassword: String): Boolean {
+        if (type != AuthType.EMAIL) return false
         val apiReq = ApiReq(oldPassword = oldPassword, newPassword = newPassword)
         try {
             val response = RetrofitInstance.api.changePassword(apiReq)
@@ -474,6 +476,7 @@ object AuthManager {
     }
 
     suspend fun verifyEmail(code: String): Boolean {
+        if (type != AuthType.EMAIL) return false
         val apiReq = ApiReq(code = code)
         try {
             val response = RetrofitInstance.api.verifyEmail(apiReq)
@@ -511,6 +514,7 @@ object AuthManager {
     }
 
     suspend fun resendVerifyEmail(): Boolean {
+        if (type != AuthType.EMAIL) return false
         try {
             val response = RetrofitInstance.api.resendVerifyEmail()
             if (response.isSuccessful) {
@@ -577,5 +581,10 @@ object AuthManager {
             Message.showErrorFromThread("Cannot reach the server")
             return false
         }
+    }
+
+    fun getUserId(): String {
+        if (type == AuthType.NULL) return ""
+        return "$email#$type"
     }
 }

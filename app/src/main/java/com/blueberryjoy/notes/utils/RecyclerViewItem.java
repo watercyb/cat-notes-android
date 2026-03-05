@@ -17,6 +17,7 @@ public class RecyclerViewItem {
     public int idx;
     public long removeTime;
     public boolean isRemovedFromServer;
+    public String userId;
 
     public RecyclerViewItem(@NonNull SQLNote SQLNote) {
         id = SQLNote.id;
@@ -27,6 +28,7 @@ public class RecyclerViewItem {
         idx = SQLNote.idx;
         removeTime = SQLNote.removeTime;
         isRemovedFromServer = SQLNote.isRemovedFromServer;
+        userId = SQLNote.userId;
     }
 
     public void toRemovedNote(long removeTime, boolean isRemovedFromServer) {
@@ -41,9 +43,9 @@ public class RecyclerViewItem {
     @NonNull
     public String toString() {
         if (removeTime == 0) {
-            return "id: " + id + ", mongoId: " + mongoId;
+            return "id: " + id + ", mongoId: " + mongoId + ", userId: " + userId;
         } else {
-            return "id: " + id + ", mongoId: " + mongoId + ", removeTime: " + getDate() + ", isRemovedFromServer: " + isRemovedFromServer;
+            return "id: " + id + ", mongoId: " + mongoId + ", removeTime: " + getDate() + ", isRemovedFromServer: " + isRemovedFromServer + ", userId: " + userId;
         }
     }
 
