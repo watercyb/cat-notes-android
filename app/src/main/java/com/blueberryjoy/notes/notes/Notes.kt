@@ -38,10 +38,13 @@ object Notes {
                     SQLite.delete(recNote)
                 } else {
                     removedList.add(recNote)
+                    Message.logW("${removedList[removedList.size - 1]}")
                 }
-                Message.logW("${removedList[removedList.size - 1]}")
             }
         }
+        //for (note in list) {
+        //note.userId = ""
+        //}
         list.sortWith(Comparator.comparingInt(ToIntFunction { a: RecyclerViewItem? -> a!!.idx }))
         for (i in list.indices) {
             list[i].idx = i * 10000
@@ -104,13 +107,12 @@ object Notes {
 
     @JvmStatic
     fun removeFromList(note: RecyclerViewItem): Int {
-        for (i in list.indices) {
-            if (list[i].id == note.id) {
-                list.removeAt(i)
-                return i
-            }
+        val idx = getNoteById(note.id)
+        if (idx >= 0) {
+            list.removeAt(idx)
+            onNoteChangeHandler?.onRemove(idx)
         }
-        return -1
+        return idx
     }
 
     fun swap(i: Int, j: Int) {
@@ -154,7 +156,10 @@ object Notes {
             if (note.userId.isEmpty()) {
                 note.userId = AuthManager.getUserId()
                 SQLite.saveUserId(note)
+            } else if (note.userId != AuthManager.getUserId()) {
+                continue
             }
+
             if (note.mongoId == null || note.mongoId.isEmpty()) {
                 SyncQueue.add(note)
             } else {
@@ -163,6 +168,12 @@ object Notes {
         }
 
         for (note in removedList) {
+            if (note.userId.isEmpty()) {
+                note.userId = AuthManager.getUserId()
+                SQLite.saveUserId(note)
+            } else if (note.userId != AuthManager.getUserId()) {
+                continue
+            }
             if (note.mongoId != null && !note.mongoId.isEmpty()) mongoIdToNotes[note.mongoId] = note
         }
 
@@ -184,6 +195,7 @@ object Notes {
             } else {
                 note.mongoId = ""
                 note.isRemovedFromServer = true
+
                 SQLite.saveRemoval(note)
             }
         }
@@ -210,7 +222,7 @@ object Notes {
     }
 
     suspend fun createNoteOnApi(note: RecyclerViewItem): Boolean {
-        if (checkAndGetToken()) return false
+        if (!checkAndGetToken()) return false
 
         val apiReq = ApiReq(title = note.title, content = note.content, version = note.version)
         try {
@@ -246,11 +258,10 @@ object Notes {
     }
 
     suspend fun deleteNodeFromApi(mongoId: String): Boolean {
-        if (checkAndGetToken()) return false
+        if (!checkAndGetToken()) return false
 
         try {
             val response = RetrofitInstance.api.deleteNote(mongoId)
-            Message.logW("deleteNodeFromApi: $response")
             if (response.isSuccessful) {
                 val res = response.body()
                 if (res?.success == true) {
@@ -281,7 +292,7 @@ object Notes {
     }
 
     suspend fun updateNoteToApi(note: RecyclerViewItem): Boolean {
-        if (checkAndGetToken()) return false
+        if (!checkAndGetToken()) return false
 
         val apiReq = ApiReq(
             noteId = note.mongoId,
@@ -337,13 +348,12 @@ object Notes {
     }
 
     suspend fun getNotesFromApi(): Boolean {
-        if (checkAndGetToken()) return false
+        if (!checkAndGetToken()) return false
 
         try {
             val response = RetrofitInstance.api.getNotesIdAndVersion()
             if (response.isSuccessful) {
                 val res = response.body()
-                Message.logW(res.toString())
                 if (res?.success == true) {
                     updateNoteWithoutTitleAndContents(res.notes)
                     return true
@@ -382,6 +392,8 @@ object Notes {
             if (note.userId.isEmpty()) {
                 note.userId = AuthManager.getUserId()
                 SQLite.saveUserId(note)
+            } else if (note.userId != AuthManager.getUserId()) {
+                continue
             }
             if (note.mongoId == null || note.mongoId.isEmpty()) {
                 SyncQueue.add(note)
@@ -391,6 +403,12 @@ object Notes {
         }
 
         for (note in removedList) {
+            if (note.userId.isEmpty()) {
+                note.userId = AuthManager.getUserId()
+                SQLite.saveUserId(note)
+            } else if (note.userId != AuthManager.getUserId()) {
+                continue
+            }
             if (note.mongoId != null && !note.mongoId.isEmpty()) mongoIdToNotes[note.mongoId] = note
         }
 
@@ -402,7 +420,6 @@ object Notes {
                 )
                 mongoIdToNotes.remove(recNote.mongoId)
             } else {
-                Message.logW(note.toString())
                 SyncQueue.add(note.mongoId)
             }
         }
@@ -422,13 +439,12 @@ object Notes {
     }
 
     suspend fun getNoteFromApi(mongoId: String): Boolean {
-        if (checkAndGetToken()) return false
+        if (!checkAndGetToken()) return false
 
         try {
             val response = RetrofitInstance.api.getNote(mongoId)
             if (response.isSuccessful) {
                 val res = response.body()
-                Message.logW(res.toString())
                 if (res?.success == true) {
                     //If note is not on the server, return true.
                     val apiNote = res.note ?: return true
@@ -468,9 +484,8 @@ object Notes {
     private suspend fun setNoteAsRemovedOnServer(note: RecyclerViewItem) {
         val isConfirmedToRemove = onNoteChangeHandler?.onRemovedFromServer(note.title)
         if (isConfirmedToRemove != null && isConfirmedToRemove) {
-            moveToTrashCan(note)
-            onNoteChangeHandler?.onChange(removeFromList(note))
-        } else {
+            onNoteChangeHandler?.onChange(moveToTrashCan(note))
+        } else if (note.userId == AuthManager.getUserId()) {
             note.mongoId = ""
             SQLite.saveMongoId(note)
             SyncQueue.add(note)
@@ -478,14 +493,15 @@ object Notes {
     }
 
     @JvmStatic
-    fun moveToTrashCan(note: RecyclerViewItem) {
-        removeFromList(note)
+    fun moveToTrashCan(note: RecyclerViewItem): Int {
+        val res = removeFromList(note)
         val isRemovedFromServer = note.mongoId == null || note.mongoId.isEmpty()
         val time = System.currentTimeMillis() + 7L * 24 * 60 * 60 * 1000
         note.toRemovedNote(time, isRemovedFromServer)
         SQLite.saveRemoval(note)
-        if (!isRemovedFromServer) SyncQueue.add(note)
+        if (!isRemovedFromServer && note.userId == AuthManager.getUserId()) SyncQueue.add(note)
         removedList.add(note)
+        return res
     }
 
     private fun findAndSaveAsRemoved(mongoId: String) {
@@ -502,13 +518,12 @@ object Notes {
     fun removeFromTrashCan(note: RecyclerViewItem) {
         note.removeTime -= 8 * 24 * 60 * 60 * 1000
         if (note.isRemovedFromServer) {
-            for (i in removedList.indices) {
-                if (removedList[i].id == note.id) {
-                    removedList.removeAt(i)
-                    SQLite.delete(note)
-                    break
-                }
-            }
+            val idx = getRemovedNoteById(note.id)
+            if (idx >= 0)
+                removedList.removeAt(idx)
+            SQLite.delete(note)
+        } else {
+            SQLite.saveRemoval(note)
         }
     }
 
@@ -516,19 +531,26 @@ object Notes {
         note.removeTime = 0
         note.isRemovedFromServer = false
         SQLite.saveRemoval(note)
-        for (i in removedList.indices) {
-            if (removedList[i].id == note.id) {
-                removedList.removeAt(i)
-                break
-            }
-        }
+        val idx = getRemovedNoteById(note.id)
+        if (idx >= 0)
+            removedList.removeAt(idx)
         list.add(note)
-        SyncQueue.add(note)
+        if (note.userId == AuthManager.getUserId())
+            SyncQueue.add(note)
         onNoteChangeHandler?.onAdd(list.size - 1)
     }
 
     private suspend fun checkAndGetToken(): Boolean {
         return (AuthManager.getType() == AuthType.GOOGLE && ClerkAuth.getToken()) || (AuthManager.getType() == AuthType.EMAIL && !AuthManager.getToken()
             .isNullOrEmpty())
+    }
+
+    private fun getRemovedNoteById(id: Int): Int {
+        for (i in removedList.indices) {
+            if (removedList[i].id == id) {
+                return i
+            }
+        }
+        return -1
     }
 }

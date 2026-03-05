@@ -24,8 +24,6 @@ class OAuthViewModel : ViewModel() {
                 else -> UiState.SignedOut
             } to user  // return a Pair<UiState, User?>
         }.onEach { (state, user) ->
-            Message.logW("Clerk user: $user state: $state")
-
             if (state != UiState.Loading) {
                 if (user != null) {
                     AuthManager.setGoogleLogin()

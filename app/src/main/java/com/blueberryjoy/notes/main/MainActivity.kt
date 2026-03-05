@@ -304,6 +304,7 @@ class MainActivity : AppCompatActivity() {
             override fun onRemove(idx: Int) {
                 Handler(Looper.getMainLooper()).post {
                     recyclerViewAdapter?.notifyItemRemoved(idx)
+                    recyclerViewAdapter?.notifyItemRangeChanged(idx, recyclerViewAdapter!!.itemCount)
                 }
             }
 
@@ -353,7 +354,6 @@ class MainActivity : AppCompatActivity() {
 
         //Do not sync at the first time when app opened since it maybe before the auth check.
         if (lastActiveTime != -1L && now - lastActiveTime >= 5 * 60 * 1000) {
-            Message.show("sync")
             lifecycleScope.launch {
                 Notes.getNotesFromApi()
             }
@@ -425,7 +425,6 @@ class MainActivity : AppCompatActivity() {
             }
             editText.setOnPasteHandler { code ->
                 Handler(Looper.getMainLooper()).post {
-                    Message.logW(code)
                     handleOnPaste(code)
                 }
             }

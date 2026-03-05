@@ -58,7 +58,7 @@ object ClerkAuth {
                     ResultType.SIGN_UP -> {
                         // The OAuth flow resulted in a sign-up
                         if (it.signUp?.status == SignUp.Status.COMPLETE) {
-                            Message.showFromThread("Signed uo")
+                            Message.showFromThread("Signed up")
                         } else {
                             // If the status is not complete, check why. User may need to
                             // complete further steps.

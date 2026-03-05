@@ -23,6 +23,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.blueberryjoy.notes.R;
+import com.blueberryjoy.notes.auth.AuthManager;
 import com.blueberryjoy.notes.utils.RecyclerViewItem;
 import com.blueberryjoy.notes.notes.Notes;
 import com.blueberryjoy.notes.notes.SyncQueue;
@@ -124,7 +125,8 @@ public class Editor extends AppCompatActivity {
             note.content = content;
             note.version++;
             SQLite.saveNote(note);
-            SyncQueue.INSTANCE.add(note);
+            if (note.userId.equals(AuthManager.getUserId()))
+                SyncQueue.INSTANCE.add(note);
         }
     }
 

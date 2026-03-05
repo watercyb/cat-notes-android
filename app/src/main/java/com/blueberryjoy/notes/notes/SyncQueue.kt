@@ -71,7 +71,6 @@ object SyncQueue {
         }
     }
 
-
     fun add(mongoId: String) {
         var id = -1
         while (id >= -1000) {

@@ -45,10 +45,11 @@ public class RemovedRecyclerViewAdapter extends RecyclerView.Adapter<RemovedRecy
         } else {
             holder.textViewTitle.setVisibility(View.VISIBLE);
             holder.textViewTitle.setText(visibleList.get(position).title);
-            holder.textViewRemoveInfo.setText(MessageFormat.format("{0} RemovedFromServer: {1}", visibleList.get(position).getDate(), visibleList.get(position).isRemovedFromServer));
         }
 
         holder.textViewContent.setText(visibleList.get(position).content);
+        holder.textViewRemoveInfo.setText(MessageFormat.format("{0} RemovedFromServer: {1}", visibleList.get(position).getDate(), visibleList.get(position).isRemovedFromServer));
+
     }
 
     @Override

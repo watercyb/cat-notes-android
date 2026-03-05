@@ -29,7 +29,7 @@ object AuthManager {
     private var token: String? = ""
 
     private var type: AuthType? = AuthType.NULL
-    private var email: String? = "" //Email will be the clerk id when login with Google.
+    private var email: String? = ""
     private var username: String? = ""
     private var isVerified: Boolean = false
     private var onAuthChangeHandler: OnAuthChangeHandler? = null
@@ -111,12 +111,14 @@ object AuthManager {
     fun setGoogleLogin(): Boolean {
         type = AuthType.GOOGLE
         username = ""
+        email = Clerk.user?.emailAddresses?.get(0)?.emailAddress.toString()
         CoroutineScope(Dispatchers.Main).launch {
             if (onAuthChangeHandler != null) onAuthChangeHandler!!.updateAvatar(getAvatar())
         }
         sharedPref!!.edit {
             putInt("TYPE", 2)
             putString("NAME", "")
+            putString("EMAIL", email)
         }
         return true
     }
@@ -331,10 +333,13 @@ object AuthManager {
             val response = RetrofitInstance.api.checkAuth()
             if (response.isSuccessful) {
                 val res = response.body()
-                Message.logW("$res")
                 if (res?.success == true && res.user != null) {
                     Notes.updateNote(res.user.notes)
-                    setEmail(res.user.email)
+                    if (type == AuthType.GOOGLE) {
+                        setEmail(Clerk.user?.emailAddresses?.get(0)?.emailAddress.toString())
+                    } else {
+                        setEmail(res.user.email)
+                    }
                     setUsername(res.user.name)
                     setIsVerified(res.user.isVerified)
                     return true
@@ -583,6 +588,7 @@ object AuthManager {
         }
     }
 
+    @JvmStatic
     fun getUserId(): String {
         if (type == AuthType.NULL) return ""
         return "$email#$type"
