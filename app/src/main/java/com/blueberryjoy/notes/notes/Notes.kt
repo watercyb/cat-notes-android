@@ -95,13 +95,7 @@ object Notes {
     //Create Note from the API result.
     fun create(note: ApiNote): Int {
         return create(
-            note.title,
-            note.content,
-            note.mongoId,
-            note.version,
-            0,
-            false,
-            AuthManager.getUserId()
+            note.title, note.content, note.mongoId, note.version, 0, false, AuthManager.getUserId()
         )
     }
 
@@ -519,8 +513,7 @@ object Notes {
         note.removeTime -= 8 * 24 * 60 * 60 * 1000
         if (note.isRemovedFromServer) {
             val idx = getRemovedNoteById(note.id)
-            if (idx >= 0)
-                removedList.removeAt(idx)
+            if (idx >= 0) removedList.removeAt(idx)
             SQLite.delete(note)
         } else {
             SQLite.saveRemoval(note)
@@ -532,17 +525,20 @@ object Notes {
         note.isRemovedFromServer = false
         SQLite.saveRemoval(note)
         val idx = getRemovedNoteById(note.id)
-        if (idx >= 0)
-            removedList.removeAt(idx)
+        if (idx >= 0) removedList.removeAt(idx)
         list.add(note)
-        if (note.userId == AuthManager.getUserId())
-            SyncQueue.add(note)
+        if (note.userId == AuthManager.getUserId()) SyncQueue.add(note)
         onNoteChangeHandler?.onAdd(list.size - 1)
     }
 
     private suspend fun checkAndGetToken(): Boolean {
-        return (AuthManager.getType() == AuthType.GOOGLE && ClerkAuth.getToken()) || (AuthManager.getType() == AuthType.EMAIL && !AuthManager.getToken()
-            .isNullOrEmpty())
+        return if (AuthManager.getType() == AuthType.EMAIL) {
+            !AuthManager.getToken().isEmpty() || !AuthManager.getRefreshToken().isEmpty()
+        } else if (AuthManager.getType() == AuthType.GOOGLE) {
+            ClerkAuth.getToken()
+        } else {
+            false
+        }
     }
 
     private fun getRemovedNoteById(id: Int): Int {

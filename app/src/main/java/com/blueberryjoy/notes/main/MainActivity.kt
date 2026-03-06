@@ -140,7 +140,12 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this@MainActivity, TrashCan::class.java)
             startActivity(intent)
         })
-        list.add(ListViewItem("TEST") {})
+        list.add(ListViewItem("TOKENS") {
+            Message.logW("T: ${AuthManager.getToken()}, RT: ${AuthManager.getRefreshToken()}")
+        })
+        list.add(ListViewItem("REMOVE TOKEN") {
+            AuthManager.setToken("")
+        })
         list.add(ListViewItem("SETTING") {})
 
         val listViewAdapter = ListViewAdapter(this, list)
@@ -304,7 +309,10 @@ class MainActivity : AppCompatActivity() {
             override fun onRemove(idx: Int) {
                 Handler(Looper.getMainLooper()).post {
                     recyclerViewAdapter?.notifyItemRemoved(idx)
-                    recyclerViewAdapter?.notifyItemRangeChanged(idx, recyclerViewAdapter!!.itemCount)
+                    recyclerViewAdapter?.notifyItemRangeChanged(
+                        idx,
+                        recyclerViewAdapter!!.itemCount
+                    )
                 }
             }
 

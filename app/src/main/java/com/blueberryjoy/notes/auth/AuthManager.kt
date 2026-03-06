@@ -27,6 +27,7 @@ import java.util.concurrent.Executors
 
 object AuthManager {
     private var token: String? = ""
+    private var refreshToken: String? = ""
 
     private var type: AuthType? = AuthType.NULL
     private var email: String? = ""
@@ -41,6 +42,7 @@ object AuthManager {
         sharedPref =
             getInstance().getContext().getSharedPreferences("APP_DATA", Context.MODE_PRIVATE)
         token = sharedPref!!.getString("TOKEN", "")
+        refreshToken = sharedPref!!.getString("REFRESH_TOKEN", "")
         val typeCode = sharedPref!!.getInt("TYPE", 0)
         type = when (typeCode) {
             1 -> {
@@ -85,17 +87,33 @@ object AuthManager {
     }
 
     @JvmStatic
-    fun getToken(): String? {
-        return token
+    fun getToken(): String {
+        return token ?: ""
+    }
+
+    fun setRefreshToken(refreshToken: String) {
+        AuthManager.refreshToken = refreshToken
+        sharedPref!!.edit { putString("REFRESH_TOKEN", refreshToken) }
+    }
+
+    fun getRefreshToken(): String {
+        return refreshToken ?: ""
     }
 
     @JvmStatic
-    fun setEmailLogin(email: String, username: String, token: String, isVerified: Boolean) {
+    fun setEmailLogin(
+        email: String,
+        username: String,
+        token: String,
+        refreshToken: String,
+        isVerified: Boolean
+    ) {
         type = AuthType.EMAIL
         AuthManager.email = email
         AuthManager.username = username
         AuthManager.isVerified = isVerified
         setToken(token)
+        setRefreshToken(refreshToken)
         CoroutineScope(Dispatchers.Main).launch {
             if (onAuthChangeHandler != null) onAuthChangeHandler!!.updateAvatar(getAvatar())
         }
@@ -129,6 +147,7 @@ object AuthManager {
         email = ""
         username = ""
         token = ""
+        refreshToken = ""
         CoroutineScope(Dispatchers.Main).launch {
             if (onAuthChangeHandler != null) onAuthChangeHandler!!.updateAvatar(getAvatar())
         }
@@ -138,6 +157,7 @@ object AuthManager {
             putString("NAME", "")
             putString("TOKEN", "")
             putBoolean("VERIFY", false)
+            putString("REFRESH_TOKEN", "")
         }
     }
 
@@ -269,7 +289,14 @@ object AuthManager {
                 val res = response.body()
                 if (res?.success == true && res.user?.name != null) {
                     val token = response.headers()["Authorization"] ?: ""
-                    setEmailLogin(res.user.email, res.user.name, token, res.user.isVerified)
+                    val refreshToken = response.headers()["RefreshToken"] ?: ""
+                    setEmailLogin(
+                        res.user.email,
+                        res.user.name,
+                        token,
+                        refreshToken,
+                        res.user.isVerified
+                    )
                     Notes.updateNote(res.user.notes)
                     return true
                 }
@@ -375,7 +402,14 @@ object AuthManager {
                 val res = response.body()
                 if (res?.success == true && res.user?.name != null) {
                     val token = response.headers()["Authorization"] ?: ""
-                    setEmailLogin(res.user.email, res.user.name, token, res.user.isVerified)
+                    val refreshToken = response.headers()["RefreshToken"] ?: ""
+                    setEmailLogin(
+                        res.user.email,
+                        res.user.name,
+                        token,
+                        refreshToken,
+                        res.user.isVerified
+                    )
                     Notes.updateNote(res.user.notes)
                     return true
                 }
