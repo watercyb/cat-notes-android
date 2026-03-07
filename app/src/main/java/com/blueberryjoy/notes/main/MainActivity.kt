@@ -18,6 +18,7 @@ import android.view.inputmethod.InputMethodManager
 import android.widget.AdapterView
 import android.widget.Button
 import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.ListView
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
@@ -57,13 +58,15 @@ import kotlin.math.min
 
 
 class MainActivity : AppCompatActivity() {
-    private var imageButtonSetting: ImageButton? = null
-    private var listViewSetting: ListView? = null
-    private var recyclerView: RecyclerView? = null
-    private var imageButtonAvatar: ImageButton? = null
-    private var viewNotificationDot: View? = null
+    private lateinit var imageButtonSetting: ImageButton
+    private lateinit var listViewSetting: ListView
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var imageButtonAvatar: ImageButton
+    private lateinit var viewNotificationDot: View
+    private lateinit var emptyView: LinearLayout
+    private lateinit var swipeRefresh: SwipeRefreshLayout
 
-    private var recyclerViewAdapter: MainRecyclerViewAdapter? = null
+    private lateinit var recyclerViewAdapter: MainRecyclerViewAdapter
     private lateinit var editorLauncher: ActivityResultLauncher<Intent>
 
     private var lastActiveTime: Long = -1L
@@ -112,16 +115,16 @@ class MainActivity : AppCompatActivity() {
         val x = ev.rawX.toInt()
         val y = ev.rawY.toInt()
         val rect = Rect()
-        listViewSetting!!.getGlobalVisibleRect(rect)
+        listViewSetting.getGlobalVisibleRect(rect)
         if (!rect.contains(x, y)) {
-            imageButtonSetting!!.getGlobalVisibleRect(rect)
-            if (!rect.contains(x, y)) listViewSetting!!.visibility = View.GONE
+            imageButtonSetting.getGlobalVisibleRect(rect)
+            if (!rect.contains(x, y)) listViewSetting.visibility = View.GONE
         }
         return super.dispatchTouchEvent(ev)
     }
 
     private fun initializeListView() {
-        listViewSetting!!.translationZ = 10f
+        listViewSetting.translationZ = 10f
         val list: MutableList<ListViewItem?> = ArrayList()
 
         list.add(ListViewItem("NEW NOTE") {
@@ -149,17 +152,18 @@ class MainActivity : AppCompatActivity() {
         list.add(ListViewItem("SETTING") {})
 
         val listViewAdapter = ListViewAdapter(this, list)
-        val params = listViewSetting!!.layoutParams
-        params.height =
-            ((min(listViewAdapter.count * 41, 250) + 15) * this@MainActivity.getResources()
-                .displayMetrics.density).toInt()
+        val params = listViewSetting.layoutParams
+        params.height = ((min(
+            listViewAdapter.count * 41,
+            250
+        ) + 15) * this@MainActivity.getResources().displayMetrics.density).toInt()
         params.width = (175 * this@MainActivity.getResources().displayMetrics.density).toInt()
-        listViewSetting!!.layoutParams = params
+        listViewSetting.layoutParams = params
 
-        listViewSetting!!.adapter = listViewAdapter
-        listViewSetting!!.setOnItemClickListener { _: AdapterView<*>?, _: View?, position: Int, _: Long ->
+        listViewSetting.adapter = listViewAdapter
+        listViewSetting.setOnItemClickListener { _: AdapterView<*>?, _: View?, position: Int, _: Long ->
             list.getOrNull(position)?.onClick()
-            listViewSetting?.visibility = View.GONE
+            listViewSetting.visibility = View.GONE
         }
     }
 
@@ -167,16 +171,16 @@ class MainActivity : AppCompatActivity() {
         val list = Notes.list
 
         val spanCount = getResources().getInteger(R.integer.grid_span)
-        recyclerView!!.setLayoutManager(
+        recyclerView.setLayoutManager(
             StaggeredGridLayoutManager(
                 spanCount, StaggeredGridLayoutManager.VERTICAL
             )
         )
         recyclerViewAdapter = MainRecyclerViewAdapter(this, list)
-        recyclerViewAdapter!!.setClickListener { _: View?, position: Int ->
+        recyclerViewAdapter.setClickListener { _: View?, position: Int ->
             openEditor(list[position].id)
         }
-        recyclerView!!.setAdapter(recyclerViewAdapter)
+        recyclerView.setAdapter(recyclerViewAdapter)
 
         val callback: ItemTouchHelper.Callback = object : ItemTouchHelper.SimpleCallback(
             ItemTouchHelper.UP or ItemTouchHelper.DOWN or ItemTouchHelper.LEFT or ItemTouchHelper.RIGHT,
@@ -190,7 +194,7 @@ class MainActivity : AppCompatActivity() {
                 val from = viewHolder.getBindingAdapterPosition()
                 val to = target.getBindingAdapterPosition()
                 Notes.swap(from, to)
-                recyclerViewAdapter!!.notifyItemMoved(from, to)
+                recyclerViewAdapter.notifyItemMoved(from, to)
                 return true
             }
 
@@ -200,6 +204,8 @@ class MainActivity : AppCompatActivity() {
 
         val helper = ItemTouchHelper(callback)
         helper.attachToRecyclerView(recyclerView)
+
+        if (recyclerViewAdapter.itemCount == 0) setRecyclerViewEmpty(true)
     }
 
     private fun openEditor(id: Int) {
@@ -210,12 +216,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun initializeEditorLauncher() {
         editorLauncher = registerForActivityResult(StartActivityForResult()) { result ->
-            if (result.resultCode == RESULT_OK && result.data != null && recyclerViewAdapter != null) {
+            if (result.resultCode == RESULT_OK && result.data != null) {
                 val position =
-                    result.data!!.getIntExtra("POSITION", recyclerViewAdapter!!.itemCount)
+                    result.data!!.getIntExtra("POSITION", recyclerViewAdapter.itemCount)
                 when {
-                    position < 0 -> recyclerViewAdapter!!.notifyItemRemoved(-position - 1)
-                    position < recyclerViewAdapter!!.itemCount -> recyclerViewAdapter!!.notifyItemChanged(
+                    position < 0 -> recyclerViewAdapter.notifyItemRemoved(-position - 1)
+                    position < recyclerViewAdapter.itemCount -> recyclerViewAdapter.notifyItemChanged(
                         position
                     )
                 }
@@ -229,19 +235,19 @@ class MainActivity : AppCompatActivity() {
         recyclerView = findViewById(R.id.recyclerView)
         imageButtonAvatar = findViewById(R.id.imageButtonAvatar)
         viewNotificationDot = findViewById(R.id.viewNotificationDot)
+        emptyView = findViewById(R.id.emptyView)
+        swipeRefresh = findViewById(R.id.swipeRefresh)
 
-        val swipeRefresh: SwipeRefreshLayout = findViewById(R.id.swipeRefresh)
-
-        imageButtonSetting!!.setOnClickListener { v: View? ->
+        imageButtonSetting.setOnClickListener { v: View? ->
             v!!.animate().scaleX(0.85f).scaleY(0.85f).setDuration(80)
                 .withEndAction { v.animate().scaleX(1f).scaleY(1f).setDuration(80).start() }.start()
-            if (listViewSetting!!.isVisible) {
-                listViewSetting!!.visibility = View.GONE
+            if (listViewSetting.isVisible) {
+                listViewSetting.visibility = View.GONE
             } else {
-                listViewSetting!!.visibility = View.VISIBLE
+                listViewSetting.visibility = View.VISIBLE
             }
         }
-        imageButtonAvatar!!.setOnClickListener {
+        imageButtonAvatar.setOnClickListener {
             if (!AuthManager.getIsVerified()) {
                 showVerifyEmailDialog()
             } else if (getType() == AuthType.EMAIL) {
@@ -276,13 +282,13 @@ class MainActivity : AppCompatActivity() {
         initialize { image ->
             if (image != null) {
                 Handler(Looper.getMainLooper()).post {
-                    imageButtonAvatar!!.setImageBitmap(
+                    imageButtonAvatar.setImageBitmap(
                         image
                     )
                 }
             } else {
                 Handler(Looper.getMainLooper()).post {
-                    imageButtonAvatar!!.setImageResource(
+                    imageButtonAvatar.setImageResource(
                         R.mipmap.avatar
                     )
                 }
@@ -296,32 +302,32 @@ class MainActivity : AppCompatActivity() {
         val handler = object : OnNoteChangeHandler {
             override fun onChange(idx: Int) {
                 Handler(Looper.getMainLooper()).post {
-                    recyclerViewAdapter?.notifyItemChanged(idx)
+                    recyclerViewAdapter.notifyItemChanged(idx)
                 }
             }
 
             override fun onAdd(idx: Int) {
                 Handler(Looper.getMainLooper()).post {
-                    recyclerViewAdapter?.notifyItemInserted(idx)
+                    recyclerViewAdapter.notifyItemInserted(idx)
                 }
+                if (recyclerViewAdapter.itemCount == 1) setRecyclerViewEmpty(false)
             }
 
             override fun onRemove(idx: Int) {
                 Handler(Looper.getMainLooper()).post {
-                    recyclerViewAdapter?.notifyItemRemoved(idx)
-                    recyclerViewAdapter?.notifyItemRangeChanged(
-                        idx,
-                        recyclerViewAdapter!!.itemCount
+                    recyclerViewAdapter.notifyItemRemoved(idx)
+                    recyclerViewAdapter.notifyItemRangeChanged(
+                        idx, recyclerViewAdapter.itemCount
                     )
                 }
+                if (recyclerViewAdapter.itemCount == 0) setRecyclerViewEmpty(true)
             }
 
             override suspend fun onRemovedFromServer(title: String): Boolean {
                 return withContext(Dispatchers.Main) {
                     suspendCancellableCoroutine { continuation ->
                         val message =
-                            "The note \"<b>$title</b>\" was removed from the server. " +
-                                    "Do you want to delete your local copy as well?"
+                            "The note \"<b>$title</b>\" was removed from the server. Do you want to delete your local copy as well?"
 
                         val builder = AlertDialog.Builder(this@MainActivity)
                         builder.setTitle("Note removed from server")
@@ -357,6 +363,18 @@ class MainActivity : AppCompatActivity() {
         Notes.initialize(handler)
     }
 
+    private fun setRecyclerViewEmpty(isEmpty: Boolean) {
+        swipeRefresh.post {
+            if (isEmpty) {
+                swipeRefresh.visibility = View.GONE
+                emptyView.visibility = View.VISIBLE
+            } else {
+                swipeRefresh.visibility = View.VISIBLE
+                emptyView.visibility = View.GONE
+            }
+        }
+    }
+
     private fun checkTime() {
         val now = System.currentTimeMillis()
 
@@ -371,7 +389,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setNotificationDotVisible(visible: Int) {
-        viewNotificationDot?.visibility = visible
+        viewNotificationDot.visibility = visible
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -400,10 +418,7 @@ class MainActivity : AppCompatActivity() {
         digits.forEachIndexed { index, editText ->
             editText.addTextChangedListener(object : TextWatcher {
                 override fun beforeTextChanged(
-                    s: CharSequence?,
-                    start: Int,
-                    count: Int,
-                    after: Int
+                    s: CharSequence?, start: Int, count: Int, after: Int
                 ) {
                 }
 
@@ -438,10 +453,8 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        val dialog = AlertDialog.Builder(this)
-            .setTitle("Verify Your Email")
-            .setView(dialogView)
-            .create()
+        val dialog =
+            AlertDialog.Builder(this).setTitle("Verify Your Email").setView(dialogView).create()
 
         val btnVerify = dialogView.findViewById<Button>(R.id.btnVerify)
         val btnResend = dialogView.findViewById<Button>(R.id.btnResend)

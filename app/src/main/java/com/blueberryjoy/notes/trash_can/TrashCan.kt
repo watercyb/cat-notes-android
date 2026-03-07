@@ -5,6 +5,7 @@ import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.view.View
+import android.widget.LinearLayout
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -18,8 +19,9 @@ import com.blueberryjoy.notes.utils.RecyclerViewItem
 
 class TrashCan : AppCompatActivity() {
 
-    private var recyclerView: RecyclerView? = null
-    private var recyclerViewAdapter: RemovedRecyclerViewAdapter? = null
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var recyclerViewAdapter: RemovedRecyclerViewAdapter
+    private lateinit var emptyView: LinearLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,6 +41,7 @@ class TrashCan : AppCompatActivity() {
         }
 
         recyclerView = findViewById(R.id.recyclerView)
+        emptyView = findViewById(R.id.emptyView)
 
         initializeRecyclerView()
     }
@@ -46,12 +49,14 @@ class TrashCan : AppCompatActivity() {
     private fun initializeRecyclerView() {
         val list = Notes.removedList
 
-        recyclerView!!.setLayoutManager(LinearLayoutManager(this@TrashCan))
+        recyclerView.setLayoutManager(LinearLayoutManager(this@TrashCan))
         recyclerViewAdapter = RemovedRecyclerViewAdapter(this@TrashCan, list)
-        recyclerViewAdapter!!.setClickListener { _: View?, position: Int ->
-            showRemoveOrRestoreDialog(list[position])
+        recyclerViewAdapter.setClickListener { _: View?, position: Int ->
+            showRemoveOrRestoreDialog(recyclerViewAdapter.visibleList[position])
         }
-        recyclerView!!.setAdapter(recyclerViewAdapter)
+        recyclerView.setAdapter(recyclerViewAdapter)
+
+        if (recyclerViewAdapter.itemCount == 0) setRecyclerViewEmpty()
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -62,16 +67,19 @@ class TrashCan : AppCompatActivity() {
             .setMessage("Do you want to permanently delete this note or restore it?")
             .setNegativeButton("Restore") { dialogInterface, _ ->
                 Notes.restoreFromTrashCan(note)
-                recyclerViewAdapter?.getVisibleList()
-                recyclerViewAdapter?.notifyDataSetChanged()
+                recyclerViewAdapter.setVisibleList()
+                recyclerViewAdapter.notifyDataSetChanged()
                 dialogInterface.dismiss()
-                //onRestore()
+
+                if (recyclerViewAdapter.itemCount == 0) setRecyclerViewEmpty()
             }
             .setPositiveButton("Delete") { dialogInterface, _ ->
                 Notes.removeFromTrashCan(note)
-                recyclerViewAdapter?.getVisibleList()
-                recyclerViewAdapter?.notifyDataSetChanged()
+                recyclerViewAdapter.setVisibleList()
+                recyclerViewAdapter.notifyDataSetChanged()
                 dialogInterface.dismiss()
+
+                if (recyclerViewAdapter.itemCount == 0) setRecyclerViewEmpty()
             }
             .create()
 
@@ -80,5 +88,12 @@ class TrashCan : AppCompatActivity() {
         // Make Delete button red
         dialog.getButton(AlertDialog.BUTTON_POSITIVE)
             .setTextColor(Color.RED)
+    }
+
+    private fun setRecyclerViewEmpty() {
+        recyclerView.post {
+            recyclerView.visibility = View.GONE
+            emptyView.visibility = View.VISIBLE
+        }
     }
 }

@@ -28,7 +28,7 @@ public class RemovedRecyclerViewAdapter extends RecyclerView.Adapter<RemovedRecy
     RemovedRecyclerViewAdapter(Context context, List<RecyclerViewItem> list) {
         this.layoutInflater = LayoutInflater.from(context);
         this.list = list;
-        getVisibleList();
+        setVisibleList();
     }
 
     @NonNull
@@ -88,11 +88,15 @@ public class RemovedRecyclerViewAdapter extends RecyclerView.Adapter<RemovedRecy
         void onItemClick(View view, int position);
     }
 
-    public void getVisibleList() {
+    public void setVisibleList() {
         visibleList.clear();
         for (RecyclerViewItem note : list) {
             if (note.removeTime == 0 || note.removeTime > System.currentTimeMillis())
                 visibleList.add(note);
         }
+    }
+
+    public List<RecyclerViewItem> getVisibleList() {
+        return visibleList;
     }
 }

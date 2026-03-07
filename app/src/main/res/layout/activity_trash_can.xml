@@ -48,4 +48,20 @@
 
     </androidx.recyclerview.widget.RecyclerView>
 
+    <LinearLayout
+        android:id="@+id/emptyView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="250dp"
+            android:layout_height="250dp"
+            android:importantForAccessibility="no"
+            android:src="@drawable/empty_view" />
+
+    </LinearLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

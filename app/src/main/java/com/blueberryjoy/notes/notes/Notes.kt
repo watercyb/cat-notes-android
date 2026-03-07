@@ -525,6 +525,7 @@ object Notes {
         note.isRemovedFromServer = false
         SQLite.saveRemoval(note)
         val idx = getRemovedNoteById(note.id)
+        Message.logW("$idx")
         if (idx >= 0) removedList.removeAt(idx)
         list.add(note)
         if (note.userId == AuthManager.getUserId()) SyncQueue.add(note)
