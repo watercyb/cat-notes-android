@@ -8,8 +8,8 @@ object RetrofitInstance {
 
     //private var BASE_URL = "http://10.0.2.2:5001/api/"
     //private var BASE_URL = "http://192.168.0.18:5001/api/"
-    private var BASE_URL = "http://192.168.0.40:5001/api/"
-    //private var BASE_URL = "https://notes.bbjdev.com/api/"
+    //private var BASE_URL = "http://192.168.0.40:5001/api/"
+    private var BASE_URL = "https://notes.bbjdev.com/api/"
 
     val api: ApiService by lazy {
         val okHttpClient = OkHttpClient.Builder()

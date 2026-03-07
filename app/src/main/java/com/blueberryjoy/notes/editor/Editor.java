@@ -125,8 +125,7 @@ public class Editor extends AppCompatActivity {
             note.content = content;
             note.version++;
             SQLite.saveNote(note);
-            if (note.userId.equals(AuthManager.getUserId()))
-                SyncQueue.INSTANCE.add(note);
+            if (note.userId.equals(AuthManager.getUserId())) SyncQueue.INSTANCE.add(note);
         }
     }
 
@@ -178,9 +177,15 @@ public class Editor extends AppCompatActivity {
             }
         });
 
-        imageButtonBack.setOnClickListener(view -> saveAndFinish());
+        imageButtonBack.setOnClickListener(view -> {
+            view.animate().scaleX(0.85f).scaleY(0.85f).setDuration(80).withEndAction(() -> view.animate().scaleX(1f).scaleY(1f).setDuration(80).start()).start();
+
+            saveAndFinish();
+        });
 
         imageButtonRemove.setOnClickListener(view -> {
+            view.animate().scaleX(0.85f).scaleY(0.85f).setDuration(80).withEndAction(() -> view.animate().scaleX(1f).scaleY(1f).setDuration(80).start()).start();
+
             Intent intent = new Intent();
             intent.putExtra("POSITION", -Notes.getNoteById(id) - 1);
             Notes.moveToTrashCan(note);
