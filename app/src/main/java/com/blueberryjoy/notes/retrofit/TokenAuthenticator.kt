@@ -2,7 +2,6 @@ package com.blueberryjoy.notes.retrofit
 
 import com.blueberryjoy.notes.auth.AuthManager
 import com.blueberryjoy.notes.retrofit.data_class.ApiReq
-import com.blueberryjoy.notes.utils.Message
 import kotlinx.coroutines.runBlocking
 import okhttp3.Authenticator
 import okhttp3.Request
@@ -37,7 +36,6 @@ class TokenAuthenticator : Authenticator {
             val refreshToken = response.headers()["RefreshToken"] ?: ""
             AuthManager.setToken(token)
             AuthManager.setRefreshToken(refreshToken)
-            Message.showFromThread("New Token")
             return token
         }
         return ""

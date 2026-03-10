@@ -34,6 +34,8 @@ import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+import com.blueberryjoy.notes.App.Companion.getInstance
+import com.blueberryjoy.notes.BuildConfig
 import com.blueberryjoy.notes.R
 import com.blueberryjoy.notes.auth.AuthManager
 import com.blueberryjoy.notes.auth.AuthManager.getType
@@ -49,6 +51,7 @@ import com.blueberryjoy.notes.notes.OnNoteChangeHandler
 import com.blueberryjoy.notes.notes.SyncQueue
 import com.blueberryjoy.notes.trash_can.TrashCan
 import com.blueberryjoy.notes.utils.Message
+import com.blueberryjoy.notes.utils.RecyclerViewItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -91,12 +94,12 @@ class MainActivity : AppCompatActivity() {
             window.navigationBarColor = getColor(R.color.background)
         }
 
+        initializeAuthManager()
         initializeViews()
         initializeViewModel()
         initializeNote()
         initializeListView()
         initializeRecyclerView()
-        initializeAuthManager()
         initializeEditorLauncher()
         checkTime()
     }
@@ -123,6 +126,7 @@ class MainActivity : AppCompatActivity() {
         return super.dispatchTouchEvent(ev)
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     private fun initializeListView() {
         listViewSetting.translationZ = 10f
         val list: MutableList<ListViewItem?> = ArrayList()
@@ -131,25 +135,36 @@ class MainActivity : AppCompatActivity() {
             val noteId = Notes.create("", "", null, 0, 0, false, AuthManager.getUserId())
             if (noteId != -1) openEditor(noteId)
         })
-        list.add(ListViewItem("REFRESH") {
-            lifecycleScope.launch {
-                Notes.getNotesFromApi()
-            }
-        })
-        list.add(ListViewItem("CHECK QUEUE") {
-            Message.show("${SyncQueue.getSize()}")
-        })
+
         list.add(ListViewItem("TRASH CAN") {
             val intent = Intent(this@MainActivity, TrashCan::class.java)
             startActivity(intent)
         })
-        list.add(ListViewItem("TOKENS") {
-            Message.logW("T: ${AuthManager.getToken()}, RT: ${AuthManager.getRefreshToken()}")
+
+        list.add(ListViewItem(if (AuthManager.getIsShowAllNotes()) "MY NOTES" else "ALL NOTES") { item ->
+            if (item.title == "ALL NOTES") {
+                item.title = "MY NOTES"
+                AuthManager.setIsShowAllNotes(true)
+            } else {
+                item.title = "ALL NOTES"
+                AuthManager.setIsShowAllNotes(false)
+            }
+            recyclerViewAdapter.setVisibleList()
+            recyclerViewAdapter.notifyDataSetChanged()
+            setRecyclerViewEmpty(recyclerViewAdapter.itemCount == 0)
         })
-        list.add(ListViewItem("REMOVE TOKEN") {
-            AuthManager.setToken("")
-        })
-        list.add(ListViewItem("SETTING") {})
+
+        if (BuildConfig.DEBUG) {
+            list.add(ListViewItem("CHECK QUEUE") {
+                Message.debug("${SyncQueue.getSize()}")
+            })
+        }
+
+        if (BuildConfig.DEBUG) {
+            list.add(ListViewItem("TEST") { _ ->
+
+            })
+        }
 
         val listViewAdapter = ListViewAdapter(this, list)
         val params = listViewSetting.layoutParams
@@ -163,22 +178,22 @@ class MainActivity : AppCompatActivity() {
         listViewSetting.adapter = listViewAdapter
         listViewSetting.setOnItemClickListener { _: AdapterView<*>?, _: View?, position: Int, _: Long ->
             list.getOrNull(position)?.onClick()
+            listViewAdapter.notifyDataSetChanged()
             listViewSetting.visibility = View.GONE
         }
     }
 
     private fun initializeRecyclerView() {
-        val list = Notes.list
-
         val spanCount = getResources().getInteger(R.integer.grid_span)
         recyclerView.setLayoutManager(
             StaggeredGridLayoutManager(
                 spanCount, StaggeredGridLayoutManager.VERTICAL
             )
         )
-        recyclerViewAdapter = MainRecyclerViewAdapter(this, list)
+        recyclerViewAdapter = MainRecyclerViewAdapter(this, Notes.list)
+
         recyclerViewAdapter.setClickListener { _: View?, position: Int ->
-            openEditor(list[position].id)
+            openEditor(recyclerViewAdapter.getIdFromVisibleIdx(position))
         }
         recyclerView.setAdapter(recyclerViewAdapter)
 
@@ -193,8 +208,8 @@ class MainActivity : AppCompatActivity() {
             ): Boolean {
                 val from = viewHolder.getBindingAdapterPosition()
                 val to = target.getBindingAdapterPosition()
-                Notes.swap(from, to)
-                recyclerViewAdapter.notifyItemMoved(from, to)
+                //Notes.swap(from, to)
+                recyclerViewAdapter.swap(from, to)
                 return true
             }
 
@@ -216,16 +231,8 @@ class MainActivity : AppCompatActivity() {
 
     private fun initializeEditorLauncher() {
         editorLauncher = registerForActivityResult(StartActivityForResult()) { result ->
-            if (result.resultCode == RESULT_OK && result.data != null) {
-                val position =
-                    result.data!!.getIntExtra("POSITION", recyclerViewAdapter.itemCount)
-                when {
-                    position < 0 -> recyclerViewAdapter.notifyItemRemoved(-position - 1)
-                    position < recyclerViewAdapter.itemCount -> recyclerViewAdapter.notifyItemChanged(
-                        position
-                    )
-                }
-            }
+            //TODO
+
         }
     }
 
@@ -300,27 +307,24 @@ class MainActivity : AppCompatActivity() {
 
     private fun initializeNote() {
         val handler = object : OnNoteChangeHandler {
-            override fun onChange(idx: Int) {
+            override fun onChange(note: RecyclerViewItem) {
                 Handler(Looper.getMainLooper()).post {
-                    recyclerViewAdapter.notifyItemChanged(idx)
+                    recyclerViewAdapter.noteChanged(note)
                 }
             }
 
-            override fun onAdd(idx: Int) {
+            override fun onAdd(note: RecyclerViewItem) {
                 Handler(Looper.getMainLooper()).post {
-                    recyclerViewAdapter.notifyItemInserted(idx)
+                    recyclerViewAdapter.addToList(note)
+                    if (recyclerViewAdapter.itemCount == 1) setRecyclerViewEmpty(false)
                 }
-                if (recyclerViewAdapter.itemCount == 1) setRecyclerViewEmpty(false)
             }
 
-            override fun onRemove(idx: Int) {
+            override fun onRemove(note: RecyclerViewItem) {
                 Handler(Looper.getMainLooper()).post {
-                    recyclerViewAdapter.notifyItemRemoved(idx)
-                    recyclerViewAdapter.notifyItemRangeChanged(
-                        idx, recyclerViewAdapter.itemCount
-                    )
+                    recyclerViewAdapter.removeNote(note)
+                    if (recyclerViewAdapter.itemCount == 0) setRecyclerViewEmpty(true)
                 }
-                if (recyclerViewAdapter.itemCount == 0) setRecyclerViewEmpty(true)
             }
 
             override suspend fun onRemovedFromServer(title: String): Boolean {
@@ -358,6 +362,10 @@ class MainActivity : AppCompatActivity() {
                         dialog.show()
                     }
                 }
+            }
+
+            override fun onUserChanged() {
+                recyclerViewAdapter.setVisibleListAndRefreshView()
             }
         }
         Notes.initialize(handler)
@@ -485,7 +493,7 @@ class MainActivity : AppCompatActivity() {
             lifecycleScope.launch {
                 val code = digits.joinToString("") { it.text.toString() }
                 if (code.length != 6) {
-                    Message.showErrorFromThread("Enter complete 6-digit code sent to your email address")
+                    Message.show(getInstance().getContext().getString(R.string.enter_code))
                 } else {
                     if (AuthManager.verifyEmail(code)) {
                         setNotificationDotVisible(View.GONE)

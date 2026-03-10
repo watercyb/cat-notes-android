@@ -1,5 +1,5 @@
 package com.blueberryjoy.notes.main;
 
 public interface ListViewAction {
-    void onClick();
+    void onClick(ListViewItem item);
 }

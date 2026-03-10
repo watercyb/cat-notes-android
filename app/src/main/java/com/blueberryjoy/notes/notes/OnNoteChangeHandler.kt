@@ -1,10 +1,14 @@
 package com.blueberryjoy.notes.notes
 
-interface OnNoteChangeHandler {
-    fun onChange(idx: Int)
-    fun onAdd(idx: Int)
-    fun onRemove(idx: Int)
+import com.blueberryjoy.notes.utils.RecyclerViewItem
 
-    //IsKeeping
+interface OnNoteChangeHandler {
+    fun onChange(note: RecyclerViewItem)
+    fun onAdd(note: RecyclerViewItem)
+    fun onRemove(note: RecyclerViewItem)
+
+    //Ask user if remove note when it is removed from server.
     suspend fun onRemovedFromServer(title: String): Boolean
+
+    fun onUserChanged()
 }

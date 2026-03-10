@@ -25,4 +25,27 @@
     <string name="resend">Resend</string>
     <string name="resend_time">Resend (%1$ds)</string>
     <string name="trash_can">Trash Can</string>
+    <string name="all_fields_required">All fields are required</string>
+    <string name="newer_version_found">A newer version is found, both two versions are kept.</string>
+    <string name="username_updated">Username updated</string>
+    <string name="password_updated">Password updated</string>
+    <string name="email_verified">Email verified</string>
+    <string name="code_resent">Code resent</string>
+    <string name="sent_reset_password_code">If an account with that email exists, a verification code has been sent.</string>
+    <string name="google_signed_in">Signed in with Google</string>
+    <string name="unable_google_sign_in">Unable to sign in with Google</string>
+    <string name="unable_google_sign_out">Unable to sign out with Google</string>
+    <string name="note_not_found">Meow! This note was not found.</string>
+    <string name="enter_code">Enter complete 6-digit code sent to your email address</string>
+    <string name="note_deleted">Note deleted</string>
+    <string name="server_internal_error">Server internal error</string>
+    <string name="too_many_requests">Too many requests, please try later.</string>
+    <string name="invalid_credentials">Invalid credentials</string>
+    <string name="unexpected_error">Unexpected error</string>
+    <string name="unable_connect_to_server">Unable to connect to the server</string>
+    <string name="user_already_exist">User already exists</string>
+    <string name="username_change_no_for_this_acount">Username change isn\'t enabled for this account</string>
+    <string name="password_change_no_for_this_account">Password change isn\'t enabled for this account</string>
+    <string name="invalid_verification_code">Invalid or expired verification code</string>
+    <string name="unable_verify_email">Invalid or email already verified</string>
 </resources>

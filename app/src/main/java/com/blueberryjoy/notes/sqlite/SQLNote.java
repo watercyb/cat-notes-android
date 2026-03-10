@@ -27,7 +27,7 @@ public class SQLNote {
     @ColumnInfo(defaultValue = "")
     final public String userId;
 
-    public SQLNote(String title, String content, String mongoId, int version, int idx, long removeTime, boolean isRemovedFromServer, String userId) {
+    public SQLNote(String title, String content, String mongoId, int version, int idx, long removeTime, boolean isRemovedFromServer, @NonNull String userId) {
         this.title = title;
         this.content = content;
         this.mongoId = mongoId;

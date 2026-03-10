@@ -55,11 +55,8 @@ class EmailUser : AppCompatActivity() {
 
             lifecycleScope.launch {
                 val newName = nameInput.text.toString()
-                if (newName == AuthManager.getUsername()) {
-                    Message.show("New name is same as the old one.")
-                } else {
+                if (newName != AuthManager.getUsername())
                     if (AuthManager.changeUsername(newName)) avatarImage.setImageBitmap(AuthManager.getAvatar())
-                }
                 updateButton.isEnabled = true
             }
         }
@@ -77,7 +74,7 @@ class EmailUser : AppCompatActivity() {
                     val newPassword = etNewPassword.text.toString()
 
                     if (oldPassword.isEmpty() || newPassword.isEmpty()) {
-                        Message.showErrorFromThread("Please fill both fields")
+                        Message.allFieldsRequired()
                     } else {
                         lifecycleScope.launch {
                             changePassword(oldPassword, newPassword)

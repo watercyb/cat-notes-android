@@ -7,12 +7,14 @@ import android.graphics.BitmapFactory
 import android.util.TypedValue
 import androidx.core.content.edit
 import com.blueberryjoy.notes.App.Companion.getInstance
+import com.blueberryjoy.notes.R
 import com.blueberryjoy.notes.clerk.ClerkAuth
-import com.blueberryjoy.notes.utils.Message
 import com.blueberryjoy.notes.notes.Notes
+import com.blueberryjoy.notes.retrofit.ErrorHandler
 import com.blueberryjoy.notes.retrofit.RetrofitInstance
 import com.blueberryjoy.notes.retrofit.data_class.ApiReq
 import com.blueberryjoy.notes.utils.Avatar
+import com.blueberryjoy.notes.utils.Message
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.clerk.api.Clerk
@@ -33,6 +35,7 @@ object AuthManager {
     private var email: String? = ""
     private var username: String? = ""
     private var isVerified: Boolean = false
+    private var isShowAllNotes: Boolean = true
     private var onAuthChangeHandler: OnAuthChangeHandler? = null
     private var sharedPref: SharedPreferences? = null
 
@@ -66,6 +69,7 @@ object AuthManager {
         email = sharedPref!!.getString("EMAIL", "")
         username = sharedPref!!.getString("NAME", "")
         isVerified = sharedPref!!.getBoolean("VERIFY", false)
+        isShowAllNotes = sharedPref!!.getBoolean("ALL_NOTES", true)
 
         //Message.logW("Type: " + getType().toString() + " name: " + getUsername())
 
@@ -91,6 +95,17 @@ object AuthManager {
         return token ?: ""
     }
 
+    @JvmStatic
+    fun setIsShowAllNotes(isShowAllNotes: Boolean) {
+        AuthManager.isShowAllNotes = isShowAllNotes
+        sharedPref!!.edit { putBoolean("ALL_NOTES", isShowAllNotes) }
+    }
+
+    @JvmStatic
+    fun getIsShowAllNotes(): Boolean {
+        return isShowAllNotes
+    }
+
     fun setRefreshToken(refreshToken: String) {
         AuthManager.refreshToken = refreshToken
         sharedPref!!.edit { putString("REFRESH_TOKEN", refreshToken) }
@@ -102,11 +117,7 @@ object AuthManager {
 
     @JvmStatic
     fun setEmailLogin(
-        email: String,
-        username: String,
-        token: String,
-        refreshToken: String,
-        isVerified: Boolean
+        email: String, username: String, token: String, refreshToken: String, isVerified: Boolean
     ) {
         type = AuthType.EMAIL
         AuthManager.email = email
@@ -123,6 +134,7 @@ object AuthManager {
             putString("NAME", username)
             putBoolean("VERIFY", isVerified)
         }
+        Notes.getOnNoteChangeHandler()?.onUserChanged()
     }
 
     @JvmStatic
@@ -138,6 +150,7 @@ object AuthManager {
             putString("NAME", "")
             putString("EMAIL", email)
         }
+        Notes.getOnNoteChangeHandler()?.onUserChanged()
         return true
     }
 
@@ -159,6 +172,7 @@ object AuthManager {
             putBoolean("VERIFY", false)
             putString("REFRESH_TOKEN", "")
         }
+        Notes.getOnNoteChangeHandler()?.onUserChanged()
     }
 
     @JvmStatic
@@ -261,7 +275,7 @@ object AuthManager {
                     )
                 }
             } catch (e: Exception) {
-                Message.showFromThread("Save avatar: $e")
+                Message.debug("Cannot save avatar: $e")
             }
         }
     }
@@ -291,33 +305,18 @@ object AuthManager {
                     val token = response.headers()["Authorization"] ?: ""
                     val refreshToken = response.headers()["RefreshToken"] ?: ""
                     setEmailLogin(
-                        res.user.email,
-                        res.user.name,
-                        token,
-                        refreshToken,
-                        res.user.isVerified
+                        res.user.email, res.user.name, token, refreshToken, res.user.isVerified
                     )
                     Notes.updateNote(res.user.notes)
                     return true
                 }
                 return false
             } else {
-                Message.logE("$response")
-                if (response.code() == 429) {
-                    Message.showErrorFromThread("Too many requests, please try later.")
-                } else if (response.code() == 401) {
-                    Message.showErrorFromThread("Invalid credentials")
-                    setLogout()
-                } else if (response.code() == 500) {
-                    Message.showErrorFromThread("Server internal error")
-                } else {
-                    Message.showErrorFromThread("Unexpected error")
-                }
+                ErrorHandler.res(response)
                 return false
             }
         } catch (e: Exception) {
-            Message.logW("Exception: $e")
-            Message.showErrorFromThread("Cannot reach the server")
+            Message.cannotReachServer()
             return false
         }
     }
@@ -334,22 +333,11 @@ object AuthManager {
                 }
                 return false
             } else {
-                Message.logE("$response")
-                if (response.code() == 429) {
-                    Message.showErrorFromThread("Too many requests, please try later.")
-                } else if (response.code() == 401) {
-                    Message.showErrorFromThread("Invalid credentials")
-                    setLogout()
-                } else if (response.code() == 500) {
-                    Message.showErrorFromThread("Server internal error")
-                } else {
-                    Message.showErrorFromThread("Unexpected error")
-                }
+                ErrorHandler.res(response)
                 return false
             }
         } catch (e: Exception) {
-            Message.logW("Exception: $e")
-            Message.showErrorFromThread("Cannot reach the server")
+            Message.cannotReachServer()
             return false
         }
     }
@@ -373,23 +361,11 @@ object AuthManager {
                 }
                 return false
             } else {
-                Message.logE("$response")
-                if (response.code() == 429) {
-                    Message.showErrorFromThread("Too many requests, please try later.")
-                } else if (response.code() == 401) {
-                    Message.showErrorFromThread("Invalid credentials")
-                    setLogout()
-                    setLogout()
-                } else if (response.code() == 500) {
-                    Message.showErrorFromThread("Server internal error")
-                } else {
-                    Message.showErrorFromThread("Unexpected error")
-                }
+                ErrorHandler.res(response)
                 return false
             }
-        } catch (e: Exception) {
-            Message.logW("Exception: $e")
-            Message.showErrorFromThread("Cannot reach the server")
+        } catch (_: Exception) {
+            Message.cannotReachServer()
             return false
         }
     }
@@ -404,37 +380,22 @@ object AuthManager {
                     val token = response.headers()["Authorization"] ?: ""
                     val refreshToken = response.headers()["RefreshToken"] ?: ""
                     setEmailLogin(
-                        res.user.email,
-                        res.user.name,
-                        token,
-                        refreshToken,
-                        res.user.isVerified
+                        res.user.email, res.user.name, token, refreshToken, res.user.isVerified
                     )
                     Notes.updateNote(res.user.notes)
                     return true
                 }
                 return false
             } else {
-                Message.logE("$response")
-                if (response.code() == 429) {
-                    Message.showErrorFromThread("Too many requests, please try later.")
-                } else if (response.code() == 401) {
-                    Message.showErrorFromThread("Invalid credentials")
-                    setLogout()
-                } else if (response.code() == 409) {
-                    Message.showErrorFromThread("User already exists")
-                } else if (response.code() == 422) {
-                    Message.showErrorFromThread("All fields are required")
-                } else if (response.code() == 500) {
-                    Message.showErrorFromThread("Server internal error")
+                if (response.code() == 409) {
+                    Message.userExists()
                 } else {
-                    Message.showErrorFromThread("Unexpected error")
+                    ErrorHandler.res(response)
                 }
                 return false
             }
-        } catch (e: Exception) {
-            Message.logW("Exception: $e")
-            Message.showErrorFromThread("Cannot reach the server")
+        } catch (_: Exception) {
+            Message.cannotReachServer()
             return false
         }
     }
@@ -448,31 +409,22 @@ object AuthManager {
                 val res = response.body()
                 if (res?.success == true) {
                     setUsername(name)
-                    Message.showFromThread("Username changed")
+                    Message.show(
+                        getInstance().getContext().getString(R.string.username_updated)
+                    )
                     return true
                 }
                 return false
             } else {
-                Message.logE("$response")
-                if (response.code() == 429) {
-                    Message.showErrorFromThread("Too many requests, please try later.")
-                } else if (response.code() == 401) {
-                    Message.showErrorFromThread("Invalid credentials")
-                    setLogout()
-                } else if (response.code() == 403) {
-                    Message.showErrorFromThread("Username change isn't enabled for this account")
-                } else if (response.code() == 422) {
-                    Message.showErrorFromThread("All fields are required")
-                } else if (response.code() == 500) {
-                    Message.showErrorFromThread("Server internal error")
+                if (response.code() == 403) {
+                    Message.usernameChangeDisable()
                 } else {
-                    Message.showErrorFromThread("Unexpected error")
+                    ErrorHandler.res(response)
                 }
                 return false
             }
-        } catch (e: Exception) {
-            Message.logW("Exception: $e")
-            Message.showErrorFromThread("Cannot reach the server")
+        } catch (_: Exception) {
+            Message.cannotReachServer()
             return false
         }
     }
@@ -485,31 +437,22 @@ object AuthManager {
             if (response.isSuccessful) {
                 val res = response.body()
                 if (res?.success == true) {
-                    Message.showFromThread("Password changed")
+                    Message.show(
+                        getInstance().getContext().getString(R.string.password_updated)
+                    )
                     return true
                 }
                 return false
             } else {
-                Message.logE("$response")
-                if (response.code() == 429) {
-                    Message.showErrorFromThread("Too many requests, please try later.")
-                } else if (response.code() == 401) {
-                    Message.showErrorFromThread("Invalid credentials")
-                    setLogout()
-                } else if (response.code() == 403) {
-                    Message.showErrorFromThread("Password change isn't enabled for this account")
-                } else if (response.code() == 422) {
-                    Message.showErrorFromThread("All fields are required")
-                } else if (response.code() == 500) {
-                    Message.showErrorFromThread("Server internal error")
+                if (response.code() == 403) {
+                    Message.passwordChangeDisable()
                 } else {
-                    Message.showErrorFromThread("Unexpected error")
+                    ErrorHandler.res(response)
                 }
                 return false
             }
-        } catch (e: Exception) {
-            Message.logW("Exception: $e")
-            Message.showErrorFromThread("Cannot reach the server")
+        } catch (_: Exception) {
+            Message.cannotReachServer()
             return false
         }
     }
@@ -522,32 +465,21 @@ object AuthManager {
             if (response.isSuccessful) {
                 val res = response.body()
                 if (res?.success == true) {
-                    Message.showFromThread("Email verified")
+                    Message.show(getInstance().getContext().getString(R.string.email_verified))
                     setIsVerified(true)
                     return true
                 }
                 return false
             } else {
-                Message.logE("$response")
-                if (response.code() == 429) {
-                    Message.showErrorFromThread("Too many requests, please try later.")
-                } else if (response.code() == 401) {
-                    Message.showErrorFromThread("Invalid credentials")
-                    setLogout()
-                } else if (response.code() == 403) {
-                    Message.showErrorFromThread("Invalid or expired verification code")
-                } else if (response.code() == 422) {
-                    Message.showErrorFromThread("All fields are required")
-                } else if (response.code() == 500) {
-                    Message.showErrorFromThread("Server internal error")
+                if (response.code() == 403) {
+                    Message.invalidVerificationCode()
                 } else {
-                    Message.showErrorFromThread("Unexpected error")
+                    ErrorHandler.res(response)
                 }
                 return false
             }
-        } catch (e: Exception) {
-            Message.logW("Exception: $e")
-            Message.showErrorFromThread("Cannot reach the server")
+        } catch (_: Exception) {
+            Message.cannotReachServer()
             return false
         }
     }
@@ -559,31 +491,20 @@ object AuthManager {
             if (response.isSuccessful) {
                 val res = response.body()
                 if (res?.success == true) {
-                    Message.showFromThread("Code is resent")
+                    Message.show(getInstance().getContext().getString(R.string.code_resent))
                     return true
                 }
                 return false
             } else {
-                Message.logE("$response")
-                if (response.code() == 429) {
-                    Message.showErrorFromThread("Too many requests, please try later.")
-                } else if (response.code() == 401) {
-                    Message.showErrorFromThread("Invalid credentials")
-                    setLogout()
-                } else if (response.code() == 403) {
-                    Message.showErrorFromThread("Invalid or email already verified")
-                } else if (response.code() == 422) {
-                    Message.showErrorFromThread("All fields are required")
-                } else if (response.code() == 500) {
-                    Message.showErrorFromThread("Server internal error")
+                if (response.code() == 403) {
+                    Message.unableVerifyEmail()
                 } else {
-                    Message.showErrorFromThread("Unexpected error")
+                    ErrorHandler.res(response)
                 }
                 return false
             }
-        } catch (e: Exception) {
-            Message.logW("Exception: $e")
-            Message.showErrorFromThread("Cannot reach the server")
+        } catch (_: Exception) {
+            Message.cannotReachServer()
             return false
         }
     }
@@ -595,29 +516,16 @@ object AuthManager {
             if (response.isSuccessful) {
                 val res = response.body()
                 if (res?.success == true) {
-                    Message.showFromThread("If an account with that email exists, a verification code has been sent.")
+                    Message.show(getInstance().getContext().getString(R.string.sent_reset_password_code))
                     return true
                 }
                 return false
             } else {
-                Message.logE("$response")
-                if (response.code() == 429) {
-                    Message.showErrorFromThread("Too many requests, please try later.")
-                } else if (response.code() == 401) {
-                    Message.showErrorFromThread("Invalid credentials")
-                    setLogout()
-                } else if (response.code() == 422) {
-                    Message.showErrorFromThread("All fields are required")
-                } else if (response.code() == 500) {
-                    Message.showErrorFromThread("Server internal error")
-                } else {
-                    Message.showErrorFromThread("Unexpected error")
-                }
+                ErrorHandler.res(response)
                 return false
             }
-        } catch (e: Exception) {
-            Message.logW("Exception: $e")
-            Message.showErrorFromThread("Cannot reach the server")
+        } catch (_: Exception) {
+            Message.cannotReachServer()
             return false
         }
     }
@@ -626,5 +534,15 @@ object AuthManager {
     fun getUserId(): String {
         if (type == AuthType.NULL) return ""
         return "$email#$type"
+    }
+
+    @JvmStatic
+    fun isShowNote(userId: String): Boolean {
+        return isShowAllNotes || userId.isEmpty() || userId == getUserId()
+    }
+
+    @JvmStatic
+    fun isOwner(userId: String): Boolean {
+        return userId.isEmpty() || userId == getUserId()
     }
 }

@@ -38,7 +38,7 @@ class SignUp : AppCompatActivity() {
             val password = passwordInput.text.toString()
 
             if (name.isEmpty() || email.isEmpty() || password.isEmpty()) {
-                Message.show("All fields are required")
+                Message.show(getString(R.string.all_fields_required))
             } else {
                 lifecycleScope.launch {
                     if (AuthManager.emailSignup(name, email, password))

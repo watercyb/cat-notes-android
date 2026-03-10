@@ -1,12 +1,13 @@
 package com.blueberryjoy.notes.notes
 
-import android.util.Log
-import android.widget.Toast
-import com.blueberryjoy.notes.App.Companion.getInstance
+import android.os.Handler
+import android.os.Looper
+import com.blueberryjoy.notes.App
+import com.blueberryjoy.notes.R
 import com.blueberryjoy.notes.auth.AuthManager
-import com.blueberryjoy.notes.auth.AuthManager.setLogout
 import com.blueberryjoy.notes.auth.AuthType
 import com.blueberryjoy.notes.clerk.ClerkAuth
+import com.blueberryjoy.notes.retrofit.ErrorHandler
 import com.blueberryjoy.notes.retrofit.RetrofitInstance
 import com.blueberryjoy.notes.retrofit.data_class.ApiNote
 import com.blueberryjoy.notes.retrofit.data_class.ApiReq
@@ -53,6 +54,11 @@ object Notes {
     }
 
     @JvmStatic
+    fun getOnNoteChangeHandler(): OnNoteChangeHandler? {
+        return onNoteChangeHandler
+    }
+
+    @JvmStatic
     fun getNoteById(id: Int): Int {
         for (i in list.indices) {
             if (list[i].id == id) return i
@@ -76,20 +82,13 @@ object Notes {
         isRemovedFromServer: Boolean,
         userId: String
     ): Int {
-        try {
-            val idx = (if (list.isEmpty()) 0 else list[list.size - 1].idx) + 10000
-            val note = SQLite.create(
-                title, content, mongoId, version, idx, removeTime, isRemovedFromServer, userId
-            )
-            val item = RecyclerViewItem(note)
-            list.add(item)
-            onNoteChangeHandler?.onAdd(list.size - 1)
-            return item.id
-        } catch (e: Exception) {
-            Toast.makeText(getInstance(), "error in Notes create: $e", Toast.LENGTH_LONG).show()
-            Log.e("testLog", e.toString())
-            return -1
-        }
+        val idx = (if (list.isEmpty()) 0 else list[list.size - 1].idx) + 10000
+        val note = SQLite.create(
+            title, content, mongoId, version, idx, removeTime, isRemovedFromServer, userId
+        )
+        val item = RecyclerViewItem(note)
+        onNoteChangeHandler?.onAdd(item)
+        return item.id
     }
 
     //Create Note from the API result.
@@ -97,47 +96,6 @@ object Notes {
         return create(
             note.title, note.content, note.mongoId, note.version, 0, false, AuthManager.getUserId()
         )
-    }
-
-    @JvmStatic
-    fun removeFromList(note: RecyclerViewItem): Int {
-        val idx = getNoteById(note.id)
-        if (idx >= 0) {
-            list.removeAt(idx)
-            onNoteChangeHandler?.onRemove(idx)
-        }
-        return idx
-    }
-
-    fun swap(i: Int, j: Int) {
-        var i = i
-        if (i > j) {
-            while (i > j) {
-                val a = list[i]
-                val b = list[i - 1]
-                val temp = a.idx
-                a.idx = b.idx
-                b.idx = temp
-                list[i] = b
-                list[i - 1] = a
-                SQLite.saveIdx(a)
-                SQLite.saveIdx(b)
-                i--
-            }
-        } else {
-            while (i < j) {
-                val a = list[i]
-                val b = list[i + 1]
-                val temp = a.idx
-                a.idx = b.idx
-                b.idx = temp
-                list[i] = b
-                list[i + 1] = a
-                SQLite.saveIdx(a)
-                SQLite.saveIdx(b)
-                i++
-            }
-        }
     }
 
     fun updateNote(notes: Array<ApiNote>?) {
@@ -206,7 +164,7 @@ object Notes {
             note.content = apiNote.content
             note.version = apiNote.version
             SQLite.saveNote(note)
-            onNoteChangeHandler?.onChange(getNoteById(note.id))
+            onNoteChangeHandler?.onChange(note)
         } else if (!note.equals(apiNote)) {
             create(apiNote)
             note.mongoId = ""
@@ -223,7 +181,6 @@ object Notes {
             val response = RetrofitInstance.api.createNote(apiReq)
             if (response.isSuccessful) {
                 val res = response.body()
-                Message.logW("Note created: $res")
                 if (res?.success == true) {
                     note.mongoId = res.note?.mongoId
                     SQLite.saveMongoId(note)
@@ -231,22 +188,11 @@ object Notes {
                 }
                 return false
             } else {
-                Message.logE("$response")
-                if (response.code() == 429) {
-                    Message.showErrorFromThread("Too many requests, please try later.")
-                } else if (response.code() == 401) {
-                    Message.showErrorFromThread("Invalid credentials")
-                    setLogout()
-                } else if (response.code() == 500) {
-                    Message.showErrorFromThread("Server internal error")
-                } else {
-                    Message.showErrorFromThread("Unexpected error")
-                }
+                ErrorHandler.res(response)
                 return false
             }
         } catch (e: Exception) {
-            Message.logW("Exception: $e")
-            Message.showErrorFromThread("Cannot reach the server")
+            Message.cannotReachServer()
             return false
         }
     }
@@ -259,28 +205,17 @@ object Notes {
             if (response.isSuccessful) {
                 val res = response.body()
                 if (res?.success == true) {
-                    Message.logW("Note deleted: $res")
+                    Message.logW("Note deleted")
                     findAndSaveAsRemoved(mongoId)
                     return true
                 }
                 return false
             } else {
-                Message.logE("$response")
-                if (response.code() == 429) {
-                    Message.showErrorFromThread("Too many requests, please try later.")
-                } else if (response.code() == 401) {
-                    Message.showErrorFromThread("Invalid credentials")
-                    setLogout()
-                } else if (response.code() == 500) {
-                    Message.showErrorFromThread("Server internal error")
-                } else {
-                    Message.showErrorFromThread("Unexpected error")
-                }
+                ErrorHandler.res(response)
                 return false
             }
         } catch (e: Exception) {
-            Message.logW("Exception: $e")
-            Message.showErrorFromThread("Cannot reach the server")
+            Message.cannotReachServer()
             return false
         }
     }
@@ -304,7 +239,7 @@ object Notes {
                         note.mongoId = res.note.mongoId
                         SQLite.saveMongoId(note)
                     } else {
-                        Message.showErrorFromThread("Unexpected error")
+                        Message.unexpectedError()
                         return false
                     }
                     SQLite.saveMongoId(note)
@@ -313,30 +248,24 @@ object Notes {
                     note.mongoId = res.newNote.mongoId
                     SQLite.saveMongoId(note)
                     create(res.noteFromServer)
-                    onNoteChangeHandler?.onAdd(list.size - 1)
-                    Message.showFromThread("A newer version is found, both two versions are kept.")
+                    Message.show(
+                        App.getInstance().getContext().getString(R.string.newer_version_found)
+                    )
                     return true
                 } else {
-                    Message.showErrorFromThread("Should not be called")
+                    Message.debug("updateNoteToApi: Should not be called")
                 }
                 return false
             } else {
-                Message.logE("$response")
-                if (response.code() == 429) {
-                    Message.showErrorFromThread("Too many requests, please try later.")
-                } else if (response.code() == 401) {
-                    Message.showErrorFromThread("Invalid credentials")
-                    setLogout()
-                } else if (response.code() == 500) {
-                    Message.showErrorFromThread("Server internal error")
+                if (response.code() == 404) {
+                    setNoteAsRemovedOnServer(note)
                 } else {
-                    Message.showErrorFromThread("Unexpected error")
+                    ErrorHandler.res(response)
                 }
                 return false
             }
         } catch (e: Exception) {
-            Message.logW("Exception: $e")
-            Message.showErrorFromThread("Cannot reach the server")
+            Message.cannotReachServer()
             return false
         }
     }
@@ -352,26 +281,15 @@ object Notes {
                     updateNoteWithoutTitleAndContents(res.notes)
                     return true
                 } else {
-                    Message.showErrorFromThread("Should not be called")
+                    Message.debug("getNotesFromApi: Should not be called")
                 }
                 return false
             } else {
-                Message.logE("$response")
-                if (response.code() == 429) {
-                    Message.showErrorFromThread("Too many requests, please try later.")
-                } else if (response.code() == 401) {
-                    Message.showErrorFromThread("Invalid credentials")
-                    setLogout()
-                } else if (response.code() == 500) {
-                    Message.showErrorFromThread("Server internal error")
-                } else {
-                    Message.showErrorFromThread("Unexpected error")
-                }
+                ErrorHandler.res(response)
                 return false
             }
         } catch (e: Exception) {
-            Message.logW("Exception: $e")
-            Message.showErrorFromThread("Cannot reach the server")
+            Message.cannotReachServer()
             return false
         }
     }
@@ -451,26 +369,15 @@ object Notes {
                     }
                     return true
                 } else {
-                    Message.showErrorFromThread("Should not be called")
+                    Message.debug("getNoteFromApi: Should not be called")
                 }
                 return false
             } else {
-                Message.logE("$response")
-                if (response.code() == 429) {
-                    Message.showErrorFromThread("Too many requests, please try later.")
-                } else if (response.code() == 401) {
-                    Message.showErrorFromThread("Invalid credentials")
-                    setLogout()
-                } else if (response.code() == 500) {
-                    Message.showErrorFromThread("Server internal error")
-                } else {
-                    Message.showErrorFromThread("Unexpected error")
-                }
+                ErrorHandler.res(response)
                 return false
             }
         } catch (e: Exception) {
-            Message.logW("Exception: $e")
-            Message.showErrorFromThread("Cannot reach the server")
+            Message.cannotReachServer()
             return false
         }
     }
@@ -478,7 +385,7 @@ object Notes {
     private suspend fun setNoteAsRemovedOnServer(note: RecyclerViewItem) {
         val isConfirmedToRemove = onNoteChangeHandler?.onRemovedFromServer(note.title)
         if (isConfirmedToRemove != null && isConfirmedToRemove) {
-            onNoteChangeHandler?.onChange(moveToTrashCan(note))
+            moveToTrashCan(note)
         } else if (note.userId == AuthManager.getUserId()) {
             note.mongoId = ""
             SQLite.saveMongoId(note)
@@ -487,15 +394,18 @@ object Notes {
     }
 
     @JvmStatic
-    fun moveToTrashCan(note: RecyclerViewItem): Int {
-        val res = removeFromList(note)
+    fun moveToTrashCan(note: RecyclerViewItem) {
+        onNoteChangeHandler?.onRemove(note)
         val isRemovedFromServer = note.mongoId == null || note.mongoId.isEmpty()
         val time = System.currentTimeMillis() + 7L * 24 * 60 * 60 * 1000
         note.toRemovedNote(time, isRemovedFromServer)
         SQLite.saveRemoval(note)
-        if (!isRemovedFromServer && note.userId == AuthManager.getUserId()) SyncQueue.add(note)
+        if (!isRemovedFromServer && note.userId == AuthManager.getUserId()) {
+            Handler(Looper.getMainLooper()).postDelayed({
+                SyncQueue.add(note)
+            }, 500)
+        }
         removedList.add(note)
-        return res
     }
 
     private fun findAndSaveAsRemoved(mongoId: String) {
@@ -525,11 +435,9 @@ object Notes {
         note.isRemovedFromServer = false
         SQLite.saveRemoval(note)
         val idx = getRemovedNoteById(note.id)
-        Message.logW("$idx")
         if (idx >= 0) removedList.removeAt(idx)
-        list.add(note)
         if (note.userId == AuthManager.getUserId()) SyncQueue.add(note)
-        onNoteChangeHandler?.onAdd(list.size - 1)
+        onNoteChangeHandler?.onAdd(note)
     }
 
     private suspend fun checkAndGetToken(): Boolean {

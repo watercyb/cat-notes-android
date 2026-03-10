@@ -16,6 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import com.blueberryjoy.notes.R
 import com.blueberryjoy.notes.auth.AuthManager.isLogin
 import com.blueberryjoy.notes.clerk.ClerkAuth
+import com.blueberryjoy.notes.utils.Message
 import com.clerk.api.sso.OAuthProvider
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
@@ -65,7 +66,7 @@ class Login : AppCompatActivity() {
 
     private fun loginEmail() {
         if (emailInput!!.getText() == null || passwordInput!!.getText() == null) {
-            Toast.makeText(this@Login, "Invalid input", Toast.LENGTH_LONG).show()
+            Message.allFieldsRequired()
             return
         }
         loginButton?.isEnabled = false

@@ -34,8 +34,7 @@ public class SQLite {
         try {
             SQLNotes = future.get();
         } catch (InterruptedException | ExecutionException e) {
-            Message.logE(e.toString());
-            Toast.makeText(App.Companion.getInstance(), "error at SQLite initialize: " + e, Toast.LENGTH_LONG).show();
+            Message.debug("Error at SQLite initialize: " + e);
         }
         return SQLNotes;
     }

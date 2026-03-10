@@ -1,6 +1,5 @@
 package com.blueberryjoy.notes.editor;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Rect;
 import android.os.Build;
@@ -12,7 +11,6 @@ import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ScrollView;
-import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.activity.OnBackPressedCallback;
@@ -22,12 +20,16 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.blueberryjoy.notes.App;
 import com.blueberryjoy.notes.R;
 import com.blueberryjoy.notes.auth.AuthManager;
+import com.blueberryjoy.notes.utils.Message;
 import com.blueberryjoy.notes.utils.RecyclerViewItem;
 import com.blueberryjoy.notes.notes.Notes;
 import com.blueberryjoy.notes.notes.SyncQueue;
 import com.blueberryjoy.notes.sqlite.SQLite;
+
+import java.util.Objects;
 
 public class Editor extends AppCompatActivity {
     FrameLayout frameLayoutBottom;
@@ -42,6 +44,7 @@ public class Editor extends AppCompatActivity {
     int id = -1;
     private String title = "";
     private String content = "";
+    private boolean isSaved = false;
 
     RecyclerViewItem note;
 
@@ -86,14 +89,13 @@ public class Editor extends AppCompatActivity {
         id = intent.getIntExtra("ID", -1);
         int idx = Notes.getNoteById(id);
         if (idx == -1) {
-            Toast.makeText(this, "Note cannot be found", Toast.LENGTH_LONG).show();
+            Message.show(App.Companion.getInstance().getContext().getString(R.string.note_not_found));
+            isSaved = true;
             finish();
         }
         note = Notes.getList().get(idx);
         title = note.title;
         content = note.content;
-
-        //Message.logW(note.toString());
 
         initializeViews();
 
@@ -107,15 +109,15 @@ public class Editor extends AppCompatActivity {
 
     @Override
     public void onDestroy() {
-        checkAndSave();
+        if (!isSaved)
+            checkAndSave();
         super.onDestroy();
     }
 
     private void saveAndFinish() {
         checkAndSave();
-        Intent intent = new Intent();
-        intent.putExtra("POSITION", Notes.getNoteById(id));
-        setResult(Activity.RESULT_OK, intent);
+        Objects.requireNonNull(Notes.getOnNoteChangeHandler()).onChange(note);
+        isSaved = true;
         finish();
     }
 
@@ -179,17 +181,14 @@ public class Editor extends AppCompatActivity {
 
         imageButtonBack.setOnClickListener(view -> {
             view.animate().scaleX(0.85f).scaleY(0.85f).setDuration(80).withEndAction(() -> view.animate().scaleX(1f).scaleY(1f).setDuration(80).start()).start();
-
             saveAndFinish();
         });
 
         imageButtonRemove.setOnClickListener(view -> {
             view.animate().scaleX(0.85f).scaleY(0.85f).setDuration(80).withEndAction(() -> view.animate().scaleX(1f).scaleY(1f).setDuration(80).start()).start();
-
-            Intent intent = new Intent();
-            intent.putExtra("POSITION", -Notes.getNoteById(id) - 1);
             Notes.moveToTrashCan(note);
-            setResult(Activity.RESULT_OK, intent);
+            Message.show(App.Companion.getInstance().getContext().getString(R.string.note_deleted));
+            isSaved = true;
             finish();
         });
     }

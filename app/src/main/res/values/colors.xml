@@ -5,4 +5,5 @@
     <color name="background">#FFFDF0FF</color>
     <color name="pink">#FFF9E4FF</color>
     <color name="blue">#FF50A6C5</color>
+    <color name="other_user">#FFFFF4F8</color>
 </resources>
