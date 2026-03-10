@@ -21,8 +21,6 @@ import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.ListView
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.ActivityResultLauncher
-import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -70,7 +68,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var swipeRefresh: SwipeRefreshLayout
 
     private lateinit var recyclerViewAdapter: MainRecyclerViewAdapter
-    private lateinit var editorLauncher: ActivityResultLauncher<Intent>
 
     private var lastActiveTime: Long = -1L
     private var resendAvailableAt: Long = 0L
@@ -100,7 +97,6 @@ class MainActivity : AppCompatActivity() {
         initializeNote()
         initializeListView()
         initializeRecyclerView()
-        initializeEditorLauncher()
         checkTime()
     }
 
@@ -226,14 +222,7 @@ class MainActivity : AppCompatActivity() {
     private fun openEditor(id: Int) {
         val intent = Intent(this@MainActivity, Editor::class.java)
         intent.putExtra("ID", id)
-        editorLauncher.launch(intent)
-    }
-
-    private fun initializeEditorLauncher() {
-        editorLauncher = registerForActivityResult(StartActivityForResult()) { result ->
-            //TODO
-
-        }
+        startActivity(intent)
     }
 
     private fun initializeViews() {
