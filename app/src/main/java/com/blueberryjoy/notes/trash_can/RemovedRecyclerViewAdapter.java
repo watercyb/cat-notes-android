@@ -9,6 +9,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.blueberryjoy.notes.BuildConfig;
 import com.blueberryjoy.notes.R;
 import com.blueberryjoy.notes.main.MainRecyclerViewAdapter;
 import com.blueberryjoy.notes.utils.RecyclerViewItem;
@@ -46,10 +47,12 @@ public class RemovedRecyclerViewAdapter extends RecyclerView.Adapter<RemovedRecy
             holder.textViewTitle.setVisibility(View.VISIBLE);
             holder.textViewTitle.setText(visibleList.get(position).title);
         }
-
         holder.textViewContent.setText(visibleList.get(position).content);
-        holder.textViewRemoveInfo.setText(MessageFormat.format("{0} RemovedFromServer: {1}", visibleList.get(position).getDate(), visibleList.get(position).isRemovedFromServer));
-
+        if (BuildConfig.DEBUG) {
+            holder.textViewRemoveInfo.setText(MessageFormat.format("{0} RemovedFromServer: {1}", visibleList.get(position).getDate(), visibleList.get(position).isRemovedFromServer));
+        } else {
+            holder.textViewRemoveInfo.setVisibility(View.GONE);
+        }
     }
 
     @Override
@@ -81,11 +84,6 @@ public class RemovedRecyclerViewAdapter extends RecyclerView.Adapter<RemovedRecy
 
     public void setClickListener(MainRecyclerViewAdapter.ItemClickListener itemClickListener) {
         this.itemclickListener = itemClickListener;
-    }
-
-    // parent activity will implement this method to respond to click events
-    public interface ItemClickListener {
-        void onItemClick(View view, int position);
     }
 
     public void setVisibleList() {

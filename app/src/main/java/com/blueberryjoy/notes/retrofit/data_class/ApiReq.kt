@@ -11,5 +11,6 @@ data class ApiReq(
     val oldPassword: String? = null,
     val newPassword: String? = null,
     val code: String? = null,
-    val refreshToken: String? = null
+    val refreshToken: String? = null,
+    val isEncrypted: Boolean? = null
 )

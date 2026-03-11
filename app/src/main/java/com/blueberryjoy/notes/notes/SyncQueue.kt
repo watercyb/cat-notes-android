@@ -25,6 +25,7 @@ object SyncQueue {
                 continue
             }
             val mongoId = HM[id]
+            Message.debug("id: $id mongoId: $mongoId")
             try {
                 var success: Boolean
                 if (id < 0) {
@@ -62,7 +63,7 @@ object SyncQueue {
 
     fun add(note: RecyclerViewItem) {
         if (!HM.containsKey(note.id)) {
-            Message.logW("Add to queue: " + note.title + " " + note.mongoId)
+            Message.logW("Add to queue: title ${note.title}, mongoId ${note.mongoId}")
             HM[note.id] = note.mongoId
             queue.offerLast(note.id)
             CoroutineScope(Dispatchers.Main).launch {
@@ -77,7 +78,7 @@ object SyncQueue {
             if (!HM.containsKey(id)) break
             id--
         }
-        Message.logW("Add to queue (mongoId): $mongoId")
+        Message.logW("Add to queue: mongoId $mongoId")
         HM[id] = mongoId
         queue.offerLast(id)
         CoroutineScope(Dispatchers.Main).launch {

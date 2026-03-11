@@ -10,6 +10,7 @@ import com.clerk.api.network.model.token.TokenResource
 import com.clerk.api.network.serialization.ClerkResult
 import com.clerk.api.network.serialization.onFailure
 import com.clerk.api.network.serialization.onSuccess
+import com.clerk.api.network.serialization.shortErrorMessageOrNull
 import com.clerk.api.session.fetchToken
 import com.clerk.api.signin.SignIn
 import com.clerk.api.signup.SignUp
@@ -43,6 +44,7 @@ object ClerkAuth {
             )
         )
             .onSuccess {
+                Message.debug("$it")
                 when (it.resultType) {
                     ResultType.SIGN_IN -> {
                         // The OAuth flow resulted in a sign in
@@ -77,12 +79,16 @@ object ClerkAuth {
                         )
                     }
                 }
-            }.onFailure {
-                // See https://clerk.com/docs/guides/development/custom-flows/error-handling
+            }
+            .onFailure { // See https://clerk.com/docs/guides/development/custom-flows/error-handling
                 // for more info on error handling
-                Message.show(
-                    App.getInstance().getContext().getString(R.string.unable_google_sign_in)
-                )
+                if (it.shortErrorMessageOrNull() == "Session already exists") {
+                    AuthManager.setGoogleLogin()
+                } else {
+                    Message.show(
+                        App.getInstance().getContext().getString(R.string.unable_google_sign_in)
+                    )
+                }
             }
     }
 

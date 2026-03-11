@@ -12,10 +12,13 @@ object ErrorHandler {
         } else if (response.code() == 401) {
             Message.invalidCredentials()
             setLogout()
+        } else if (response.code() == 404) {
+            Message.internalError()
         } else if (response.code() == 422) {
             Message.allFieldsRequired()
-            setLogout()
         } else if (response.code() == 500) {
+            Message.internalError()
+        } else if (response.code() == 503) {
             Message.internalError()
         } else {
             Message.unexpectedError()

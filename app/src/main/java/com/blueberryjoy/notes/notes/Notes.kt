@@ -74,17 +74,26 @@ object Notes {
     }
 
     fun create(
-        title: String?,
-        content: String?,
-        mongoId: String?,
+        title: String,
+        content: String,
+        mongoId: String,
         version: Int,
         removeTime: Int,
         isRemovedFromServer: Boolean,
-        userId: String
+        userId: String,
+        isEncrypted: Boolean
     ): Int {
         val idx = (if (list.isEmpty()) 0 else list[list.size - 1].idx) + 10000
         val note = SQLite.create(
-            title, content, mongoId, version, idx, removeTime, isRemovedFromServer, userId
+            title,
+            content,
+            mongoId,
+            version,
+            idx,
+            removeTime,
+            isRemovedFromServer,
+            userId,
+            isEncrypted
         )
         val item = RecyclerViewItem(note)
         onNoteChangeHandler?.onAdd(item)
@@ -94,7 +103,14 @@ object Notes {
     //Create Note from the API result.
     fun create(note: ApiNote): Int {
         return create(
-            note.title, note.content, note.mongoId, note.version, 0, false, AuthManager.getUserId()
+            note.title,
+            note.content,
+            note.mongoId,
+            note.version,
+            0,
+            false,
+            AuthManager.getUserId(),
+            note.isEncrypted
         )
     }
 
@@ -176,7 +192,12 @@ object Notes {
     suspend fun createNoteOnApi(note: RecyclerViewItem): Boolean {
         if (!checkAndGetToken()) return false
 
-        val apiReq = ApiReq(title = note.title, content = note.content, version = note.version)
+        val apiReq = ApiReq(
+            title = note.title,
+            content = note.content,
+            version = note.version,
+            isEncrypted = note.isEncrypted
+        )
         try {
             val response = RetrofitInstance.api.createNote(apiReq)
             if (response.isSuccessful) {
@@ -191,7 +212,7 @@ object Notes {
                 ErrorHandler.res(response)
                 return false
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             Message.cannotReachServer()
             return false
         }
@@ -199,6 +220,8 @@ object Notes {
 
     suspend fun deleteNodeFromApi(mongoId: String): Boolean {
         if (!checkAndGetToken()) return false
+
+        Message.debug("deleteNodeFromApi $mongoId")
 
         try {
             val response = RetrofitInstance.api.deleteNote(mongoId)
@@ -214,7 +237,7 @@ object Notes {
                 ErrorHandler.res(response)
                 return false
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             Message.cannotReachServer()
             return false
         }
@@ -227,7 +250,8 @@ object Notes {
             noteId = note.mongoId,
             title = note.title,
             content = note.content,
-            version = note.version
+            version = note.version,
+            isEncrypted = note.isEncrypted,
         )
         try {
             val response = RetrofitInstance.api.updateNote(apiReq)
@@ -257,14 +281,14 @@ object Notes {
                 }
                 return false
             } else {
-                if (response.code() == 404) {
+                if (response.code() == 403) {
                     setNoteAsRemovedOnServer(note)
                 } else {
                     ErrorHandler.res(response)
                 }
                 return false
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             Message.cannotReachServer()
             return false
         }
@@ -288,7 +312,7 @@ object Notes {
                 ErrorHandler.res(response)
                 return false
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             Message.cannotReachServer()
             return false
         }
@@ -373,10 +397,14 @@ object Notes {
                 }
                 return false
             } else {
-                ErrorHandler.res(response)
+                if (response.code() == 403) {
+                    Message.debug("getNoteFromApi: Should not be called")
+                } else {
+                    ErrorHandler.res(response)
+                }
                 return false
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             Message.cannotReachServer()
             return false
         }
@@ -436,8 +464,12 @@ object Notes {
         SQLite.saveRemoval(note)
         val idx = getRemovedNoteById(note.id)
         if (idx >= 0) removedList.removeAt(idx)
-        if (note.userId == AuthManager.getUserId()) SyncQueue.add(note)
         onNoteChangeHandler?.onAdd(note)
+        if (note.userId == AuthManager.getUserId()) {
+            Handler(Looper.getMainLooper()).postDelayed({
+                SyncQueue.add(note)
+            }, 500)
+        }
     }
 
     private suspend fun checkAndGetToken(): Boolean {

@@ -2,8 +2,7 @@ package com.blueberryjoy.notes.sqlite;
 
 import static com.blueberryjoy.notes.sqlite.AppDatabase.MIGRATION_1_2;
 import static com.blueberryjoy.notes.sqlite.AppDatabase.MIGRATION_2_3;
-
-import android.widget.Toast;
+import static com.blueberryjoy.notes.sqlite.AppDatabase.MIGRATION_3_4;
 
 import androidx.annotation.NonNull;
 import androidx.room.Room;
@@ -25,6 +24,7 @@ public class SQLite {
             .databaseBuilder(App.Companion.getInstance().getContext(), AppDatabase.class, "app_db")
             .addMigrations(MIGRATION_1_2)
             .addMigrations(MIGRATION_2_3)
+            .addMigrations(MIGRATION_3_4)
             .build();
     private static final ExecutorService executor = Executors.newSingleThreadExecutor();
 
@@ -39,32 +39,8 @@ public class SQLite {
         return SQLNotes;
     }
 
-    public static void clearAll() {
-        executor.submit(() -> Objects.requireNonNull(db.pageDao()).deleteAllNotes());
-    }
-
-    public static void saveTitle(int id, String title) {
-        executor.submit(() -> Objects.requireNonNull(db.pageDao()).updateTitle(id, title));
-    }
-
-    public static void saveContent(int id, String content) {
-        executor.submit(() -> Objects.requireNonNull(db.pageDao()).updateContent(id, content));
-    }
-
-    public static void saveMongoId(int id, String mongoId) {
-        executor.submit(() -> Objects.requireNonNull(db.pageDao()).updateMongoId(id, mongoId));
-    }
-
     public static void saveMongoId(RecyclerViewItem note) {
         executor.submit(() -> Objects.requireNonNull(db.pageDao()).updateMongoId(note.id, note.mongoId));
-    }
-
-    public static void saveVersion(int id, int version) {
-        executor.submit(() -> Objects.requireNonNull(db.pageDao()).updateVersion(id, version));
-    }
-
-    public static void saveIdx(int id, int idx) {
-        executor.submit(() -> Objects.requireNonNull(db.pageDao()).updateIdx(id, idx));
     }
 
     public static void saveIdx(RecyclerViewItem note) {
@@ -83,22 +59,17 @@ public class SQLite {
         executor.submit(() -> Objects.requireNonNull(db.pageDao()).updateUserId(note.id, note.userId));
     }
 
-
     @NonNull
-    public static SQLNote create(String title, String content, String mongoId, int version, int idx, int removeTime, boolean isRemovedFromServer, String userId) {
-        SQLNote SQLNote = new SQLNote(title, content, mongoId, version, idx, removeTime, isRemovedFromServer, userId);
+    public static SQLNote create(String title, String content, String mongoId, int version, int idx, int removeTime, boolean isRemovedFromServer, String userId, boolean isEncrypted) {
+        SQLNote SQLNote = new SQLNote(title, content, mongoId, version, idx, removeTime, isRemovedFromServer, userId, isEncrypted);
         Future<Long> future = executor.submit(() -> Objects.requireNonNull(db.pageDao()).insert(SQLNote));
         try {
             long id = future.get();
             SQLNote.id = (int) id;
         } catch (InterruptedException | ExecutionException e) {
-            Toast.makeText(App.Companion.getInstance(), "error at SQLite create: " + e, Toast.LENGTH_LONG).show();
+            Message.debug("error at SQLite create: " + e);
         }
         return SQLNote;
-    }
-
-    public static void delete(int id) {
-        executor.submit(() -> Objects.requireNonNull(db.pageDao()).deleteNote(id));
     }
 
     public static void delete(@NonNull RecyclerViewItem note) {

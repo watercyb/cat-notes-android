@@ -3,18 +3,17 @@ package com.blueberryjoy.notes.clerk
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.blueberryjoy.notes.auth.AuthManager
-import com.blueberryjoy.notes.utils.Message
 import com.blueberryjoy.notes.auth.AuthType
+import com.blueberryjoy.notes.utils.Message
 import com.clerk.api.Clerk
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 
 class OAuthViewModel : ViewModel() {
     private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
-    val uiState = _uiState.asStateFlow()
+    //val uiState = _uiState.asStateFlow()
 
     init {
         combine(Clerk.isInitialized, Clerk.userFlow) { isInitialized, user ->

@@ -128,7 +128,12 @@ class MainActivity : AppCompatActivity() {
         val list: MutableList<ListViewItem?> = ArrayList()
 
         list.add(ListViewItem("NEW NOTE") {
-            val noteId = Notes.create("", "", null, 0, 0, false, AuthManager.getUserId())
+            val noteId = Notes.create("", "", "", 0, 0, false, AuthManager.getUserId(), false)
+            if (noteId != -1) openEditor(noteId)
+        })
+
+        list.add(ListViewItem("SECURE NOTE") {
+            val noteId = Notes.create("", "", "", 0, 0, false, AuthManager.getUserId(), false)
             if (noteId != -1) openEditor(noteId)
         })
 

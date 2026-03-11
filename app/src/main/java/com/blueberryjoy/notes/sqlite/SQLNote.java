@@ -10,8 +10,14 @@ public class SQLNote {
     @PrimaryKey(autoGenerate = true)
     public int id;
 
+    @NonNull
+    @ColumnInfo(defaultValue = "")
     final public String title;
+    @NonNull
+    @ColumnInfo(defaultValue = "")
     final public String content;
+    @NonNull
+    @ColumnInfo(defaultValue = "")
     final public String mongoId;
     final public int version;
     final public int idx;
@@ -27,7 +33,11 @@ public class SQLNote {
     @ColumnInfo(defaultValue = "")
     final public String userId;
 
-    public SQLNote(String title, String content, String mongoId, int version, int idx, long removeTime, boolean isRemovedFromServer, @NonNull String userId) {
+    // New fields #4
+    @ColumnInfo(defaultValue = "0")
+    final public boolean isEncrypted;
+
+    public SQLNote(@NonNull String title, @NonNull String content, @NonNull String mongoId, int version, int idx, long removeTime, boolean isRemovedFromServer, @NonNull String userId, boolean isEncrypted) {
         this.title = title;
         this.content = content;
         this.mongoId = mongoId;
@@ -36,10 +46,11 @@ public class SQLNote {
         this.removeTime = removeTime;
         this.isRemovedFromServer = isRemovedFromServer;
         this.userId = userId;
+        this.isEncrypted = isEncrypted;
     }
 
     @NonNull
     public String toString() {
-        return "id: " + id + " title: " + title + " mongoId: " + mongoId + " version: " + version + " content: " + content + " idx: " + idx + " removeTime: " + removeTime + " isRemovedFromServer: " + isRemovedFromServer + " userId: " + userId;
+        return "id: " + id + " title: " + title + " mongoId: " + mongoId + " isEncrypted: " + isEncrypted + " version: " + version + " removeTime: " + removeTime + " isRemovedFromServer: " + isRemovedFromServer + " userId: " + userId + " content: " + content + " idx: " + idx;
     }
 }

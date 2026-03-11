@@ -23,6 +23,7 @@ public class Message {
             Handler handler = new Handler(Looper.getMainLooper());
             handler.post(() -> Toast.makeText(App.Companion.getInstance().getContext(), str, Toast.LENGTH_LONG).show());
         }
+        logW(str);
     }
 
     public static void logW(@NonNull String str) {

@@ -18,6 +18,7 @@ import com.blueberryjoy.notes.utils.Message
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.clerk.api.Clerk
+import com.clerk.api.Clerk.user
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -315,7 +316,7 @@ object AuthManager {
                 ErrorHandler.res(response)
                 return false
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             Message.cannotReachServer()
             return false
         }
@@ -336,7 +337,7 @@ object AuthManager {
                 ErrorHandler.res(response)
                 return false
             }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             Message.cannotReachServer()
             return false
         }

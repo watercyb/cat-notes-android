@@ -1,6 +1,5 @@
 package com.blueberryjoy.notes.auth
 
-import android.app.Activity
 import android.app.AlertDialog
 import android.os.Bundle
 import android.view.inputmethod.InputMethodManager
