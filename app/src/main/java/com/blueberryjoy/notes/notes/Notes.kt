@@ -7,6 +7,8 @@ import com.blueberryjoy.notes.R
 import com.blueberryjoy.notes.auth.AuthManager
 import com.blueberryjoy.notes.auth.AuthType
 import com.blueberryjoy.notes.clerk.ClerkAuth
+import com.blueberryjoy.notes.notes.SyncQueue.HM
+import com.blueberryjoy.notes.notes.SyncQueue.queue
 import com.blueberryjoy.notes.retrofit.ErrorHandler
 import com.blueberryjoy.notes.retrofit.RetrofitInstance
 import com.blueberryjoy.notes.retrofit.data_class.ApiNote
@@ -24,7 +26,7 @@ object Notes {
     var list: MutableList<RecyclerViewItem> = ArrayList()
         private set
     var removedList: MutableList<RecyclerViewItem> = ArrayList()
-    private var onNoteChangeHandler: OnNoteChangeHandler? = null
+    private lateinit var onNoteChangeHandler: OnNoteChangeHandler
 
     fun initialize(onNoteChangeHandler: OnNoteChangeHandler) {
         val notes = SQLite.initialize()
@@ -54,7 +56,7 @@ object Notes {
     }
 
     @JvmStatic
-    fun getOnNoteChangeHandler(): OnNoteChangeHandler? {
+    fun getOnNoteChangeHandler(): OnNoteChangeHandler {
         return onNoteChangeHandler
     }
 
@@ -96,7 +98,7 @@ object Notes {
             isEncrypted
         )
         val item = RecyclerViewItem(note)
-        onNoteChangeHandler?.onAdd(item)
+        onNoteChangeHandler.onAdd(item)
         return item.id
     }
 
@@ -111,6 +113,20 @@ object Notes {
             false,
             AuthManager.getUserId(),
             note.isEncrypted
+        )
+    }
+
+    //Duplicate note.
+    fun create(note: RecyclerViewItem): Int {
+        return create(
+            note.title,
+            note.content,
+            "",
+            0,
+            0,
+            false,
+            AuthManager.getUserId(),
+            false
         )
     }
 
@@ -180,7 +196,7 @@ object Notes {
             note.content = apiNote.content
             note.version = apiNote.version
             SQLite.saveNote(note)
-            onNoteChangeHandler?.onChange(note)
+            onNoteChangeHandler.onChange(note)
         } else if (!note.equals(apiNote)) {
             create(apiNote)
             note.mongoId = ""
@@ -220,8 +236,6 @@ object Notes {
 
     suspend fun deleteNodeFromApi(mongoId: String): Boolean {
         if (!checkAndGetToken()) return false
-
-        Message.debug("deleteNodeFromApi $mongoId")
 
         try {
             val response = RetrofitInstance.api.deleteNote(mongoId)
@@ -411,8 +425,8 @@ object Notes {
     }
 
     private suspend fun setNoteAsRemovedOnServer(note: RecyclerViewItem) {
-        val isConfirmedToRemove = onNoteChangeHandler?.onRemovedFromServer(note.title)
-        if (isConfirmedToRemove != null && isConfirmedToRemove) {
+        val isConfirmedToRemove = onNoteChangeHandler.onRemovedFromServer(note.title)
+        if (isConfirmedToRemove) {
             moveToTrashCan(note)
         } else if (note.userId == AuthManager.getUserId()) {
             note.mongoId = ""
@@ -423,7 +437,7 @@ object Notes {
 
     @JvmStatic
     fun moveToTrashCan(note: RecyclerViewItem) {
-        onNoteChangeHandler?.onRemove(note)
+        onNoteChangeHandler.onRemove(note)
         val isRemovedFromServer = note.mongoId == null || note.mongoId.isEmpty()
         val time = System.currentTimeMillis() + 7L * 24 * 60 * 60 * 1000
         note.toRemovedNote(time, isRemovedFromServer)
@@ -464,7 +478,7 @@ object Notes {
         SQLite.saveRemoval(note)
         val idx = getRemovedNoteById(note.id)
         if (idx >= 0) removedList.removeAt(idx)
-        onNoteChangeHandler?.onAdd(note)
+        onNoteChangeHandler.onAdd(note)
         if (note.userId == AuthManager.getUserId()) {
             Handler(Looper.getMainLooper()).postDelayed({
                 SyncQueue.add(note)
@@ -489,5 +503,17 @@ object Notes {
             }
         }
         return -1
+    }
+
+    fun showNotes() {
+        Message.debug("list: ${list.size}, removedList: ${removedList.size}")
+        Message.logW("List:")
+        for (note in list) {
+            Message.logW("$note")
+        }
+        Message.logW("RemovedList:")
+        for (note in removedList) {
+            Message.logW("$note")
+        }
     }
 }

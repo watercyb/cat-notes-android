@@ -4,6 +4,7 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -53,6 +54,15 @@ public class RemovedRecyclerViewAdapter extends RecyclerView.Adapter<RemovedRecy
         } else {
             holder.textViewRemoveInfo.setVisibility(View.GONE);
         }
+
+        if (!visibleList.get(position).isEncrypted) {
+            holder.textViewContent.setText(visibleList.get(position).content);
+            holder.textViewContent.setVisibility(View.VISIBLE);
+            holder.secureNote.setVisibility(View.GONE);
+        } else {
+            holder.textViewContent.setVisibility(View.GONE);
+            holder.secureNote.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override
@@ -66,12 +76,14 @@ public class RemovedRecyclerViewAdapter extends RecyclerView.Adapter<RemovedRecy
         TextView textViewTitle;
         TextView textViewContent;
         TextView textViewRemoveInfo;
+        LinearLayout secureNote;
 
         ViewHolder(@NonNull View itemView) {
             super(itemView);
             textViewTitle = itemView.findViewById(R.id.textViewTitle);
             textViewContent = itemView.findViewById(R.id.textViewContent);
             textViewRemoveInfo = itemView.findViewById(R.id.textViewRemoveInfo);
+            secureNote = itemView.findViewById(R.id.secureNote);
             itemView.setOnClickListener(this);
         }
 

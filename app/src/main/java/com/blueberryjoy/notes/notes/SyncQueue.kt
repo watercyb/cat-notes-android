@@ -25,7 +25,6 @@ object SyncQueue {
                 continue
             }
             val mongoId = HM[id]
-            Message.debug("id: $id mongoId: $mongoId")
             try {
                 var success: Boolean
                 if (id < 0) {
@@ -106,5 +105,12 @@ object SyncQueue {
         queue.clear()
         HM.clear()
         isRunning = false
+    }
+
+    fun showQueue() {
+        Message.debug("${queue.size}")
+        for (id in queue) {
+            Message.logW("Id: $id, mongoId: ${HM[id]}")
+        }
     }
 }

@@ -12,11 +12,15 @@ import android.os.Looper
 import android.text.Editable
 import android.text.Html
 import android.text.TextWatcher
+import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.View
+import android.view.WindowManager
+import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.widget.AdapterView
 import android.widget.Button
+import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.ListView
@@ -48,6 +52,7 @@ import com.blueberryjoy.notes.notes.Notes
 import com.blueberryjoy.notes.notes.OnNoteChangeHandler
 import com.blueberryjoy.notes.notes.SyncQueue
 import com.blueberryjoy.notes.trash_can.TrashCan
+import com.blueberryjoy.notes.utils.Crypto
 import com.blueberryjoy.notes.utils.Message
 import com.blueberryjoy.notes.utils.RecyclerViewItem
 import kotlinx.coroutines.Dispatchers
@@ -72,6 +77,7 @@ class MainActivity : AppCompatActivity() {
     private var lastActiveTime: Long = -1L
     private var resendAvailableAt: Long = 0L
 
+    @Suppress("DEPRECATION")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         this.enableEdgeToEdge()
@@ -87,7 +93,6 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             window.isNavigationBarContrastEnforced = false
         } else {
-            @Suppress("DEPRECATION")
             window.navigationBarColor = getColor(R.color.background)
         }
 
@@ -133,8 +138,7 @@ class MainActivity : AppCompatActivity() {
         })
 
         list.add(ListViewItem("SECURE NOTE") {
-            val noteId = Notes.create("", "", "", 0, 0, false, AuthManager.getUserId(), false)
-            if (noteId != -1) openEditor(noteId)
+            showInputPassword()
         })
 
         list.add(ListViewItem("TRASH CAN") {
@@ -157,11 +161,13 @@ class MainActivity : AppCompatActivity() {
 
         if (BuildConfig.DEBUG) {
             list.add(ListViewItem("CHECK QUEUE") {
-                Message.debug("${SyncQueue.getSize()}")
+                SyncQueue.showQueue()
             })
-        }
 
-        if (BuildConfig.DEBUG) {
+            list.add(ListViewItem("NOTES") {
+                Notes.showNotes()
+            })
+
             list.add(ListViewItem("TEST") { _ ->
 
             })
@@ -170,8 +176,7 @@ class MainActivity : AppCompatActivity() {
         val listViewAdapter = ListViewAdapter(this, list)
         val params = listViewSetting.layoutParams
         params.height = ((min(
-            listViewAdapter.count * 41,
-            250
+            listViewAdapter.count * 41, 250
         ) + 15) * this@MainActivity.getResources().displayMetrics.density).toInt()
         params.width = (175 * this@MainActivity.getResources().displayMetrics.density).toInt()
         listViewSetting.layoutParams = params
@@ -512,5 +517,50 @@ class MainActivity : AppCompatActivity() {
         dialog.show()
 
         startResendTimer(resendAvailableAt)
+    }
+
+    fun showInputPassword() {
+        val dialogView = layoutInflater.inflate(R.layout.editor_password, null)
+        val inputPassword = dialogView.findViewById<EditText>(R.id.inputPassword)
+
+        val dialog =
+            android.app.AlertDialog.Builder(this).setTitle("Create Password").setView(dialogView)
+                .setCancelable(false).setPositiveButton("Create") { _, _ ->
+                    try {
+                        val password = inputPassword.text.toString()
+                        if (password.isEmpty()) {
+                            Message.show(getString(R.string.password_empty))
+                        } else {
+                            val content = Crypto.encrypt(password, "")
+                            val noteId = Notes.create(
+                                "", content, "", 0, 0, false, AuthManager.getUserId(), true
+                            )
+                            if (noteId != -1) openEditor(noteId)
+                        }
+                    } catch (_: Exception) {
+                        Message.show(getString(R.string.incorrect_password))
+                    }
+                }.setNegativeButton("Cancel") { _, _ ->
+                }.create()
+
+        dialog?.window?.setSoftInputMode(
+            WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE
+        )
+        inputPassword.post {
+            inputPassword.requestFocus()
+            val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+            imm.showSoftInput(inputPassword, InputMethodManager.SHOW_IMPLICIT)
+        }
+
+        dialog.show()
+
+        inputPassword.setOnEditorActionListener { _, actionId, event ->
+            if (actionId == EditorInfo.IME_ACTION_DONE || event?.keyCode == KeyEvent.KEYCODE_ENTER) {
+                dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).performClick()
+                true
+            } else {
+                false
+            }
+        }
     }
 }

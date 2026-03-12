@@ -27,10 +27,7 @@ object Crypto {
         val factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
 
         val spec = PBEKeySpec(
-            password.toCharArray(),
-            salt,
-            ITERATIONS,
-            KEY_LENGTH
+            password.toCharArray(), salt, ITERATIONS, KEY_LENGTH
         )
 
         val keyBytes = factory.generateSecret(spec).encoded
@@ -53,8 +50,30 @@ object Crypto {
         return Base64.encodeToString(combined, Base64.NO_WRAP)
     }
 
-    fun decrypt(password: String, encrypted: String): String {
+    fun encrypt(salt: ByteArray, key: SecretKeySpec, plaintext: String): String {
+        val random = SecureRandom()
 
+        val iv = ByteArray(IV_SIZE)
+        random.nextBytes(iv)
+
+        val cipher = Cipher.getInstance("AES/GCM/NoPadding")
+
+        val gcmSpec = GCMParameterSpec(128, iv)
+
+        cipher.init(Cipher.ENCRYPT_MODE, key, gcmSpec)
+
+        val ciphertext = cipher.doFinal(plaintext.toByteArray(Charsets.UTF_8))
+
+        val combined = ByteArray(salt.size + iv.size + ciphertext.size)
+
+        System.arraycopy(salt, 0, combined, 0, salt.size)
+        System.arraycopy(iv, 0, combined, salt.size, iv.size)
+        System.arraycopy(ciphertext, 0, combined, salt.size + iv.size, ciphertext.size)
+
+        return Base64.encodeToString(combined, Base64.NO_WRAP)
+    }
+
+    fun decrypt(password: String, encrypted: String): Triple<ByteArray, SecretKeySpec, String> {
         val combined = Base64.decode(encrypted, Base64.NO_WRAP)
 
         val salt = combined.copyOfRange(0, 16)
@@ -64,10 +83,7 @@ object Crypto {
         val factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
 
         val spec = PBEKeySpec(
-            password.toCharArray(),
-            salt,
-            ITERATIONS,
-            KEY_LENGTH
+            password.toCharArray(), salt, ITERATIONS, KEY_LENGTH
         )
 
         val keyBytes = factory.generateSecret(spec).encoded
@@ -81,6 +97,24 @@ object Crypto {
 
         val plaintextBytes = cipher.doFinal(ciphertext)
 
-        return String(plaintextBytes, Charsets.UTF_8)
+        return Triple(salt, key, String(plaintextBytes, Charsets.UTF_8))
+    }
+
+    fun getKey(password: String): Pair<ByteArray, SecretKeySpec> {
+        val random = SecureRandom()
+
+        val salt = ByteArray(SALT_SIZE)
+        random.nextBytes(salt)
+
+        val factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
+
+        val spec = PBEKeySpec(
+            password.toCharArray(), salt, ITERATIONS, KEY_LENGTH
+        )
+
+        val keyBytes = factory.generateSecret(spec).encoded
+        val key = SecretKeySpec(keyBytes, "AES")
+
+        return Pair(salt, key)
     }
 }

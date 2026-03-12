@@ -67,7 +67,7 @@ public class SQLite {
             long id = future.get();
             SQLNote.id = (int) id;
         } catch (InterruptedException | ExecutionException e) {
-            Message.debug("error at SQLite create: " + e);
+            Message.debug("Error at SQLite create: " + e);
         }
         return SQLNote;
     }

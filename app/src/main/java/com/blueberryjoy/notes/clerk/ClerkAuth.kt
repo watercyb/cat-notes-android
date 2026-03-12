@@ -44,7 +44,6 @@ object ClerkAuth {
             )
         )
             .onSuccess {
-                Message.debug("$it")
                 when (it.resultType) {
                     ResultType.SIGN_IN -> {
                         // The OAuth flow resulted in a sign in
@@ -65,11 +64,11 @@ object ClerkAuth {
                     ResultType.SIGN_UP -> {
                         // The OAuth flow resulted in a sign-up
                         if (it.signUp?.status == SignUp.Status.COMPLETE) {
-                            Message.debug("Signed up with Google")
+                            Message.debug("Signed up with Google: Should not be called")
                         } else {
                             // If the status is not complete, check why. User may need to
                             // complete further steps.
-                            Message.debug("Cannot sign up")
+                            Message.debug("Cannot sign up: Should not be called")
                         }
                     }
 

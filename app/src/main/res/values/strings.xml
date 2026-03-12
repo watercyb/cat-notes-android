@@ -48,4 +48,12 @@
     <string name="password_change_no_for_this_account">Password change isn\'t enabled for this account</string>
     <string name="invalid_verification_code">Invalid or expired verification code</string>
     <string name="unable_verify_email">Invalid or email already verified</string>
+    <string name="locked">Locked</string>
+    <string name="secure_note">Secure Note</string>
+    <string name="copy_created">A copy of this note has been created.</string>
+    <string name="incorrect_password">Incorrect password</string>
+    <string name="password_empty">Please enter a password</string>
+    <string name="password_not_match">Passwords do not match</string>
+    <string name="unable_update_password">Unable to update password</string>
+    <string name="clone">clone</string>
 </resources>

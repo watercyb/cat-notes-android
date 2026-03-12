@@ -2,9 +2,11 @@ package com.blueberryjoy.notes.main;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.media.Image;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -57,7 +59,14 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
             holder.linearLayout.setBackgroundColor(ContextCompat.getColor(holder.itemView.getContext(), R.color.other_user));
         }
 
-        holder.textViewContent.setText(visibleList.get(position).content);
+        if (!visibleList.get(position).isEncrypted) {
+            holder.textViewContent.setText(visibleList.get(position).content);
+            holder.textViewContent.setVisibility(View.VISIBLE);
+            holder.secureNote.setVisibility(View.GONE);
+        } else {
+            holder.textViewContent.setVisibility(View.GONE);
+            holder.secureNote.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override
@@ -71,12 +80,15 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
         TextView textViewTitle;
         TextView textViewContent;
         LinearLayout linearLayout;
+        LinearLayout secureNote;
+
 
         ViewHolder(@NonNull View itemView) {
             super(itemView);
             textViewTitle = itemView.findViewById(R.id.textViewTitle);
             textViewContent = itemView.findViewById(R.id.textViewContent);
             linearLayout = itemView.findViewById(R.id.linearLayout);
+            secureNote = itemView.findViewById(R.id.secureNote);
             itemView.setOnClickListener(this);
         }
 
@@ -145,7 +157,7 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
         for (int j = 0; j < list.size(); j++) {
             if (list.get(j) == visibleList.get(i)) return j;
         }
-        Message.debug("getIdxFromVisibleIdx: Should not reached.");
+        Message.debug("getIdxFromVisibleIdx: Should not be called");
         return -1;
     }
 
