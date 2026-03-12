@@ -7,8 +7,6 @@ import com.blueberryjoy.notes.R
 import com.blueberryjoy.notes.auth.AuthManager
 import com.blueberryjoy.notes.auth.AuthType
 import com.blueberryjoy.notes.clerk.ClerkAuth
-import com.blueberryjoy.notes.notes.SyncQueue.HM
-import com.blueberryjoy.notes.notes.SyncQueue.queue
 import com.blueberryjoy.notes.retrofit.ErrorHandler
 import com.blueberryjoy.notes.retrofit.RetrofitInstance
 import com.blueberryjoy.notes.retrofit.data_class.ApiNote
@@ -465,7 +463,12 @@ object Notes {
         note.removeTime -= 8 * 24 * 60 * 60 * 1000
         if (note.isRemovedFromServer) {
             val idx = getRemovedNoteById(note.id)
-            if (idx >= 0) removedList.removeAt(idx)
+            if (idx >= 0) {
+                removedList.removeAt(idx)
+                Message.show(
+                    App.getInstance().getContext().getString(R.string.note_permanently_deleted)
+                )
+            }
             SQLite.delete(note)
         } else {
             SQLite.saveRemoval(note)
@@ -477,7 +480,12 @@ object Notes {
         note.isRemovedFromServer = false
         SQLite.saveRemoval(note)
         val idx = getRemovedNoteById(note.id)
-        if (idx >= 0) removedList.removeAt(idx)
+        if (idx >= 0) {
+            removedList.removeAt(idx)
+            Message.show(
+                App.getInstance().getContext().getString(R.string.note_restored)
+            )
+        }
         onNoteChangeHandler.onAdd(note)
         if (note.userId == AuthManager.getUserId()) {
             Handler(Looper.getMainLooper()).postDelayed({

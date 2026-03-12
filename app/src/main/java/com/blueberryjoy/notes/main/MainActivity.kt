@@ -60,7 +60,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
-import kotlin.math.min
 
 
 class MainActivity : AppCompatActivity() {
@@ -175,9 +174,24 @@ class MainActivity : AppCompatActivity() {
 
         val listViewAdapter = ListViewAdapter(this, list)
         val params = listViewSetting.layoutParams
-        params.height = ((min(
-            listViewAdapter.count * 41, 250
-        ) + 15) * this@MainActivity.getResources().displayMetrics.density).toInt()
+
+        var totalHeight = 0
+        for (i in 0 until listViewAdapter.count) {
+            val listItem = listViewAdapter.getView(i, null, listViewSetting)
+            listItem.measure(
+                View.MeasureSpec.makeMeasureSpec(listViewSetting.width, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.UNSPECIFIED
+            )
+            totalHeight += listItem.measuredHeight
+        }
+        totalHeight += listViewSetting.dividerHeight * (listViewAdapter.count - 1)
+
+        if (totalHeight <= 262 * this@MainActivity.getResources().displayMetrics.density) {
+            params.height = 0
+        } else {
+            params.height =
+                (262 * this@MainActivity.getResources().displayMetrics.density).toInt()
+        }
         params.width = (175 * this@MainActivity.getResources().displayMetrics.density).toInt()
         listViewSetting.layoutParams = params
 

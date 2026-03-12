@@ -37,14 +37,14 @@
     <string name="unable_google_sign_out">Unable to sign out with Google</string>
     <string name="note_not_found">Meow! This note was not found.</string>
     <string name="enter_code">Enter complete 6-digit code sent to your email address</string>
-    <string name="note_deleted">Note deleted</string>
+    <string name="note_to_trash">Note moved to Trash</string>
     <string name="server_internal_error">Server internal error</string>
     <string name="too_many_requests">Too many requests, please try later.</string>
     <string name="invalid_credentials">Invalid credentials</string>
     <string name="unexpected_error">Unexpected error</string>
     <string name="unable_connect_to_server">Unable to connect to the server</string>
     <string name="user_already_exist">User already exists</string>
-    <string name="username_change_no_for_this_acount">Username change isn\'t enabled for this account</string>
+    <string name="username_change_no_for_this_account">Username change isn\'t enabled for this account</string>
     <string name="password_change_no_for_this_account">Password change isn\'t enabled for this account</string>
     <string name="invalid_verification_code">Invalid or expired verification code</string>
     <string name="unable_verify_email">Invalid or email already verified</string>
@@ -56,4 +56,6 @@
     <string name="password_not_match">Passwords do not match</string>
     <string name="unable_update_password">Unable to update password</string>
     <string name="clone">clone</string>
+    <string name="note_permanently_deleted">Note permanently deleted</string>
+    <string name="note_restored">Note restored</string>
 </resources>

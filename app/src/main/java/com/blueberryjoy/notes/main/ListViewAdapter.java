@@ -9,8 +9,11 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 
+import com.blueberryjoy.notes.BuildConfig;
 import com.blueberryjoy.notes.R;
+import com.blueberryjoy.notes.utils.Message;
 
+import java.lang.reflect.Parameter;
 import java.util.List;
 
 public class ListViewAdapter extends ArrayAdapter<ListViewItem> {
@@ -31,6 +34,8 @@ public class ListViewAdapter extends ArrayAdapter<ListViewItem> {
         ListViewItem item = getItem(position);
 
         TextView text = convertView.findViewById(R.id.textView);
+
+        if (!BuildConfig.DEBUG) text.setTextSize(18);
 
         assert item != null;
         text.setText(item.getTitle());

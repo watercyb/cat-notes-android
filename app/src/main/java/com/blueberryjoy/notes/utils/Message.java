@@ -60,7 +60,7 @@ public class Message {
     }
 
     public static void usernameChangeDisable() {
-        new Handler(Looper.getMainLooper()).post(() -> Toast.makeText(App.Companion.getInstance().getContext(), App.Companion.getInstance().getContext().getString(R.string.username_change_no_for_this_acount), Toast.LENGTH_LONG).show());
+        new Handler(Looper.getMainLooper()).post(() -> Toast.makeText(App.Companion.getInstance().getContext(), App.Companion.getInstance().getContext().getString(R.string.username_change_no_for_this_account), Toast.LENGTH_LONG).show());
     }
 
     public static void passwordChangeDisable() {

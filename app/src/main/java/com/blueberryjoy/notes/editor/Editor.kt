@@ -248,7 +248,7 @@ class Editor : AppCompatActivity() {
             }.setNegativeButton("Cancel") { _, _ ->
                 isSaved = true
                 finish()
-            }.setNeutralButton("Remove") { _, _ ->
+            }.setNeutralButton("Delete") { _, _ ->
                 deleteAndClose()
             }.create()
 
@@ -347,12 +347,12 @@ class Editor : AppCompatActivity() {
 
     fun deleteAndClose() {
         Notes.moveToTrashCan(note)
-        Message.show(getInstance().getContext().getString(R.string.note_deleted))
+        Message.show(getString(R.string.note_to_trash))
         isSaved = true
         finish()
     }
 
     fun duplicate() {
-        Notes.create(note);
+        Notes.create(note)
     }
 }
