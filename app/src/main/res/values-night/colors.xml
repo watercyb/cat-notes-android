@@ -3,8 +3,8 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="background">#FF1B1C2A</color>
-    <color name="note_card">#FF2A2B38</color>
-    <color name="note_card_other_user">#FF33354A</color>
+    <color name="note_card">#FF33354A</color>
+    <color name="note_card_other_user">#FF2A2B38</color>
     <color name="menu_background">#FF171826</color>
     <color name="menu_divider">#FF2E2F3F</color>
     <color name="pink">#FFF9E4FF</color>
