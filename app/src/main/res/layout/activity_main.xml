@@ -97,6 +97,8 @@
         android:layout_marginEnd="32dp"
         android:layout_marginBottom="64dp"
         android:background="@android:drawable/dialog_holo_light_frame"
+        android:divider="@color/menu_divider"
+        android:dividerHeight="1dp"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />

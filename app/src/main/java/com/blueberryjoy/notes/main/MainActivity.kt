@@ -186,11 +186,11 @@ class MainActivity : AppCompatActivity() {
         }
         totalHeight += listViewSetting.dividerHeight * (listViewAdapter.count - 1)
 
-        if (totalHeight <= 262 * this@MainActivity.getResources().displayMetrics.density) {
+        if (totalHeight <= 261 * this@MainActivity.getResources().displayMetrics.density) {
             params.height = 0
         } else {
             params.height =
-                (262 * this@MainActivity.getResources().displayMetrics.density).toInt()
+                (261 * this@MainActivity.getResources().displayMetrics.density).toInt()
         }
         params.width = (175 * this@MainActivity.getResources().displayMetrics.density).toInt()
         listViewSetting.layoutParams = params

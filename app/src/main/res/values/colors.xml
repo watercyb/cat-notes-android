@@ -3,8 +3,11 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="background">#FFFDF0FF</color>
+    <color name="note_card">#FFFFFFFF</color>
+    <color name="note_card_other_user">#FFFFF4F8</color>
+    <color name="menu_background">#FFFFFFFF</color>
+    <color name="menu_divider">#1F000000</color>
     <color name="pink">#FFF9E4FF</color>
     <color name="blue">#FF50A6C5</color>
-    <color name="other_user">#FFFFF4F8</color>
     <color name="pink_remove">#FFFF9898</color>
 </resources>

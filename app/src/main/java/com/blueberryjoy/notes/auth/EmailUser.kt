@@ -50,12 +50,13 @@ class EmailUser : AppCompatActivity() {
             val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
             val view = currentFocus ?: EditText(this@EmailUser) // fallback view
             imm.hideSoftInputFromWindow(view.windowToken, 0)
-            nameInput.isFocusable = false
+            nameInput.isEnabled = false
 
             lifecycleScope.launch {
                 val newName = nameInput.text.toString()
                 if (newName != AuthManager.getUsername())
                     if (AuthManager.changeUsername(newName)) avatarImage.setImageBitmap(AuthManager.getAvatar())
+                nameInput.isEnabled = true
                 updateButton.isEnabled = true
             }
         }
