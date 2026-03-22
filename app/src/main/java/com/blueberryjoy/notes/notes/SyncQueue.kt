@@ -16,7 +16,7 @@ object SyncQueue {
     var isUpdatingNotesFromApi = false
 
     suspend fun startQueue() {
-        if (isRunning && !isUpdatingNotesFromApi) return
+        if (isRunning || isUpdatingNotesFromApi) return
         isRunning = true
         while (!queue.isEmpty()) {
             val id = queue.peekFirst()
@@ -39,7 +39,7 @@ object SyncQueue {
                             Message.logW("Run createNote: $note " + note.title)
                             success = Notes.createNoteOnApi(note)
                         } else if (note.mongoId.equals("REMOVED FROM SERVER")) {
-                            Message.logW("Run createNote on server removed: $note " + note.title)
+                            Message.logW("Should not be called: $note " + note.title)
                             success = Notes.createNoteOnApi(note)
                         } else {
                             Message.logW("Run updateNote: $note " + note.title)

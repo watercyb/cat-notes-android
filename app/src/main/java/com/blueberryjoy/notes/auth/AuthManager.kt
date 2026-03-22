@@ -352,7 +352,7 @@ object AuthManager {
                 if (res?.success == true && res.user != null) {
                     Notes.updateNote(res.user.notes)
                     if (type == AuthType.GOOGLE) {
-                        setEmail(Clerk.user?.emailAddresses?.get(0)?.emailAddress.toString())
+                        setEmail(user?.emailAddresses?.get(0)?.emailAddress.toString())
                     } else {
                         setEmail(res.user.email)
                     }

@@ -171,7 +171,7 @@ object Notes {
 
         for (note in mongoIdToNotes.values) {
             if (note.removeTime == 0L) {
-                CoroutineScope(Dispatchers.Default).launch {
+                CoroutineScope(Dispatchers.Main).launch {
                     setNoteAsRemovedOnServer(note)
                 }
             } else {
@@ -273,7 +273,11 @@ object Notes {
                     Message.logW("Note updated: $res")
                     if (res.note != null) {
                         note.mongoId = res.note.mongoId
+                        note.title = res.note.title
+                        note.content = res.note.content
+                        note.mongoId = res.note.mongoId
                         SQLite.saveMongoId(note)
+                        onNoteChangeHandler.onChange(note)
                     } else {
                         Message.unexpectedError()
                         return false
@@ -374,7 +378,7 @@ object Notes {
 
         for (note in mongoIdToNotes.values) {
             if (note.removeTime == 0L) {
-                CoroutineScope(Dispatchers.Default).launch {
+                CoroutineScope(Dispatchers.Main).launch {
                     setNoteAsRemovedOnServer(note)
                 }
             } else {

@@ -24,6 +24,7 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.ListView
+import androidx.activity.addCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -75,6 +76,7 @@ class MainActivity : AppCompatActivity() {
 
     private var lastActiveTime: Long = -1L
     private var resendAvailableAt: Long = 0L
+    private var backPressedTime: Long = 0L
 
     @Suppress("DEPRECATION")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -290,6 +292,16 @@ class MainActivity : AppCompatActivity() {
             lifecycleScope.launch {
                 Notes.getNotesFromApi()
                 swipeRefresh.isRefreshing = false
+            }
+        }
+
+        onBackPressedDispatcher.addCallback(this) {
+            val now = System.currentTimeMillis()
+            if (now - backPressedTime < 2000) {
+                finish()
+            } else {
+                backPressedTime = now
+                Message.show(getString(R.string.press_back_again_to_exit))
             }
         }
     }

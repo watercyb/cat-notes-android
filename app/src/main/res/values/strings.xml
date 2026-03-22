@@ -58,4 +58,6 @@
     <string name="clone">clone</string>
     <string name="note_permanently_deleted">Note permanently deleted</string>
     <string name="note_restored">Note restored</string>
+    <string name="delete_or_restore">Permanently delete or restore this note? (Deleted notes are removed after 7 days.)</string>
+    <string name="press_back_again_to_exit">Press back again to exit</string>
 </resources>

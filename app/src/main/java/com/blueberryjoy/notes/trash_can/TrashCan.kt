@@ -64,7 +64,7 @@ class TrashCan : AppCompatActivity() {
         val title = if (note.title.trim().isEmpty()) "<No Title>" else note.title
         val dialog = AlertDialog.Builder(this)
             .setTitle(title)
-            .setMessage("Do you want to permanently delete this note or restore it?")
+            .setMessage(getString(R.string.delete_or_restore))
             .setNegativeButton("Restore") { dialogInterface, _ ->
                 Notes.restoreFromTrashCan(note)
                 recyclerViewAdapter.setVisibleList()
