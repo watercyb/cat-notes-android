@@ -275,7 +275,7 @@ object Notes {
                         note.mongoId = res.note.mongoId
                         note.title = res.note.title
                         note.content = res.note.content
-                        note.mongoId = res.note.mongoId
+                        note.version = res.note.version
                         SQLite.saveMongoId(note)
                         onNoteChangeHandler.onChange(note)
                     } else {
