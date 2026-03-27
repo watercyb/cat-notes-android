@@ -172,6 +172,10 @@ class MainActivity : AppCompatActivity() {
             list.add(ListViewItem("TEST") { _ ->
 
             })
+
+            list.add(ListViewItem("TEST") { _ ->
+
+            })
         }
 
         val listViewAdapter = ListViewAdapter(this, list)
