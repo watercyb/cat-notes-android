@@ -110,20 +110,20 @@
         android:orientation="horizontal">
 
         <Button
-            android:id="@+id/btnVerify"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/verify"
-            tools:ignore="ButtonStyle" />
-
-        <Button
             android:id="@+id/btnResend"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_weight="1"
             android:text="@string/resend"
+            tools:ignore="ButtonStyle" />
+
+        <Button
+            android:id="@+id/btnVerify"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/verify"
             tools:ignore="ButtonStyle" />
     </LinearLayout>
 

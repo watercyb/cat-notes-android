@@ -97,8 +97,8 @@ class MainActivity : AppCompatActivity() {
             window.navigationBarColor = getColor(R.color.background)
         }
 
-        initializeAuthManager()
         initializeViews()
+        initializeAuthManager()
         initializeViewModel()
         initializeNote()
         initializeListView()
@@ -167,10 +167,6 @@ class MainActivity : AppCompatActivity() {
 
             list.add(ListViewItem("NOTES") {
                 Notes.showNotes()
-            })
-
-            list.add(ListViewItem("TEST") { _ ->
-
             })
 
             list.add(ListViewItem("TEST") { _ ->
@@ -487,6 +483,15 @@ class MainActivity : AppCompatActivity() {
                 Handler(Looper.getMainLooper()).post {
                     handleOnPaste(code)
                 }
+            }
+            editText.setOnKeyListener { _, keyCode, event ->
+                if (event.action == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_DEL) {
+                    if (index > 0) {
+                        editText.setText("")
+                        digits[index - 1].requestFocus()
+                    }
+                }
+                return@setOnKeyListener false
             }
         }
 
