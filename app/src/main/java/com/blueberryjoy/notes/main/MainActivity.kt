@@ -56,6 +56,7 @@ import com.blueberryjoy.notes.trash_can.TrashCan
 import com.blueberryjoy.notes.utils.Crypto
 import com.blueberryjoy.notes.utils.Message
 import com.blueberryjoy.notes.utils.RecyclerViewItem
+import com.google.android.material.card.MaterialCardView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -73,6 +74,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var swipeRefresh: SwipeRefreshLayout
 
     private lateinit var recyclerViewAdapter: MainRecyclerViewAdapter
+
+    private lateinit var menuContainer: MaterialCardView
+    private val menuItemList: MutableList<ListViewItem> = ArrayList()
 
     private var lastActiveTime: Long = -1L
     private var resendAvailableAt: Long = 0L
@@ -120,88 +124,71 @@ class MainActivity : AppCompatActivity() {
         val x = ev.rawX.toInt()
         val y = ev.rawY.toInt()
         val rect = Rect()
-        listViewSetting.getGlobalVisibleRect(rect)
+        menuContainer.getGlobalVisibleRect(rect)
         if (!rect.contains(x, y)) {
             imageButtonSetting.getGlobalVisibleRect(rect)
-            if (!rect.contains(x, y)) listViewSetting.visibility = View.GONE
+            if (!rect.contains(x, y)) hideMenu()
         }
         return super.dispatchTouchEvent(ev)
     }
 
     @SuppressLint("NotifyDataSetChanged")
     private fun initializeListView() {
-        listViewSetting.translationZ = 10f
-        val list: MutableList<ListViewItem?> = ArrayList()
+        menuContainer.translationZ = 10f
 
-        list.add(ListViewItem("NEW NOTE") {
-            val noteId = Notes.create("", "", "", 0, 0, false, AuthManager.getUserId(), false)
-            if (noteId != -1) openEditor(noteId)
-        })
+        menuItemList.add(
+            ListViewItem("NEW NOTE", {
+                val noteId = Notes.create("", "", "", 0, 0, false, AuthManager.getUserId(), false)
+                if (noteId != -1) openEditor(noteId)
+            }, { return@ListViewItem true })
+        )
 
-        list.add(ListViewItem("SECURE NOTE") {
-            showInputPassword()
-        })
+        menuItemList.add(
+            ListViewItem("SECURE NOTE", { showInputPassword() }, { return@ListViewItem true })
+        )
 
-        list.add(ListViewItem("TRASH CAN") {
-            val intent = Intent(this@MainActivity, TrashCan::class.java)
-            startActivity(intent)
-        })
+        menuItemList.add(
+            ListViewItem("TRASH CAN", {
+                val intent = Intent(this@MainActivity, TrashCan::class.java)
+                startActivity(intent)
+            }, { return@ListViewItem true })
+        )
 
-        list.add(ListViewItem(if (AuthManager.getIsShowAllNotes()) "MY NOTES" else "ALL NOTES") { item ->
-            if (item.title == "ALL NOTES") {
-                item.title = "MY NOTES"
-                AuthManager.setIsShowAllNotes(true)
-            } else {
-                item.title = "ALL NOTES"
-                AuthManager.setIsShowAllNotes(false)
-            }
-            recyclerViewAdapter.setVisibleList()
-            recyclerViewAdapter.notifyDataSetChanged()
-            setRecyclerViewEmpty(recyclerViewAdapter.itemCount == 0)
-        })
+        menuItemList.add(
+            ListViewItem(if (AuthManager.getIsShowAllNotes()) "MY NOTES" else "ALL NOTES", { item ->
+                if (item.title == "ALL NOTES") {
+                    item.title = "MY NOTES"
+                    AuthManager.setIsShowAllNotes(true)
+                } else {
+                    item.title = "ALL NOTES"
+                    AuthManager.setIsShowAllNotes(false)
+                }
+                recyclerViewAdapter.setVisibleList()
+                recyclerViewAdapter.notifyDataSetChanged()
+                setRecyclerViewEmpty(recyclerViewAdapter.itemCount == 0)
+            }, {
+                for (note in Notes.list) {
+                    if (!note.userId.equals(AuthManager.getUserId())) {
+                        return@ListViewItem true
+                    }
+                }
+                return@ListViewItem false
+            })
+        )
 
         if (BuildConfig.DEBUG) {
-            list.add(ListViewItem("CHECK QUEUE") {
-                SyncQueue.showQueue()
-            })
-
-            list.add(ListViewItem("NOTES") {
-                Notes.showNotes()
-            })
-
-            list.add(ListViewItem("TEST") { _ ->
-
-            })
-        }
-
-        val listViewAdapter = ListViewAdapter(this, list)
-        val params = listViewSetting.layoutParams
-
-        var totalHeight = 0
-        for (i in 0 until listViewAdapter.count) {
-            val listItem = listViewAdapter.getView(i, null, listViewSetting)
-            listItem.measure(
-                View.MeasureSpec.makeMeasureSpec(listViewSetting.width, View.MeasureSpec.EXACTLY),
-                View.MeasureSpec.UNSPECIFIED
+            menuItemList.add(
+                ListViewItem("CHECK QUEUE", {
+                    SyncQueue.showQueue()
+                }, { return@ListViewItem true })
             )
-            totalHeight += listItem.measuredHeight
-        }
-        totalHeight += listViewSetting.dividerHeight * (listViewAdapter.count - 1)
 
-        if (totalHeight <= 261 * this@MainActivity.getResources().displayMetrics.density) {
-            params.height = 0
-        } else {
-            params.height =
-                (261 * this@MainActivity.getResources().displayMetrics.density).toInt()
-        }
-        params.width = (175 * this@MainActivity.getResources().displayMetrics.density).toInt()
-        listViewSetting.layoutParams = params
+            menuItemList.add(ListViewItem("NOTES", {
+                Notes.showNotes()
+            }, { return@ListViewItem true }))
 
-        listViewSetting.adapter = listViewAdapter
-        listViewSetting.setOnItemClickListener { _: AdapterView<*>?, _: View?, position: Int, _: Long ->
-            list.getOrNull(position)?.onClick()
-            listViewAdapter.notifyDataSetChanged()
-            listViewSetting.visibility = View.GONE
+            menuItemList.add(ListViewItem("TEST", { _ ->
+            }, { return@ListViewItem true }))
         }
     }
 
@@ -259,14 +246,15 @@ class MainActivity : AppCompatActivity() {
         viewNotificationDot = findViewById(R.id.viewNotificationDot)
         emptyView = findViewById(R.id.emptyView)
         swipeRefresh = findViewById(R.id.swipeRefresh)
+        menuContainer = findViewById(R.id.menuContainer)
 
         imageButtonSetting.setOnClickListener { v: View? ->
             v!!.animate().scaleX(0.85f).scaleY(0.85f).setDuration(80)
                 .withEndAction { v.animate().scaleX(1f).scaleY(1f).setDuration(80).start() }.start()
-            if (listViewSetting.isVisible) {
-                listViewSetting.visibility = View.GONE
+            if (menuContainer.isVisible) {
+                hideMenu()
             } else {
-                listViewSetting.visibility = View.VISIBLE
+                showMenu()
             }
         }
         imageButtonAvatar.setOnClickListener {
@@ -597,5 +585,47 @@ class MainActivity : AppCompatActivity() {
                 false
             }
         }
+    }
+
+    private fun showMenu() {
+        val list: MutableList<ListViewItem> = ArrayList()
+        for (item in menuItemList) {
+            if (item.isShowing())
+                list.add(item)
+        }
+        val listViewAdapter = ListViewAdapter(this, list)
+        val params = menuContainer.layoutParams
+
+        var totalHeight = 0
+        for (i in 0 until listViewAdapter.count) {
+            val listItem = listViewAdapter.getView(i, null, listViewSetting)
+            listItem.measure(
+                View.MeasureSpec.makeMeasureSpec(listViewSetting.width, View.MeasureSpec.EXACTLY),
+                View.MeasureSpec.UNSPECIFIED
+            )
+            totalHeight += listItem.measuredHeight
+        }
+        totalHeight += listViewSetting.dividerHeight * (listViewAdapter.count - 1)
+
+        if (totalHeight <= 247 * this@MainActivity.getResources().displayMetrics.density) {
+            params.height = 0
+        } else {
+            params.height = (247 * this@MainActivity.getResources().displayMetrics.density).toInt()
+        }
+        params.width = (175 * this@MainActivity.getResources().displayMetrics.density).toInt()
+        menuContainer.layoutParams = params
+
+        listViewSetting.adapter = listViewAdapter
+        listViewSetting.setOnItemClickListener { _: AdapterView<*>?, _: View?, position: Int, _: Long ->
+            list.getOrNull(position)?.onClick()
+            listViewAdapter.notifyDataSetChanged()
+            hideMenu()
+        }
+
+        menuContainer.visibility = View.VISIBLE
+    }
+
+    private fun hideMenu() {
+        menuContainer.visibility = View.GONE
     }
 }

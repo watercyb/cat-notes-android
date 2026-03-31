@@ -90,19 +90,28 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:srcCompat="@mipmap/menu" />
 
-    <ListView
-        android:id="@+id/listViewSetting"
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/menuContainer"
         android:layout_width="150dp"
         android:layout_height="250dp"
         android:layout_marginEnd="32dp"
-        android:layout_marginBottom="64dp"
-        android:background="@android:drawable/dialog_holo_light_frame"
-        android:divider="@color/menu_divider"
-        android:dividerHeight="1dp"
-        android:scrollbars="none"
+        android:layout_marginBottom="76dp"
         android:visibility="gone"
+        app:cardBackgroundColor="@color/menu_background"
+        app:cardCornerRadius="12dp"
+        app:cardElevation="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ListView
+            android:id="@+id/listViewSetting"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:divider="@color/menu_divider"
+            android:dividerHeight="1dp"
+            android:scrollbars="none" />
+
+    </com.google.android.material.card.MaterialCardView>
 
 
 </androidx.constraintlayout.widget.ConstraintLayout>
