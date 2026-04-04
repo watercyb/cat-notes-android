@@ -48,7 +48,8 @@ public class Message {
     }
 
     public static void cannotReachServer() {
-        new Handler(Looper.getMainLooper()).post(() -> Toast.makeText(App.Companion.getInstance().getContext(), App.Companion.getInstance().getContext().getString(R.string.unable_connect_to_server), Toast.LENGTH_LONG).show());
+        if (BuildConfig.DEBUG)
+            new Handler(Looper.getMainLooper()).post(() -> Toast.makeText(App.Companion.getInstance().getContext(), App.Companion.getInstance().getContext().getString(R.string.unable_connect_to_server), Toast.LENGTH_LONG).show());
     }
 
     public static void allFieldsRequired() {

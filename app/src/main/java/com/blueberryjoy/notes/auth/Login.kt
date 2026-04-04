@@ -78,12 +78,12 @@ class Login : AppCompatActivity() {
                 finish()
             } else {
                 val dialog = AlertDialog.Builder(this@Login)
-                    .setTitle("Login Error")
-                    .setMessage("Invalid email or password")
+                    .setTitle(getString(R.string.login_error))
+                    .setMessage(getString(R.string.invalid_email_or_password))
                     .setPositiveButton("OK") { dialogInterface, _ ->
                         dialogInterface.dismiss()
                     }
-                    .setNegativeButton("Reset Password") { dialogInterface, _ ->
+                    .setNegativeButton(getString(R.string.reset_password)) { dialogInterface, _ ->
                         lifecycleScope.launch {
                             if (AuthManager.forgotPassword(
                                     emailInput!!.getText().toString()

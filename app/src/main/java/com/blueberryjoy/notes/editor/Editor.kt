@@ -228,8 +228,9 @@ class Editor : AppCompatActivity() {
         val dialogView = layoutInflater.inflate(R.layout.editor_password, null)
         val inputPassword = dialogView.findViewById<EditText>(R.id.inputPassword)
 
-        val dialog = AlertDialog.Builder(this).setTitle("Password Required").setView(dialogView)
-            .setCancelable(false).setPositiveButton("Unlock") { _, _ ->
+        val dialog = AlertDialog.Builder(this).setTitle(getString(R.string.password_required))
+            .setView(dialogView)
+            .setCancelable(false).setPositiveButton(getString(R.string.unlock)) { _, _ ->
                 try {
                     val (salt, key, content) = Crypto.decrypt(
                         inputPassword.text.toString(),
@@ -245,10 +246,10 @@ class Editor : AppCompatActivity() {
                     isSaved = true
                     finish()
                 }
-            }.setNegativeButton("Cancel") { _, _ ->
+            }.setNegativeButton(getString(R.string.cancel)) { _, _ ->
                 isSaved = true
                 finish()
-            }.setNeutralButton("Delete") { _, _ ->
+            }.setNeutralButton(getString(R.string.delete)) { _, _ ->
                 deleteAndClose()
             }.create()
 
@@ -283,9 +284,11 @@ class Editor : AppCompatActivity() {
         val inputPassword = dialogView.findViewById<EditText>(R.id.inputPassword)
         val confirmPassword = dialogView.findViewById<EditText>(R.id.confirmPassword)
 
-        val dialog = AlertDialog.Builder(this).setTitle("Update Password").setView(dialogView)
-            .setCancelable(false).setPositiveButton("Update", null)   // IMPORTANT: null
-            .setNegativeButton("Cancel", null).create()
+        val dialog = AlertDialog.Builder(this).setTitle(getString(R.string.update_password))
+            .setView(dialogView)
+            .setCancelable(false)
+            .setPositiveButton(getString(R.string.update), null)   // IMPORTANT: null
+            .setNegativeButton(getString(R.string.cancel), null).create()
 
         dialog.setOnShowListener {
             val neutralButton = dialog.getButton(AlertDialog.BUTTON_NEUTRAL)

@@ -67,9 +67,9 @@ class EmailUser : AppCompatActivity() {
             val etNewPassword = dialogView.findViewById<EditText>(R.id.etNewPassword)
 
             val dialog = AlertDialog.Builder(this)
-                .setTitle("Update Password")
+                .setTitle(getString(R.string.update_password))
                 .setView(dialogView)
-                .setPositiveButton("Update") { _, _ ->
+                .setPositiveButton(getString(R.string.update)) { _, _ ->
                     val oldPassword = etOldPassword.text.toString()
                     val newPassword = etNewPassword.text.toString()
 
@@ -81,7 +81,7 @@ class EmailUser : AppCompatActivity() {
                         }
                     }
                 }
-                .setNegativeButton("Cancel", null)
+                .setNegativeButton(getString(R.string.cancel), null)
                 .create()
 
             dialog.show()

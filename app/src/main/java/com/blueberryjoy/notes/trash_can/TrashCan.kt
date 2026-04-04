@@ -61,11 +61,11 @@ class TrashCan : AppCompatActivity() {
 
     @SuppressLint("NotifyDataSetChanged")
     private fun showRemoveOrRestoreDialog(note: RecyclerViewItem) {
-        val title = if (note.title.trim().isEmpty()) "<No Title>" else note.title
+        val title = if (note.title.trim().isEmpty()) getString(R.string.no_title) else note.title
         val dialog = AlertDialog.Builder(this)
             .setTitle(title)
             .setMessage(getString(R.string.delete_or_restore))
-            .setNegativeButton("Restore") { dialogInterface, _ ->
+            .setNegativeButton(getString(R.string.restore)) { dialogInterface, _ ->
                 Notes.restoreFromTrashCan(note)
                 recyclerViewAdapter.setVisibleList()
                 recyclerViewAdapter.notifyDataSetChanged()
@@ -73,7 +73,7 @@ class TrashCan : AppCompatActivity() {
 
                 if (recyclerViewAdapter.itemCount == 0) setRecyclerViewEmpty()
             }
-            .setPositiveButton("Delete") { dialogInterface, _ ->
+            .setPositiveButton(getString(R.string.delete)) { dialogInterface, _ ->
                 Notes.removeFromTrashCan(note)
                 recyclerViewAdapter.setVisibleList()
                 recyclerViewAdapter.notifyDataSetChanged()

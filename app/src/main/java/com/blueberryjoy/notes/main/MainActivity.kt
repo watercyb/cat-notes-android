@@ -137,43 +137,49 @@ class MainActivity : AppCompatActivity() {
         menuContainer.translationZ = 10f
 
         menuItemList.add(
-            ListViewItem("NEW NOTE", {
+            ListViewItem(getString(R.string.new_note), {
                 val noteId = Notes.create("", "", "", 0, 0, false, AuthManager.getUserId(), false)
                 if (noteId != -1) openEditor(noteId)
             }, { return@ListViewItem true })
         )
 
         menuItemList.add(
-            ListViewItem("SECURE NOTE", { showInputPassword() }, { return@ListViewItem true })
+            ListViewItem(
+                getString(R.string.secure_note_menu),
+                { showInputPassword() },
+                { return@ListViewItem true })
         )
 
         menuItemList.add(
-            ListViewItem("TRASH CAN", {
+            ListViewItem(getString(R.string.trash_can_menu), {
                 val intent = Intent(this@MainActivity, TrashCan::class.java)
                 startActivity(intent)
             }, { return@ListViewItem true })
         )
 
         menuItemList.add(
-            ListViewItem(if (AuthManager.getIsShowAllNotes()) "MY NOTES" else "ALL NOTES", { item ->
-                if (item.title == "ALL NOTES") {
-                    item.title = "MY NOTES"
-                    AuthManager.setIsShowAllNotes(true)
-                } else {
-                    item.title = "ALL NOTES"
-                    AuthManager.setIsShowAllNotes(false)
-                }
-                recyclerViewAdapter.setVisibleList()
-                recyclerViewAdapter.notifyDataSetChanged()
-                setRecyclerViewEmpty(recyclerViewAdapter.itemCount == 0)
-            }, {
-                for (note in Notes.list) {
-                    if (!note.userId.equals(AuthManager.getUserId())) {
-                        return@ListViewItem true
+            ListViewItem(
+                if (AuthManager.getIsShowAllNotes()) getString(R.string.my_notes) else getString(
+                    R.string.all_notes
+                ), { item ->
+                    if (item.title == getString(R.string.all_notes)) {
+                        item.title = getString(R.string.my_notes)
+                        AuthManager.setIsShowAllNotes(true)
+                    } else {
+                        item.title = getString(R.string.all_notes)
+                        AuthManager.setIsShowAllNotes(false)
                     }
-                }
-                return@ListViewItem false
-            })
+                    recyclerViewAdapter.setVisibleList()
+                    recyclerViewAdapter.notifyDataSetChanged()
+                    setRecyclerViewEmpty(recyclerViewAdapter.itemCount == 0)
+                }, {
+                    for (note in Notes.list) {
+                        if (!note.userId.equals(AuthManager.getUserId())) {
+                            return@ListViewItem true
+                        }
+                    }
+                    return@ListViewItem false
+                })
         )
 
         if (BuildConfig.DEBUG) {
@@ -484,7 +490,8 @@ class MainActivity : AppCompatActivity() {
         }
 
         val dialog =
-            AlertDialog.Builder(this).setTitle("Verify Your Email").setView(dialogView).create()
+            AlertDialog.Builder(this).setTitle(getString(R.string.verify_email)).setView(dialogView)
+                .create()
 
         val btnVerify = dialogView.findViewById<Button>(R.id.btnVerify)
         val btnResend = dialogView.findViewById<Button>(R.id.btnResend)
@@ -547,8 +554,9 @@ class MainActivity : AppCompatActivity() {
         val inputPassword = dialogView.findViewById<EditText>(R.id.inputPassword)
 
         val dialog =
-            android.app.AlertDialog.Builder(this).setTitle("Create Password").setView(dialogView)
-                .setCancelable(false).setPositiveButton("Create") { _, _ ->
+            android.app.AlertDialog.Builder(this).setTitle(getString(R.string.create_password))
+                .setView(dialogView)
+                .setCancelable(false).setPositiveButton(getString(R.string.create)) { _, _ ->
                     try {
                         val password = inputPassword.text.toString()
                         if (password.isEmpty()) {
@@ -563,7 +571,7 @@ class MainActivity : AppCompatActivity() {
                     } catch (_: Exception) {
                         Message.show(getString(R.string.incorrect_password))
                     }
-                }.setNegativeButton("Cancel") { _, _ ->
+                }.setNegativeButton(getString(R.string.cancel)) { _, _ ->
                 }.create()
 
         dialog?.window?.setSoftInputMode(
