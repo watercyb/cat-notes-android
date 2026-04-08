@@ -20,6 +20,8 @@ object ErrorHandler {
             Message.internalError()
         } else if (response.code() == 503) {
             Message.internalError()
+        } else if (response.code() == 521) {
+            Message.cannotReachServer()
         } else {
             Message.unexpectedError()
         }
