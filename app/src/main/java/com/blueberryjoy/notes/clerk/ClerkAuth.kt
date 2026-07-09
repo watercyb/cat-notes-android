@@ -92,9 +92,12 @@ object ClerkAuth {
     }
 
     suspend fun logout(): Boolean {
-        Clerk.signOut()
+        Clerk.auth.signOut()
             .onSuccess {
                 setLogout()
+                Message.show(
+                    App.getInstance().getContext().getString(R.string.google_signed_out)
+                )
                 return true
             }
             .onFailure {

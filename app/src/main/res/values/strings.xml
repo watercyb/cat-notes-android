@@ -77,4 +77,5 @@
     <string name="invalid_email_or_password">Invalid email or password</string>
     <string name="reset_password">Reset Password</string>
     <string name="verify_email">Verify Your Email</string>
+    <string name="google_signed_out">Signed out from Google</string>
 </resources>
