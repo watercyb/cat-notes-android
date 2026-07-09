@@ -6,7 +6,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/background"
-    tools:context=".editor.Editor">
+    tools:context=".editor.Editor"
+    tools:ignore="Overdraw">
 
     <ImageButton
         android:id="@+id/imageButtonBack"

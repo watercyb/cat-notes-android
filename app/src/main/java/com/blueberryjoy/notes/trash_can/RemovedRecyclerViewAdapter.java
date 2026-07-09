@@ -73,10 +73,10 @@ public class RemovedRecyclerViewAdapter extends RecyclerView.Adapter<RemovedRecy
 
     // stores and recycles views as they are scrolled off-screen
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        TextView textViewTitle;
-        TextView textViewContent;
-        TextView textViewRemoveInfo;
-        LinearLayout secureNote;
+        final TextView textViewTitle;
+        final TextView textViewContent;
+        final TextView textViewRemoveInfo;
+        final LinearLayout secureNote;
 
         ViewHolder(@NonNull View itemView) {
             super(itemView);

@@ -17,7 +17,6 @@ import com.blueberryjoy.notes.utils.Avatar
 import com.blueberryjoy.notes.utils.Message
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
-import com.clerk.api.Clerk
 import com.clerk.api.Clerk.user
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -135,14 +134,14 @@ object AuthManager {
             putString("NAME", username)
             putBoolean("VERIFY", isVerified)
         }
-        Notes.getOnNoteChangeHandler()?.onUserChanged()
+        Notes.getOnNoteChangeHandler().onUserChanged()
     }
 
     @JvmStatic
-    fun setGoogleLogin(): Boolean {
+    fun setGoogleLogin() {
         type = AuthType.GOOGLE
         username = ""
-        email = Clerk.user?.emailAddresses?.get(0)?.emailAddress.toString()
+        email = user?.emailAddresses?.get(0)?.emailAddress.toString()
         CoroutineScope(Dispatchers.Main).launch {
             if (onAuthChangeHandler != null) onAuthChangeHandler!!.updateAvatar(getAvatar())
         }
@@ -151,8 +150,7 @@ object AuthManager {
             putString("NAME", "")
             putString("EMAIL", email)
         }
-        Notes.getOnNoteChangeHandler()?.onUserChanged()
-        return true
+        Notes.getOnNoteChangeHandler().onUserChanged()
     }
 
     @JvmStatic
@@ -173,7 +171,7 @@ object AuthManager {
             putBoolean("VERIFY", false)
             putString("REFRESH_TOKEN", "")
         }
-        Notes.getOnNoteChangeHandler()?.onUserChanged()
+        Notes.getOnNoteChangeHandler().onUserChanged()
     }
 
     @JvmStatic
@@ -220,7 +218,7 @@ object AuthManager {
     suspend fun getAvatar(): Bitmap? {
         when (type) {
             AuthType.GOOGLE -> {
-                val url = Clerk.user?.imageUrl ?: ""
+                val url = user?.imageUrl ?: ""
                 if (!url.isEmpty()) {
                     val image = loadClerkImage(url)
                     if (image != null) {
@@ -289,7 +287,7 @@ object AuthManager {
 
     @JvmStatic
     val isLogin: Boolean
-        get() = Clerk.user != null
+        get() = user != null
 
     @JvmStatic
     fun getType(): AuthType? {

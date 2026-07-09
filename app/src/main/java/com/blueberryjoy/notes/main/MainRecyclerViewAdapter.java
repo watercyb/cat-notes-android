@@ -2,11 +2,9 @@ package com.blueberryjoy.notes.main;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.media.Image;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -77,10 +75,10 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
 
     // stores and recycles views as they are scrolled off-screen
     public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
-        TextView textViewTitle;
-        TextView textViewContent;
-        LinearLayout linearLayout;
-        LinearLayout secureNote;
+        final TextView textViewTitle;
+        final TextView textViewContent;
+        final LinearLayout linearLayout;
+        final LinearLayout secureNote;
 
 
         ViewHolder(@NonNull View itemView) {

@@ -11,9 +11,7 @@ import androidx.annotation.NonNull;
 
 import com.blueberryjoy.notes.BuildConfig;
 import com.blueberryjoy.notes.R;
-import com.blueberryjoy.notes.utils.Message;
 
-import java.lang.reflect.Parameter;
 import java.util.List;
 
 public class ListViewAdapter extends ArrayAdapter<ListViewItem> {

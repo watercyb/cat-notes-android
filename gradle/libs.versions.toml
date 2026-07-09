@@ -1,31 +1,23 @@
 [versions]
 accompanistSystemuicontroller = "0.36.0"
-agp = "9.1.0"
-glide = "5.0.5"
+agp = "9.2.1"
+glide = "5.0.7"
 junit = "4.13.2"
 junitVersion = "1.3.0"
 espressoCore = "3.7.0"
 appcompat = "1.7.1"
-kotlinxCoroutinesAndroid = "1.10.2"
-material = "1.13.0"
-activity = "1.12.2"
+kotlinxCoroutinesAndroid = "1.11.0"
+material = "1.14.0"
+activity = "1.13.0"
 constraintlayout = "2.2.1"
-materialVersion = "1.11.0"
 retrofit = "3.0.0"
 roomRuntimeVersion = "2.8.4"
-swiperefreshlayout = "latest"
 volley = "1.2.1"
-lifecycleViewmodelKtx = "2.10.0"
-lifecycleRuntimeKtx = "2.10.0"
-activityCompose = "1.12.4"
-kotlin = "2.2.10"
-composeBom = "2024.09.00"
-bson = "5.5.1"
-androidxRoomGradlePlugin = "2.8.4"
-roomCommonJvm = "2.8.4"
-roomRuntimeJvm = "2.8.4"
-roomCompiler = "2.8.4"
-roomRuntime = "2.8.4"
+lifecycleViewmodelKtx = "2.11.0"
+lifecycleRuntimeKtx = "2.11.0"
+activityCompose = "1.13.0"
+kotlin = "2.4.0"
+composeBom = "2026.06.01"
 swiperefreshlayoutVersion = "1.2.0"
 
 [libraries]
@@ -41,11 +33,9 @@ kotlinx-coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutine
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
 constraintlayout = { group = "androidx.constraintlayout", name = "constraintlayout", version.ref = "constraintlayout" }
-material-v1110 = { module = "com.google.android.material:material", version.ref = "materialVersion" }
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomRuntimeVersion" }
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomRuntimeVersion" }
-swiperefreshlayout = { module = "androidx.swiperefreshlayout:swiperefreshlayout", version.ref = "swiperefreshlayout" }
 volley = { group = "com.android.volley", name = "volley", version.ref = "volley" }
 lifecycle-viewmodel-ktx = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-ktx", version.ref = "lifecycleViewmodelKtx" }
 lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }

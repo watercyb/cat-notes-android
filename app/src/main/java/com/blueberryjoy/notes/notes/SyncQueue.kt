@@ -7,7 +7,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.LinkedList
+import kotlin.time.Duration.Companion.milliseconds
 
+@Suppress("unused")
 object SyncQueue {
     val queue = LinkedList<Int>()
     val HM = HashMap<Int, String>()
@@ -48,13 +50,13 @@ object SyncQueue {
                     }
                 }
                 if (!success) {
-                    delay(DELAY)
+                    delay(DELAY.milliseconds)
                 } else {
                     queue.pollFirst()
                     HM.remove(id)
                 }
             } catch (_: Exception) {
-                delay(DELAY)
+                delay(DELAY.milliseconds)
             }
         }
         isRunning = false

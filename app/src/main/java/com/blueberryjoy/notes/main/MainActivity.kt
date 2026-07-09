@@ -375,7 +375,7 @@ class MainActivity : AppCompatActivity() {
                             dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.RED)
                         }
 
-                        // Handle coroutine cancellation (dismiss dialog if scope is cancelled)
+                        // Handle coroutine cancellation (dismiss dialog if scope is canceled)
                         continuation.invokeOnCancellation { dialog.dismiss() }
 
                         dialog.show()
@@ -469,7 +469,7 @@ class MainActivity : AppCompatActivity() {
                     editText.post { editText.selectAll() }
                 }
                 val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-                imm.showSoftInput(editText, InputMethodManager.SHOW_IMPLICIT)
+                imm.showSoftInput(editText, 0)
 
                 true
             }
@@ -580,7 +580,7 @@ class MainActivity : AppCompatActivity() {
         inputPassword.post {
             inputPassword.requestFocus()
             val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-            imm.showSoftInput(inputPassword, InputMethodManager.SHOW_IMPLICIT)
+            imm.showSoftInput(inputPassword, 0)
         }
 
         dialog.show()

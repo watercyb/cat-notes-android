@@ -56,6 +56,7 @@ class SignUp : AppCompatActivity() {
             })
     }
 
+    @Suppress("EmptyMethod")
     override fun onDestroy() {
         super.onDestroy()
     }

@@ -24,9 +24,9 @@ public class SQLNote {
 
     // New fields #2
     @ColumnInfo(defaultValue = "0")
-    public long removeTime;
+    public final long removeTime;
     @ColumnInfo(defaultValue = "0")
-    public boolean isRemovedFromServer;
+    public final boolean isRemovedFromServer;
 
     // New fields #3
     @NonNull

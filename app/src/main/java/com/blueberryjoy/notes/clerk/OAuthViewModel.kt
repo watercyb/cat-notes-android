@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.blueberryjoy.notes.auth.AuthManager
 import com.blueberryjoy.notes.auth.AuthType
-import com.blueberryjoy.notes.utils.Message
 import com.clerk.api.Clerk
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine

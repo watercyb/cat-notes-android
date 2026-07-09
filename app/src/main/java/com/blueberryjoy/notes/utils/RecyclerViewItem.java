@@ -9,7 +9,7 @@ import java.time.ZoneId;
 import java.util.Objects;
 
 public class RecyclerViewItem {
-    public int id;
+    public final int id;
     public String title;
     public String content;
     public String mongoId;
@@ -18,7 +18,7 @@ public class RecyclerViewItem {
     public long removeTime;
     public boolean isRemovedFromServer;
     public String userId;
-    public boolean isEncrypted;
+    public final boolean isEncrypted;
 
     public RecyclerViewItem(@NonNull SQLNote SQLNote) {
         id = SQLNote.id;
