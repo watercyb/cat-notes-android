@@ -82,7 +82,6 @@ class MainActivity : AppCompatActivity() {
     private var resendAvailableAt: Long = 0L
     private var backPressedTime: Long = 0L
 
-    @Suppress("DEPRECATION")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         this.enableEdgeToEdge()
@@ -98,6 +97,7 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             window.isNavigationBarContrastEnforced = false
         } else {
+            @Suppress("DEPRECATION")
             window.navigationBarColor = getColor(R.color.background)
         }
 

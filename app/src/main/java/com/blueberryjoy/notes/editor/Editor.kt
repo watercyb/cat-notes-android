@@ -11,7 +11,6 @@ import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
-import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageButton
@@ -20,6 +19,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import com.blueberryjoy.notes.App.Companion.getInstance
 import com.blueberryjoy.notes.R
@@ -58,7 +58,6 @@ class Editor : AppCompatActivity() {
     private lateinit var salt: ByteArray
     private lateinit var key: SecretKeySpec
 
-    @Suppress("DEPRECATION")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         this.enableEdgeToEdge()
@@ -93,6 +92,7 @@ class Editor : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             window.isNavigationBarContrastEnforced = false
         } else {
+            @Suppress("DEPRECATION")
             window.navigationBarColor = getColor(R.color.background)
         }
 
@@ -263,8 +263,11 @@ class Editor : AppCompatActivity() {
         )
         inputPassword.post {
             inputPassword.requestFocus()
-            val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-            imm.showSoftInput(inputPassword, InputMethodManager.SHOW_IMPLICIT)
+            //val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+            //imm.showSoftInput(inputPassword, InputMethodManager.SHOW_IMPLICIT)
+
+            val controller = WindowCompat.getInsetsController(window, inputPassword)
+            controller.show(WindowInsetsCompat.Type.ime())
         }
 
         dialog.show()
@@ -300,8 +303,11 @@ class Editor : AppCompatActivity() {
         )
         inputPassword.post {
             inputPassword.requestFocus()
-            val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-            imm.showSoftInput(inputPassword, InputMethodManager.SHOW_IMPLICIT)
+            //val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
+            //imm.showSoftInput(inputPassword, InputMethodManager.SHOW_IMPLICIT)
+
+            val controller = WindowCompat.getInsetsController(window, inputPassword)
+            controller.show(WindowInsetsCompat.Type.ime())
         }
 
         dialog.show()

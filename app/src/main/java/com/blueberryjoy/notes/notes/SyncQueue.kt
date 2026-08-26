@@ -9,7 +9,6 @@ import kotlinx.coroutines.launch
 import java.util.LinkedList
 import kotlin.time.Duration.Companion.milliseconds
 
-@Suppress("unused")
 object SyncQueue {
     val queue = LinkedList<Int>()
     val HM = HashMap<Int, String>()
@@ -99,6 +98,7 @@ object SyncQueue {
         }
     }
 
+    @Suppress("unused")
     fun getSize(): Int {
         return queue.size
     }
