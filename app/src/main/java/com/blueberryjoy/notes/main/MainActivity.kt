@@ -199,7 +199,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initializeRecyclerView() {
-        val spanCount = getResources().getInteger(R.integer.grid_span)
+        val spanCount = resources.getInteger(R.integer.grid_span)
         recyclerView.setLayoutManager(
             StaggeredGridLayoutManager(
                 spanCount, StaggeredGridLayoutManager.VERTICAL
@@ -359,13 +359,16 @@ class MainActivity : AppCompatActivity() {
                         //val input = EditText(this@MainActivity)
                         //builder.setView(input)
 
-                        builder.setPositiveButton("Delete") { _, _ ->
+                        builder.setPositiveButton("Delete") { dialog, _ ->
+                            dialog.dismiss()
                             if (continuation.isActive) continuation.resume(true)
                         }
-                        builder.setNegativeButton("Keep") { _, _ ->
+                        builder.setNegativeButton("Keep") { dialog, _ ->
+                            dialog.dismiss()
                             if (continuation.isActive) continuation.resume(false)
                         }
-                        builder.setOnCancelListener {
+                        builder.setOnCancelListener { dialog ->
+                            dialog.dismiss()
                             if (continuation.isActive) continuation.resume(false)
                         }
 
@@ -615,12 +618,12 @@ class MainActivity : AppCompatActivity() {
         }
         totalHeight += listViewSetting.dividerHeight * (listViewAdapter.count - 1)
 
-        if (totalHeight <= 247 * this@MainActivity.getResources().displayMetrics.density) {
+        if (totalHeight <= 247 * this@MainActivity.resources.displayMetrics.density) {
             params.height = 0
         } else {
-            params.height = (247 * this@MainActivity.getResources().displayMetrics.density).toInt()
+            params.height = (247 * this@MainActivity.resources.displayMetrics.density).toInt()
         }
-        params.width = (175 * this@MainActivity.getResources().displayMetrics.density).toInt()
+        params.width = (175 * this@MainActivity.resources.displayMetrics.density).toInt()
         menuContainer.layoutParams = params
 
         listViewSetting.adapter = listViewAdapter
