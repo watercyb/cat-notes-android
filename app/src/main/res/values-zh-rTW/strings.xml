@@ -79,4 +79,7 @@
     <string name="reset_password">重置密碼</string>
     <string name="verify_email">驗證你的信箱</string>
     <string name="google_signed_out">已從 Google 登出</string>
+    <string name="keep">保留</string>
+    <string name="note_removed_from_server">伺服器上的筆記「<b>%s</b>」已被刪除。是否也要刪除本機副本？</string>
+    <string name="note_removed_from_server_title">筆記已從伺服器刪除</string>
 </resources>

@@ -2,6 +2,7 @@ package com.blueberryjoy.notes.notes
 
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import com.blueberryjoy.notes.App
 import com.blueberryjoy.notes.R
 import com.blueberryjoy.notes.auth.AuthManager
@@ -11,12 +12,14 @@ import com.blueberryjoy.notes.retrofit.ErrorHandler
 import com.blueberryjoy.notes.retrofit.RetrofitInstance
 import com.blueberryjoy.notes.retrofit.data_class.ApiNote
 import com.blueberryjoy.notes.retrofit.data_class.ApiReq
+import com.blueberryjoy.notes.retrofit.data_class.ApiRes
 import com.blueberryjoy.notes.sqlite.SQLite
 import com.blueberryjoy.notes.utils.Message
 import com.blueberryjoy.notes.utils.RecyclerViewItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.lang.System.console
 import java.util.function.ToIntFunction
 
 object Notes {
@@ -25,10 +28,12 @@ object Notes {
         private set
     var removedList: MutableList<RecyclerViewItem> = ArrayList()
     private lateinit var onNoteChangeHandler: OnNoteChangeHandler
+    private var deletedFromServer: HashSet<Int> = HashSet()
 
     fun initialize(onNoteChangeHandler: OnNoteChangeHandler) {
         val notes = SQLite.initialize()
         list = ArrayList()
+        deletedFromServer.clear()
         for (note in notes) {
             if (note.removeTime == 0L) {
                 list.add(RecyclerViewItem(note))
@@ -117,14 +122,7 @@ object Notes {
     //Duplicate note.
     fun create(note: RecyclerViewItem): Int {
         return create(
-            note.title,
-            note.content,
-            "",
-            0,
-            0,
-            false,
-            AuthManager.getUserId(),
-            false
+            note.title, note.content, "", 0, 0, false, AuthManager.getUserId(), false
         )
     }
 
@@ -315,20 +313,25 @@ object Notes {
 
         try {
             val response = RetrofitInstance.api.getNotesIdAndVersion()
+            Log.w("testLog", response.isSuccessful.toString())
             if (response.isSuccessful) {
+                Log.w("testLog", "getNotesFromApi")
                 val res = response.body()
                 if (res?.success == true) {
+                    Log.w("testLog", "notes.size: ${res.notes?.size}")
                     updateNoteWithoutTitleAndContents(res.notes)
                     return true
                 } else {
-                    Message.debug("getNotesFromApi: Should not be called")
+                    Message.logW("getNotesFromApi: Should not be called")
                 }
                 return false
             } else {
+                Message.logW(response.toString())
                 ErrorHandler.res(response)
                 return false
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            Log.w("testLog", e.toString())
             Message.cannotReachServer()
             return false
         }
@@ -427,6 +430,7 @@ object Notes {
     }
 
     private suspend fun setNoteAsRemovedOnServer(note: RecyclerViewItem) {
+        if (!deletedFromServer.add(note.id)) return
         val isConfirmedToRemove = onNoteChangeHandler.onRemovedFromServer(note.title)
         if (isConfirmedToRemove) {
             moveToTrashCan(note)

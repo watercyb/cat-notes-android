@@ -1,9 +1,15 @@
 package com.blueberryjoy.notes.retrofit.data_class
 
+import com.google.gson.annotations.SerializedName
+
 data class ApiUser(
+    @SerializedName("name")
     val name: String,
+    @SerializedName("email")
     val email: String,
+    @SerializedName("notes")
     val notes: Array<ApiNote>,
+    @SerializedName("isVerified")
     val isVerified: Boolean
 ) {
     override fun equals(other: Any?): Boolean {

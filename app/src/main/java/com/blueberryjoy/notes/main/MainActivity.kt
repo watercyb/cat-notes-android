@@ -189,10 +189,6 @@ class MainActivity : AppCompatActivity() {
                 }, { return@ListViewItem true })
             )
 
-            menuItemList.add(ListViewItem("NOTES", {
-                Notes.showNotes()
-            }, { return@ListViewItem true }))
-
             menuItemList.add(ListViewItem("TEST", { _ ->
             }, { return@ListViewItem true }))
         }
@@ -349,21 +345,19 @@ class MainActivity : AppCompatActivity() {
             override suspend fun onRemovedFromServer(title: String): Boolean {
                 return withContext(Dispatchers.Main) {
                     suspendCancellableCoroutine { continuation ->
-                        val message =
-                            "The note \"<b>$title</b>\" was removed from the server. Do you want to delete your local copy as well?"
-
+                        val message = getString(R.string.note_removed_from_server, title)
                         val builder = AlertDialog.Builder(this@MainActivity)
-                        builder.setTitle("Note removed from server")
+                        builder.setTitle(getString(R.string.note_removed_from_server_title))
                         builder.setMessage(Html.fromHtml(message, Html.FROM_HTML_MODE_LEGACY))
 
                         //val input = EditText(this@MainActivity)
                         //builder.setView(input)
 
-                        builder.setPositiveButton("Delete") { dialog, _ ->
+                        builder.setPositiveButton(getString(R.string.delete)) { dialog, _ ->
                             dialog.dismiss()
                             if (continuation.isActive) continuation.resume(true)
                         }
-                        builder.setNegativeButton("Keep") { dialog, _ ->
+                        builder.setNegativeButton(getString(R.string.keep)) { dialog, _ ->
                             dialog.dismiss()
                             if (continuation.isActive) continuation.resume(false)
                         }
@@ -558,8 +552,8 @@ class MainActivity : AppCompatActivity() {
 
         val dialog =
             android.app.AlertDialog.Builder(this).setTitle(getString(R.string.create_password))
-                .setView(dialogView)
-                .setCancelable(false).setPositiveButton(getString(R.string.create)) { _, _ ->
+                .setView(dialogView).setCancelable(false)
+                .setPositiveButton(getString(R.string.create)) { _, _ ->
                     try {
                         val password = inputPassword.text.toString()
                         if (password.isEmpty()) {
@@ -601,8 +595,7 @@ class MainActivity : AppCompatActivity() {
     private fun showMenu() {
         val list: MutableList<ListViewItem> = ArrayList()
         for (item in menuItemList) {
-            if (item.isShowing())
-                list.add(item)
+            if (item.isShowing()) list.add(item)
         }
         val listViewAdapter = ListViewAdapter(this, list)
         val params = menuContainer.layoutParams

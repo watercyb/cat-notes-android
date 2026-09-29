@@ -78,4 +78,7 @@
     <string name="reset_password">Reset Password</string>
     <string name="verify_email">Verify Your Email</string>
     <string name="google_signed_out">Signed out from Google</string>
+    <string name="keep">Keep</string>
+    <string name="note_removed_from_server">The note \"<b>%s</b>\" was removed from the server. Do you want to delete your local copy as well?</string>
+    <string name="note_removed_from_server_title">Note removed from server</string>
 </resources>

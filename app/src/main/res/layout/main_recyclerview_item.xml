@@ -15,12 +15,13 @@
 
         <TextView
             android:id="@+id/textViewTitle"
+            style="@style/bold"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ellipsize="end"
+            android:fontFamily="@font/text"
             android:maxLines="1"
-            android:textSize="16sp"
-            android:textStyle="bold" />
+            android:textSize="16sp" />
 
         <TextView
             android:id="@+id/textViewContent"
@@ -28,6 +29,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="5dp"
             android:ellipsize="end"
+            android:fontFamily="@font/text"
             android:maxLines="5"
             android:textSize="14sp" />
 
@@ -50,9 +52,9 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/locked"
                 android:paddingStart="0dp"
                 android:paddingEnd="15dp"
+                android:text="@string/locked"
                 android:textColor="@color/pink_remove"
                 android:textSize="14sp"
                 android:textStyle="bold" />

@@ -1,0 +1,6 @@
+<resources>
+
+    <style name="bold">
+        <item name="android:textStyle">normal</item>
+    </style>
+</resources>
