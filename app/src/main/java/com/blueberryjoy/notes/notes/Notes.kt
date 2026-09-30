@@ -2,7 +2,6 @@ package com.blueberryjoy.notes.notes
 
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import com.blueberryjoy.notes.App
 import com.blueberryjoy.notes.R
 import com.blueberryjoy.notes.auth.AuthManager
@@ -12,14 +11,12 @@ import com.blueberryjoy.notes.retrofit.ErrorHandler
 import com.blueberryjoy.notes.retrofit.RetrofitInstance
 import com.blueberryjoy.notes.retrofit.data_class.ApiNote
 import com.blueberryjoy.notes.retrofit.data_class.ApiReq
-import com.blueberryjoy.notes.retrofit.data_class.ApiRes
 import com.blueberryjoy.notes.sqlite.SQLite
 import com.blueberryjoy.notes.utils.Message
 import com.blueberryjoy.notes.utils.RecyclerViewItem
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.lang.System.console
 import java.util.function.ToIntFunction
 
 object Notes {
@@ -313,12 +310,9 @@ object Notes {
 
         try {
             val response = RetrofitInstance.api.getNotesIdAndVersion()
-            Log.w("testLog", response.isSuccessful.toString())
             if (response.isSuccessful) {
-                Log.w("testLog", "getNotesFromApi")
                 val res = response.body()
                 if (res?.success == true) {
-                    Log.w("testLog", "notes.size: ${res.notes?.size}")
                     updateNoteWithoutTitleAndContents(res.notes)
                     return true
                 } else {
@@ -330,8 +324,7 @@ object Notes {
                 ErrorHandler.res(response)
                 return false
             }
-        } catch (e: Exception) {
-            Log.w("testLog", e.toString())
+        } catch (_: Exception) {
             Message.cannotReachServer()
             return false
         }
