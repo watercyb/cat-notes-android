@@ -14,13 +14,14 @@
         <!-- Title -->
         <TextView
             android:id="@+id/userTitle"
+            style="@style/bold"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="24dp"
             android:layout_marginTop="48dp"
+            android:fontFamily="@font/menu"
             android:text="@string/account"
             android:textSize="28sp"
-            android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -44,6 +45,7 @@
             android:layout_marginStart="24dp"
             android:layout_marginTop="32dp"
             android:layout_marginEnd="24dp"
+            android:fontFamily="@font/menu"
             android:hint="@string/name"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -53,7 +55,8 @@
                 android:id="@+id/nameInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:enabled="false" />
+                android:enabled="false"
+                android:fontFamily="@font/menu" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Email Display -->
@@ -64,6 +67,7 @@
             android:layout_marginStart="24dp"
             android:layout_marginTop="16dp"
             android:layout_marginEnd="24dp"
+            android:fontFamily="@font/menu"
             android:hint="@string/email"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -73,7 +77,8 @@
                 android:id="@+id/emailInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:enabled="false" />
+                android:enabled="false"
+                android:fontFamily="@font/menu" />
         </com.google.android.material.textfield.TextInputLayout>
 
 
@@ -86,6 +91,7 @@
             android:layout_marginStart="24dp"
             android:layout_marginTop="64dp"
             android:layout_marginEnd="24dp"
+            android:fontFamily="@font/menu"
             android:text="@string/logout_from_google"
             app:icon="@drawable/ic_google"
             app:iconGravity="textStart"

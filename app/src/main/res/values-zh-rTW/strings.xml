@@ -82,4 +82,12 @@
     <string name="keep">保留</string>
     <string name="note_removed_from_server">伺服器上的筆記「<b>%s</b>」已被刪除。是否也要刪除本機副本？</string>
     <string name="note_removed_from_server_title">筆記已從伺服器刪除</string>
+    <string name="about">關於</string>
+    <string name="about_contact_developer">聯絡開發者</string>
+    <string name="about_version">"版本 "</string>
+    <string name="about_description">這是一款簡單、安全的筆記應用程式，幫助您建立、整理和管理筆記。</string>
+    <string name="sync_notes">同步筆記</string>
+    <string name="synced">同步完成</string>
+    <string name="syncing">正在同步…</string>
+    <string name="ok">確定</string>
 </resources>

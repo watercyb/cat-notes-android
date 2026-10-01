@@ -445,6 +445,8 @@ object AuthManager {
             } else {
                 if (response.code() == 403) {
                     Message.passwordChangeDisable()
+                } else if (response.code() == 401) {
+                    Message.invalidCredentials()
                 } else {
                     ErrorHandler.res(response)
                 }
@@ -515,7 +517,9 @@ object AuthManager {
             if (response.isSuccessful) {
                 val res = response.body()
                 if (res?.success == true) {
-                    Message.show(getInstance().getContext().getString(R.string.sent_reset_password_code))
+                    Message.show(
+                        getInstance().getContext().getString(R.string.sent_reset_password_code)
+                    )
                     return true
                 }
                 return false

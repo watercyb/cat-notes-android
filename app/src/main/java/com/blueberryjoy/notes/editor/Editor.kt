@@ -1,7 +1,6 @@
 package com.blueberryjoy.notes.editor
 
 import android.app.AlertDialog
-import android.graphics.Color
 import android.graphics.Rect
 import android.os.Build
 import android.os.Bundle
@@ -11,6 +10,7 @@ import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
+import android.widget.Button
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageButton
@@ -225,38 +225,10 @@ class Editor : AppCompatActivity() {
     }
 
     fun showInputPassword() {
-        val dialogView = layoutInflater.inflate(R.layout.editor_password, null)
+        val dialogView = layoutInflater.inflate(R.layout.dialog_editor_password, null)
         val inputPassword = dialogView.findViewById<EditText>(R.id.inputPassword)
 
-        val dialog = AlertDialog.Builder(this).setTitle(getString(R.string.password_required))
-            .setView(dialogView)
-            .setCancelable(false).setPositiveButton(getString(R.string.unlock)) { _, _ ->
-                try {
-                    val (salt, key, content) = Crypto.decrypt(
-                        inputPassword.text.toString(),
-                        note.content
-                    )
-                    this.salt = salt
-                    this.key = key
-                    this.content = content
-                    originContent = content
-                    editTextContent.setText(content)
-                } catch (_: Exception) {
-                    Message.show(getString(R.string.incorrect_password))
-                    isSaved = true
-                    finish()
-                }
-            }.setNegativeButton(getString(R.string.cancel)) { _, _ ->
-                isSaved = true
-                finish()
-            }.setNeutralButton(getString(R.string.delete)) { _, _ ->
-                deleteAndClose()
-            }.create()
-
-        dialog.setOnShowListener {
-            val neutralButton = dialog.getButton(AlertDialog.BUTTON_NEUTRAL)
-            neutralButton.setTextColor(Color.RED)
-        }
+        val dialog = AlertDialog.Builder(this).setCancelable(false).setView(dialogView).create()
 
         dialog?.window?.setSoftInputMode(
             WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE
@@ -274,37 +246,54 @@ class Editor : AppCompatActivity() {
 
         inputPassword.setOnEditorActionListener { _, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_DONE || event?.keyCode == KeyEvent.KEYCODE_ENTER) {
-                dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+                dialogView.findViewById<Button>(R.id.buttonPositive).performClick()
                 true
             } else {
                 false
             }
         }
+
+        dialogView.findViewById<Button>(R.id.buttonNeutral).setOnClickListener {
+            deleteAndClose()
+        }
+
+        dialogView.findViewById<Button>(R.id.buttonNegative).setOnClickListener {
+            isSaved = true
+            finish()
+        }
+
+        dialogView.findViewById<Button>(R.id.buttonPositive).setOnClickListener {
+            try {
+                val (salt, key, content) = Crypto.decrypt(
+                    inputPassword.text.toString(),
+                    note.content
+                )
+                this.salt = salt
+                this.key = key
+                this.content = content
+                originContent = content
+                editTextContent.setText(content)
+                dialog.dismiss()
+            } catch (_: Exception) {
+                Message.showWithDelay(getString(R.string.incorrect_password))
+                isSaved = true
+                finish()
+            }
+        }
     }
 
     fun showChangePassword() {
-        val dialogView = layoutInflater.inflate(R.layout.editor_change_password, null)
+        val dialogView = layoutInflater.inflate(R.layout.dialog_editor_change_password, null)
         val inputPassword = dialogView.findViewById<EditText>(R.id.inputPassword)
         val confirmPassword = dialogView.findViewById<EditText>(R.id.confirmPassword)
 
-        val dialog = AlertDialog.Builder(this).setTitle(getString(R.string.update_password))
-            .setView(dialogView)
-            .setCancelable(false)
-            .setPositiveButton(getString(R.string.update), null)   // IMPORTANT: null
-            .setNegativeButton(getString(R.string.cancel), null).create()
-
-        dialog.setOnShowListener {
-            val neutralButton = dialog.getButton(AlertDialog.BUTTON_NEUTRAL)
-            neutralButton.setTextColor(Color.RED)
-        }
+        val dialog = AlertDialog.Builder(this).setView(dialogView).setCancelable(false).create()
 
         dialog?.window?.setSoftInputMode(
             WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE
         )
         inputPassword.post {
             inputPassword.requestFocus()
-            //val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-            //imm.showSoftInput(inputPassword, InputMethodManager.SHOW_IMPLICIT)
 
             val controller = WindowCompat.getInsetsController(window, inputPassword)
             controller.show(WindowInsetsCompat.Type.ime())
@@ -312,9 +301,7 @@ class Editor : AppCompatActivity() {
 
         dialog.show()
 
-        val updateBtn = dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-
-        updateBtn.setOnClickListener {
+        dialogView.findViewById<Button>(R.id.buttonPositive).setOnClickListener {
             try {
                 val password = inputPassword.text.toString()
                 val confirm = confirmPassword.text.toString()
@@ -340,6 +327,10 @@ class Editor : AppCompatActivity() {
                 dialog.dismiss()
             } catch (_: Exception) {
                 Message.show(getString(R.string.unable_update_password))
+            }
+
+            dialogView.findViewById<Button>(R.id.buttonNegative).setOnClickListener {
+                dialog.dismiss()
             }
         }
 

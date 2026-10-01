@@ -15,7 +15,6 @@
 
         <TextView
             android:id="@+id/textViewTitle"
-            style="@style/bold"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ellipsize="end"
@@ -55,9 +54,10 @@
                 android:paddingStart="0dp"
                 android:paddingEnd="15dp"
                 android:text="@string/locked"
+                android:fontFamily="@font/menu"
                 android:textColor="@color/pink_remove"
-                android:textSize="14sp"
-                android:textStyle="bold" />
+                android:textSize="@dimen/locked_text_size"
+                style="@style/bold" />
         </LinearLayout>
 
 

@@ -1,11 +1,12 @@
 package com.blueberryjoy.notes.trash_can
 
 import android.annotation.SuppressLint
-import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.view.View
+import android.widget.Button
 import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -62,32 +63,26 @@ class TrashCan : AppCompatActivity() {
     @SuppressLint("NotifyDataSetChanged")
     private fun showRemoveOrRestoreDialog(note: RecyclerViewItem) {
         val title = if (note.title.trim().isEmpty()) getString(R.string.no_title) else note.title
-        val dialog = AlertDialog.Builder(this)
-            .setTitle(title)
-            .setMessage(getString(R.string.delete_or_restore))
-            .setNegativeButton(getString(R.string.restore)) { dialogInterface, _ ->
-                Notes.restoreFromTrashCan(note)
-                recyclerViewAdapter.setVisibleList()
-                recyclerViewAdapter.notifyDataSetChanged()
-                dialogInterface.dismiss()
+        val view = layoutInflater.inflate(R.layout.dialog_trash_can, null)
+        val dialog = AlertDialog.Builder(this@TrashCan).setView(view).create()
+        view.findViewById<TextView>(R.id.dialog_title).text = title
+        view.findViewById<Button>(R.id.dialog_negative).setOnClickListener {
+            Notes.restoreFromTrashCan(note)
+            recyclerViewAdapter.setVisibleList()
+            recyclerViewAdapter.notifyDataSetChanged()
+            dialog.dismiss()
 
-                if (recyclerViewAdapter.itemCount == 0) setRecyclerViewEmpty()
-            }
-            .setPositiveButton(getString(R.string.delete)) { dialogInterface, _ ->
-                Notes.removeFromTrashCan(note)
-                recyclerViewAdapter.setVisibleList()
-                recyclerViewAdapter.notifyDataSetChanged()
-                dialogInterface.dismiss()
+            if (recyclerViewAdapter.itemCount == 0) setRecyclerViewEmpty()
+        }
+        view.findViewById<Button>(R.id.dialog_positive).setOnClickListener {
+            Notes.removeFromTrashCan(note)
+            recyclerViewAdapter.setVisibleList()
+            recyclerViewAdapter.notifyDataSetChanged()
+            dialog.dismiss()
 
-                if (recyclerViewAdapter.itemCount == 0) setRecyclerViewEmpty()
-            }
-            .create()
-
+            if (recyclerViewAdapter.itemCount == 0) setRecyclerViewEmpty()
+        }
         dialog.show()
-
-        // Make Delete button red
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE)
-            .setTextColor(Color.RED)
     }
 
     private fun setRecyclerViewEmpty() {

@@ -5,7 +5,6 @@ import android.content.Context
 import com.clerk.api.Clerk
 
 class App : Application() {
-    //val publishableKey: String = "pk_test_b3Blbi1ib2FyLTc0LmNsZXJrLmFjY291bnRzLmRldiQ"
     val publishableKey: String="pk_live_Y2xlcmsubm90ZXMuYmJqZGV2LmNvbSQ"
 
     companion object {

@@ -24,10 +24,12 @@ import android.widget.EditText
 import android.widget.ImageButton
 import android.widget.LinearLayout
 import android.widget.ListView
+import android.widget.TextView
 import androidx.activity.addCallback
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
@@ -51,7 +53,6 @@ import com.blueberryjoy.notes.clerk.OAuthViewModel
 import com.blueberryjoy.notes.editor.Editor
 import com.blueberryjoy.notes.notes.Notes
 import com.blueberryjoy.notes.notes.OnNoteChangeHandler
-import com.blueberryjoy.notes.notes.SyncQueue
 import com.blueberryjoy.notes.trash_can.TrashCan
 import com.blueberryjoy.notes.utils.Crypto
 import com.blueberryjoy.notes.utils.Message
@@ -62,6 +63,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
+import androidx.core.net.toUri
 
 
 class MainActivity : AppCompatActivity() {
@@ -81,6 +83,8 @@ class MainActivity : AppCompatActivity() {
     private var lastActiveTime: Long = -1L
     private var resendAvailableAt: Long = 0L
     private var backPressedTime: Long = 0L
+
+    private var syncButton: ListViewItem? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -160,28 +164,78 @@ class MainActivity : AppCompatActivity() {
         menuItemList.add(
             ListViewItem(
                 if (AuthManager.getIsShowAllNotes()) getString(R.string.my_notes) else getString(
-                    R.string.all_notes
-                ), { item ->
-                    if (item.title == getString(R.string.all_notes)) {
-                        item.title = getString(R.string.my_notes)
-                        AuthManager.setIsShowAllNotes(true)
-                    } else {
-                        item.title = getString(R.string.all_notes)
-                        AuthManager.setIsShowAllNotes(false)
+                R.string.all_notes
+            ), { item ->
+                if (item.title == getString(R.string.all_notes)) {
+                    item.title = getString(R.string.my_notes)
+                    AuthManager.setIsShowAllNotes(true)
+                } else {
+                    item.title = getString(R.string.all_notes)
+                    AuthManager.setIsShowAllNotes(false)
+                }
+                recyclerViewAdapter.setVisibleList()
+                recyclerViewAdapter.notifyDataSetChanged()
+                setRecyclerViewEmpty(recyclerViewAdapter.itemCount == 0)
+            }, {
+                for (note in Notes.list) {
+                    if (!note.userId.equals(AuthManager.getUserId())) {
+                        return@ListViewItem true
                     }
-                    recyclerViewAdapter.setVisibleList()
-                    recyclerViewAdapter.notifyDataSetChanged()
-                    setRecyclerViewEmpty(recyclerViewAdapter.itemCount == 0)
-                }, {
-                    for (note in Notes.list) {
-                        if (!note.userId.equals(AuthManager.getUserId())) {
-                            return@ListViewItem true
-                        }
-                    }
-                    return@ListViewItem false
-                })
+                }
+                return@ListViewItem false
+            })
         )
 
+        syncButton = ListViewItem(getString(R.string.sync_notes), { item ->
+            if (item.title == getString(R.string.sync_notes)) {
+                item.title = getString(R.string.syncing)
+
+                Handler(Looper.getMainLooper()).postDelayed({
+                    syncButton!!.title = getString(R.string.sync_notes)
+                }, 5000)
+
+                lifecycleScope.launch {
+                    if (Notes.getNotesFromApi()) Message.show(getString(R.string.synced))
+                    item.title = getString(R.string.sync_notes)
+                }
+            }
+        }, {
+            return@ListViewItem true
+        })
+
+        menuItemList.add(syncButton!!)
+
+        menuItemList.add(
+            ListViewItem(getString(R.string.about), { _ ->
+                lifecycleScope.launch {
+                    val view = layoutInflater.inflate(R.layout.dialog_main_about, null)
+                    val version: TextView = view.findViewById(R.id.textViewVersion)
+                    version.text = java.lang.String.format(
+                        "%s%s", getString(R.string.about_version), BuildConfig.VERSION_NAME
+                    )
+                    val contact: TextView = view.findViewById(R.id.textViewContact)
+                    contact.setOnClickListener { _: View? ->
+                        val intent = Intent(Intent.ACTION_SENDTO)
+                        intent.data = "mailto:blueberryjoy24@gmail.com".toUri()
+                        intent.putExtra(Intent.EXTRA_SUBJECT, "Cat Notes")
+                        startActivity(intent)
+                    }
+
+                    val dialog =
+                        android.app.AlertDialog.Builder(this@MainActivity).setView(view).create()
+
+                    dialog.show()
+
+                    view.findViewById<Button>(R.id.dialog_positive).setOnClickListener {
+                        dialog.dismiss()
+                    }
+                }
+            }, {
+                return@ListViewItem true
+            })
+        )
+
+        /*
         if (BuildConfig.DEBUG) {
             menuItemList.add(
                 ListViewItem("CHECK QUEUE", {
@@ -192,6 +246,7 @@ class MainActivity : AppCompatActivity() {
             menuItemList.add(ListViewItem("TEST", { _ ->
             }, { return@ListViewItem true }))
         }
+        */
     }
 
     private fun initializeRecyclerView() {
@@ -276,12 +331,19 @@ class MainActivity : AppCompatActivity() {
 
         swipeRefresh.setOnRefreshListener {
             // Trigger your refresh logic
+            if (syncButton!!.title == getString(R.string.syncing)) {
+                swipeRefresh.isRefreshing = false
+                return@setOnRefreshListener
+            }
+            syncButton!!.title = getString(R.string.syncing)
             Handler(Looper.getMainLooper()).postDelayed({
                 swipeRefresh.isRefreshing = false
+                syncButton!!.title = getString(R.string.sync_notes)
             }, 5000)
             lifecycleScope.launch {
-                Notes.getNotesFromApi()
+                if (Notes.getNotesFromApi()) Message.show(getString(R.string.synced))
                 swipeRefresh.isRefreshing = false
+                syncButton!!.title = getString(R.string.sync_notes)
             }
         }
 
@@ -418,7 +480,7 @@ class MainActivity : AppCompatActivity() {
 
     @SuppressLint("ClickableViewAccessibility")
     fun showVerifyEmailDialog() {
-        val dialogView = layoutInflater.inflate(R.layout.main_verify_email, null)
+        val dialogView = layoutInflater.inflate(R.layout.dialog_main_verify_email, null)
 
         val digits = arrayOf(
             dialogView.findViewById(R.id.etDigit1),
@@ -547,7 +609,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun showInputPassword() {
-        val dialogView = layoutInflater.inflate(R.layout.editor_password, null)
+        val dialogView = layoutInflater.inflate(R.layout.dialog_editor_password, null)
         val inputPassword = dialogView.findViewById<EditText>(R.id.inputPassword)
 
         val dialog =
@@ -590,6 +652,12 @@ class MainActivity : AppCompatActivity() {
                 false
             }
         }
+
+
+        val font = ResourcesCompat.getFont(this@MainActivity, R.font.menu)
+
+        dialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE)?.typeface = font
+        dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE)?.typeface = font
     }
 
     private fun showMenu() {

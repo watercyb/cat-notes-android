@@ -82,4 +82,13 @@
     <string name="keep">保留</string>
     <string name="note_removed_from_server">服务器上的笔记「<b>%s</b>」已被删除。是否也要删除本地副本？</string>
     <string name="note_removed_from_server_title">笔记已从服务器删除</string>
+    <string name="about">关于</string>
+    <string name="about_contact_developer">联系开发者</string>
+    <string name="about_version">"版本 "</string>
+    <string name="about_description">这是一款简单、安全的笔记应用，帮助您创建、整理和管理笔记。</string>
+    <string name="sync_notes">同步笔记</string>
+    <string name="synced">同步完成</string>
+    <string name="syncing">正在同步…</string>
+    <string name="ok">确定</string>
+
 </resources>

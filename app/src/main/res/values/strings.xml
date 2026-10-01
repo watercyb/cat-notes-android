@@ -81,4 +81,12 @@
     <string name="keep">Keep</string>
     <string name="note_removed_from_server">The note \"<b>%s</b>\" was removed from the server. Do you want to delete your local copy as well?</string>
     <string name="note_removed_from_server_title">Note removed from server</string>
+    <string name="about">ABOUT</string>
+    <string name="about_contact_developer">Contact Developer</string>
+    <string name="about_version">"Version "</string>
+    <string name="about_description">A simple and secure app for creating and managing your notes.</string>
+    <string name="sync_notes">SYNC NOTES</string>
+    <string name="synced">Sync complete</string>
+    <string name="syncing">Syncing…</string>
+    <string name="ok">OK</string>
 </resources>

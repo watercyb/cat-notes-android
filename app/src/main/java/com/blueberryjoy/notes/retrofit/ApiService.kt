@@ -2,7 +2,6 @@ package com.blueberryjoy.notes.retrofit
 
 import com.blueberryjoy.notes.retrofit.data_class.ApiRes
 import com.blueberryjoy.notes.retrofit.data_class.ApiReq
-import com.google.gson.JsonObject
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE

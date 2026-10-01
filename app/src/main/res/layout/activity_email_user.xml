@@ -19,8 +19,9 @@
             android:layout_marginStart="24dp"
             android:layout_marginTop="48dp"
             android:text="@string/profile"
+            style="@style/bold"
             android:textSize="28sp"
-            android:textStyle="bold"
+            android:fontFamily="@font/menu"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -45,6 +46,7 @@
             android:layout_marginTop="32dp"
             android:layout_marginEnd="24dp"
             android:hint="@string/email"
+            android:fontFamily="@font/menu"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/avatarImage">
@@ -52,6 +54,7 @@
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/emailInput"
                 android:layout_width="match_parent"
+                android:fontFamily="@font/menu"
                 android:layout_height="wrap_content"
                 android:enabled="false" />
         </com.google.android.material.textfield.TextInputLayout>
@@ -65,6 +68,7 @@
             android:layout_marginTop="16dp"
             android:layout_marginEnd="24dp"
             android:hint="@string/name"
+            android:fontFamily="@font/menu"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/emailLayout">
@@ -73,6 +77,7 @@
                 android:id="@+id/nameInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:fontFamily="@font/menu"
                 android:inputType="textPersonName" />
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -83,6 +88,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="24dp"
             android:layout_marginTop="24dp"
+            android:fontFamily="@font/menu"
             android:layout_marginEnd="24dp"
             android:text="@string/update_profile"
             app:layout_constraintEnd_toEndOf="parent"
@@ -99,6 +105,7 @@
             android:layout_marginEnd="24dp"
             android:text="@string/update_password"
             app:layout_constraintEnd_toEndOf="parent"
+            android:fontFamily="@font/menu"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/updateButton" />
 
@@ -109,6 +116,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="24dp"
             android:layout_marginTop="64dp"
+            android:fontFamily="@font/menu"
             android:layout_marginEnd="24dp"
             android:text="@string/logout"
             app:layout_constraintEnd_toEndOf="parent"

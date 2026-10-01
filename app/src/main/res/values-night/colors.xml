@@ -7,4 +7,6 @@
     <color name="menu_divider">#FF2E2F3F</color>
     <color name="blue">#FF50A6C5</color>
     <color name="pink_remove">#FFFF9898</color>
+    <color name="toast_background">#303030</color>
+    <color name="toast_text">#FFFFFF</color>
 </resources>

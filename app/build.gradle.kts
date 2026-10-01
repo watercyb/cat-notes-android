@@ -38,8 +38,8 @@ android {
         applicationId = "com.blueberryjoy.notes"
         minSdk = 26
         targetSdk = 37
-        versionCode = 6
-        versionName = "1.1"
+        versionCode = 7
+        versionName = "1.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -99,10 +99,10 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
-    implementation("com.clerk:clerk-android-api:1.0.34") {
+    implementation("com.clerk:clerk-android-api:1.0.39") {
         exclude(group = "com.intellij", module = "annotations")
     }
-    implementation("com.clerk:clerk-android-ui:1.0.34") {
+    implementation("com.clerk:clerk-android-ui:1.0.39") {
         exclude(group = "com.intellij", module = "annotations")
     }
     androidTestImplementation(platform(libs.compose.bom))

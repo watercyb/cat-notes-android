@@ -1,3 +1,8 @@
 <resources>
-    <dimen name="trash_can_textview_text_size">36sp</dimen>
+    <dimen name="trash_can_textview_text_size">30sp</dimen>
+    <dimen name="toast_text_size">16sp</dimen>
+    <dimen name="locked_text_size">16sp</dimen>
+    <dimen name="dialog_title_size">20sp</dimen>
+    <dimen name="dialog_message_size">16sp</dimen>
+    <dimen name="dialog_button_text_size">14sp</dimen>
 </resources>

@@ -54,37 +54,39 @@ class EmailUser : AppCompatActivity() {
 
             lifecycleScope.launch {
                 val newName = nameInput.text.toString()
-                if (newName != AuthManager.getUsername())
-                    if (AuthManager.changeUsername(newName)) avatarImage.setImageBitmap(AuthManager.getAvatar())
+                if (newName != AuthManager.getUsername()) if (AuthManager.changeUsername(newName)) avatarImage.setImageBitmap(
+                    AuthManager.getAvatar()
+                )
                 nameInput.isEnabled = true
                 updateButton.isEnabled = true
             }
         }
 
         changePasswordButton.setOnClickListener {
-            val dialogView = layoutInflater.inflate(R.layout.email_user_update_password, null)
+            val dialogView = layoutInflater.inflate(R.layout.dialog_email_user_update_password, null)
             val etOldPassword = dialogView.findViewById<EditText>(R.id.etOldPassword)
             val etNewPassword = dialogView.findViewById<EditText>(R.id.etNewPassword)
 
-            val dialog = AlertDialog.Builder(this)
-                .setTitle(getString(R.string.update_password))
-                .setView(dialogView)
-                .setPositiveButton(getString(R.string.update)) { _, _ ->
-                    val oldPassword = etOldPassword.text.toString()
-                    val newPassword = etNewPassword.text.toString()
-
-                    if (oldPassword.isEmpty() || newPassword.isEmpty()) {
-                        Message.allFieldsRequired()
-                    } else {
-                        lifecycleScope.launch {
-                            changePassword(oldPassword, newPassword)
-                        }
-                    }
-                }
-                .setNegativeButton(getString(R.string.cancel), null)
-                .create()
+            val dialog = AlertDialog.Builder(this).setView(dialogView).create()
 
             dialog.show()
+
+            dialogView.findViewById<MaterialButton>(R.id.buttonPositive).setOnClickListener {
+                val oldPassword = etOldPassword.text.toString()
+                val newPassword = etNewPassword.text.toString()
+
+                if (oldPassword.isEmpty() || newPassword.isEmpty()) {
+                    Message.allFieldsRequired()
+                } else {
+                    dialog.dismiss()
+                    lifecycleScope.launch {
+                        changePassword(oldPassword, newPassword)
+                    }
+                }
+            }
+            dialogView.findViewById<MaterialButton>(R.id.buttonNegative).setOnClickListener {
+                dialog.dismiss()
+            }
         }
 
         logoutButton.setOnClickListener {

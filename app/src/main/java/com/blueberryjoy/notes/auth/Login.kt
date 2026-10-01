@@ -71,32 +71,30 @@ class Login : AppCompatActivity() {
 
         lifecycleScope.launch {
             if (AuthManager.emailLogin(
-                    emailInput!!.getText().toString(),
-                    passwordInput!!.getText().toString()
+                    emailInput!!.getText().toString(), passwordInput!!.getText().toString()
                 )
             ) {
                 finish()
             } else {
-                val dialog = AlertDialog.Builder(this@Login)
-                    .setTitle(getString(R.string.login_error))
-                    .setMessage(getString(R.string.invalid_email_or_password))
-                    .setPositiveButton("OK") { dialogInterface, _ ->
-                        dialogInterface.dismiss()
-                    }
-                    .setNegativeButton(getString(R.string.reset_password)) { dialogInterface, _ ->
-                        lifecycleScope.launch {
-                            if (AuthManager.forgotPassword(
-                                    emailInput!!.getText().toString()
-                                )
-                            ) dialogInterface.dismiss()
-                        }
-                    }
-                    .create()
+                val dialogView =
+                    layoutInflater.inflate(R.layout.dialog_login, null)
+                val dialog = AlertDialog.Builder(this@Login).setView(dialogView).create()
 
                 dialog.show()
 
                 val resetButton: Button = dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
                 resetButton.setTextColor(Color.RED)
+                dialogView.findViewById<Button>(R.id.dialog_positive).setOnClickListener {
+                    lifecycleScope.launch {
+                        if (AuthManager.forgotPassword(
+                                emailInput!!.getText().toString()
+                            )
+                        ) dialog.dismiss()
+                    }
+                }
+                dialogView.findViewById<Button>(R.id.dialog_negative).setOnClickListener {
+                    dialog.dismiss()
+                }
             }
 
             loginButton?.isEnabled = true
