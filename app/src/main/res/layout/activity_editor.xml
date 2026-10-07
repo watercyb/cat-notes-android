@@ -87,6 +87,7 @@
         android:inputType="text"
         android:paddingStart="10dp"
         android:paddingEnd="10dp"
+        android:tag="24"
         android:text=""
         android:textSize="24sp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -122,6 +123,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@color/background"
+            android:fontFamily="@font/text"
             android:gravity="top"
             android:hint="@string/Note"
             android:importantForAutofill="no"
@@ -130,8 +132,9 @@
             android:paddingStart="10dp"
             android:paddingEnd="10dp"
             android:scrollbars="vertical"
-            android:fontFamily="@font/text"
+            android:tag="18"
             android:text=""
+            android:textSize="18sp"
             tools:ignore="LabelFor" />
     </ScrollView>
 

@@ -2,7 +2,6 @@ package com.blueberryjoy.notes.main
 
 import android.annotation.SuppressLint
 import android.content.Intent
-import android.graphics.Color
 import android.graphics.Rect
 import android.os.Build
 import android.os.Bundle
@@ -27,9 +26,10 @@ import android.widget.ListView
 import android.widget.TextView
 import androidx.activity.addCallback
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
@@ -64,6 +64,9 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 import androidx.core.net.toUri
+import com.blueberryjoy.notes.auth.AuthManager.emailLogout
+import com.blueberryjoy.notes.setting.Setting
+import kotlin.jvm.java
 
 
 class MainActivity : AppCompatActivity() {
@@ -85,6 +88,8 @@ class MainActivity : AppCompatActivity() {
     private var backPressedTime: Long = 0L
 
     private var syncButton: ListViewItem? = null
+
+    private lateinit var settingLauncher: ActivityResultLauncher<Intent>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -111,6 +116,7 @@ class MainActivity : AppCompatActivity() {
         initializeNote()
         initializeListView()
         initializeRecyclerView()
+        initializeSettingLauncher()
         checkTime()
     }
 
@@ -140,8 +146,9 @@ class MainActivity : AppCompatActivity() {
     private fun initializeListView() {
         menuContainer.translationZ = 10f
 
+        /*
         menuItemList.add(
-            ListViewItem(getString(R.string.new_note), {
+            ListViewItem(getString(R.string.new_note_menu), {
                 val noteId = Notes.create("", "", "", 0, 0, false, AuthManager.getUserId(), false)
                 if (noteId != -1) openEditor(noteId)
             }, { return@ListViewItem true })
@@ -149,9 +156,31 @@ class MainActivity : AppCompatActivity() {
 
         menuItemList.add(
             ListViewItem(
-                getString(R.string.secure_note_menu),
+                getString(R.string.new_secure_note),
                 { showInputPassword() },
                 { return@ListViewItem true })
+        )
+        */
+
+        menuItemList.add(
+            ListViewItem(getString(R.string.new_note_menu), {
+                val view = layoutInflater.inflate(R.layout.dialog_main_new_note, null)
+                val dialog = AlertDialog.Builder(this@MainActivity).setView(view).create()
+                view.findViewById<TextView>(R.id.new_note).setOnClickListener {
+                    val noteId =
+                        Notes.create("", "", "", 0, 0, false, AuthManager.getUserId(), false)
+                    if (noteId != -1) openEditor(noteId)
+                    dialog.dismiss()
+                }
+                view.findViewById<TextView>(R.id.new_secure_note).setOnClickListener {
+                    dialog.dismiss()
+                    showInputPassword()
+                }
+                view.findViewById<Button>(R.id.dialog_negative).setOnClickListener {
+                    dialog.dismiss()
+                }
+                dialog.show()
+            }, { return@ListViewItem true })
         )
 
         menuItemList.add(
@@ -164,26 +193,26 @@ class MainActivity : AppCompatActivity() {
         menuItemList.add(
             ListViewItem(
                 if (AuthManager.getIsShowAllNotes()) getString(R.string.my_notes) else getString(
-                R.string.all_notes
-            ), { item ->
-                if (item.title == getString(R.string.all_notes)) {
-                    item.title = getString(R.string.my_notes)
-                    AuthManager.setIsShowAllNotes(true)
-                } else {
-                    item.title = getString(R.string.all_notes)
-                    AuthManager.setIsShowAllNotes(false)
-                }
-                recyclerViewAdapter.setVisibleList()
-                recyclerViewAdapter.notifyDataSetChanged()
-                setRecyclerViewEmpty(recyclerViewAdapter.itemCount == 0)
-            }, {
-                for (note in Notes.list) {
-                    if (!note.userId.equals(AuthManager.getUserId())) {
-                        return@ListViewItem true
+                    R.string.all_notes
+                ), { item ->
+                    if (item.title == getString(R.string.all_notes)) {
+                        item.title = getString(R.string.my_notes)
+                        AuthManager.setIsShowAllNotes(true)
+                    } else {
+                        item.title = getString(R.string.all_notes)
+                        AuthManager.setIsShowAllNotes(false)
                     }
-                }
-                return@ListViewItem false
-            })
+                    recyclerViewAdapter.setVisibleList()
+                    recyclerViewAdapter.notifyDataSetChanged()
+                    setRecyclerViewEmpty(recyclerViewAdapter.itemCount == 0)
+                }, {
+                    for (note in Notes.activeNotes) {
+                        if (!note.userId.equals(AuthManager.getUserId())) {
+                            return@ListViewItem true
+                        }
+                    }
+                    return@ListViewItem false
+                })
         )
 
         syncButton = ListViewItem(getString(R.string.sync_notes), { item ->
@@ -206,9 +235,19 @@ class MainActivity : AppCompatActivity() {
         menuItemList.add(syncButton!!)
 
         menuItemList.add(
+            ListViewItem(getString(R.string.setting), {
+                val intent = Intent(this@MainActivity, Setting::class.java)
+                settingLauncher.launch(intent)
+            }, { return@ListViewItem true })
+        )
+
+        menuItemList.add(
             ListViewItem(getString(R.string.about), { _ ->
                 lifecycleScope.launch {
                     val view = layoutInflater.inflate(R.layout.dialog_main_about, null)
+                    val dialog =
+                        android.app.AlertDialog.Builder(this@MainActivity).setView(view).create()
+
                     val version: TextView = view.findViewById(R.id.textViewVersion)
                     version.text = java.lang.String.format(
                         "%s%s", getString(R.string.about_version), BuildConfig.VERSION_NAME
@@ -221,14 +260,11 @@ class MainActivity : AppCompatActivity() {
                         startActivity(intent)
                     }
 
-                    val dialog =
-                        android.app.AlertDialog.Builder(this@MainActivity).setView(view).create()
-
-                    dialog.show()
-
                     view.findViewById<Button>(R.id.dialog_positive).setOnClickListener {
                         dialog.dismiss()
                     }
+
+                    dialog.show()
                 }
             }, {
                 return@ListViewItem true
@@ -256,7 +292,7 @@ class MainActivity : AppCompatActivity() {
                 spanCount, StaggeredGridLayoutManager.VERTICAL
             )
         )
-        recyclerViewAdapter = MainRecyclerViewAdapter(this, Notes.list)
+        recyclerViewAdapter = MainRecyclerViewAdapter(this, Notes.activeNotes)
 
         recyclerViewAdapter.setClickListener { _: View?, position: Int ->
             openEditor(recyclerViewAdapter.getIdFromVisibleIdx(position))
@@ -407,31 +443,26 @@ class MainActivity : AppCompatActivity() {
             override suspend fun onRemovedFromServer(title: String): Boolean {
                 return withContext(Dispatchers.Main) {
                     suspendCancellableCoroutine { continuation ->
+                        val dialogView =
+                            layoutInflater.inflate(R.layout.dialog_main_deleted_from_server, null)
                         val message = getString(R.string.note_removed_from_server, title)
-                        val builder = AlertDialog.Builder(this@MainActivity)
-                        builder.setTitle(getString(R.string.note_removed_from_server_title))
-                        builder.setMessage(Html.fromHtml(message, Html.FROM_HTML_MODE_LEGACY))
 
-                        //val input = EditText(this@MainActivity)
-                        //builder.setView(input)
+                        val dialog = AlertDialog.Builder(this@MainActivity).setView(dialogView)
+                            .setOnCancelListener { dialog ->
+                                dialog.dismiss()
+                                if (continuation.isActive) continuation.resume(false)
+                            }.create()
 
-                        builder.setPositiveButton(getString(R.string.delete)) { dialog, _ ->
+                        dialogView.findViewById<TextView>(R.id.dialog_message).text =
+                            Html.fromHtml(message, Html.FROM_HTML_MODE_LEGACY)
+
+                        dialogView.findViewById<Button>(R.id.dialog_positive).setOnClickListener {
                             dialog.dismiss()
                             if (continuation.isActive) continuation.resume(true)
                         }
-                        builder.setNegativeButton(getString(R.string.keep)) { dialog, _ ->
+                        dialogView.findViewById<Button>(R.id.dialog_negative).setOnClickListener {
                             dialog.dismiss()
                             if (continuation.isActive) continuation.resume(false)
-                        }
-                        builder.setOnCancelListener { dialog ->
-                            dialog.dismiss()
-                            if (continuation.isActive) continuation.resume(false)
-                        }
-
-                        val dialog = builder.create()
-
-                        dialog.setOnShowListener {
-                            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.RED)
                         }
 
                         // Handle coroutine cancellation (dismiss dialog if scope is canceled)
@@ -548,12 +579,11 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        val dialog =
-            AlertDialog.Builder(this).setTitle(getString(R.string.verify_email)).setView(dialogView)
-                .create()
+        val dialog = AlertDialog.Builder(this).setView(dialogView).create()
 
         val btnVerify = dialogView.findViewById<Button>(R.id.btnVerify)
         val btnResend = dialogView.findViewById<Button>(R.id.btnResend)
+        val btnLogout = dialogView.findViewById<Button>(R.id.btnLogout)
 
         fun startResendTimer(endTime: Long) {
             val remaining = endTime - System.currentTimeMillis()
@@ -590,7 +620,6 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-
         btnResend.setOnClickListener {
             lifecycleScope.launch {
                 if (AuthManager.resendVerifyEmail()) {
@@ -602,6 +631,18 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+        btnLogout.setOnClickListener {
+            btnVerify.isEnabled = false
+            btnResend.isEnabled = false
+            btnLogout.isEnabled = false
+            lifecycleScope.launch {
+                if (emailLogout()) dialog.dismiss()
+                btnVerify.isEnabled = true
+                btnResend.isEnabled = true
+                btnLogout.isEnabled = true
+                setNotificationDotVisible(View.GONE)
+            }
+        }
 
         dialog.show()
 
@@ -609,29 +650,11 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun showInputPassword() {
-        val dialogView = layoutInflater.inflate(R.layout.dialog_editor_password, null)
+        val dialogView = layoutInflater.inflate(R.layout.dialog_main_password, null)
         val inputPassword = dialogView.findViewById<EditText>(R.id.inputPassword)
 
         val dialog =
-            android.app.AlertDialog.Builder(this).setTitle(getString(R.string.create_password))
-                .setView(dialogView).setCancelable(false)
-                .setPositiveButton(getString(R.string.create)) { _, _ ->
-                    try {
-                        val password = inputPassword.text.toString()
-                        if (password.isEmpty()) {
-                            Message.show(getString(R.string.password_empty))
-                        } else {
-                            val content = Crypto.encrypt(password, "")
-                            val noteId = Notes.create(
-                                "", content, "", 0, 0, false, AuthManager.getUserId(), true
-                            )
-                            if (noteId != -1) openEditor(noteId)
-                        }
-                    } catch (_: Exception) {
-                        Message.show(getString(R.string.incorrect_password))
-                    }
-                }.setNegativeButton(getString(R.string.cancel)) { _, _ ->
-                }.create()
+            android.app.AlertDialog.Builder(this).setView(dialogView).setCancelable(false).create()
 
         dialog?.window?.setSoftInputMode(
             WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE
@@ -641,23 +664,36 @@ class MainActivity : AppCompatActivity() {
             val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
             imm.showSoftInput(inputPassword, 0)
         }
-
-        dialog.show()
-
         inputPassword.setOnEditorActionListener { _, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_DONE || event?.keyCode == KeyEvent.KEYCODE_ENTER) {
-                dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).performClick()
+                dialogView.findViewById<Button>(R.id.buttonPositive).performClick()
                 true
             } else {
                 false
             }
         }
+        dialogView.findViewById<Button>(R.id.buttonPositive).setOnClickListener {
+            try {
+                val password = inputPassword.text.toString()
+                if (password.isEmpty()) {
+                    Message.show(getString(R.string.password_empty))
+                } else {
+                    val content = Crypto.encrypt(password, "")
+                    val noteId = Notes.create(
+                        "", content, "", 0, 0, false, AuthManager.getUserId(), true
+                    )
+                    if (noteId != -1) openEditor(noteId)
+                    dialog.dismiss()
+                }
+            } catch (_: Exception) {
+                Message.show(getString(R.string.incorrect_password))
+            }
+        }
+        dialogView.findViewById<Button>(R.id.buttonNegative).setOnClickListener {
+            dialog.dismiss()
+        }
 
-
-        val font = ResourcesCompat.getFont(this@MainActivity, R.font.menu)
-
-        dialog.getButton(android.app.AlertDialog.BUTTON_NEGATIVE)?.typeface = font
-        dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE)?.typeface = font
+        dialog.show()
     }
 
     private fun showMenu() {
@@ -699,5 +735,27 @@ class MainActivity : AppCompatActivity() {
 
     private fun hideMenu() {
         menuContainer.visibility = View.GONE
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    private fun initializeSettingLauncher() {
+        settingLauncher =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode == RESULT_OK) {
+                    val returnValue = result.data?.getIntExtra("result", 0) ?: 0
+
+                    when (returnValue) {
+                        1 -> {
+                            recyclerViewAdapter.notifyDataSetChanged()
+                        }
+
+                        2 -> {
+                        }
+
+                        3 -> {
+                        }
+                    }
+                }
+            }
     }
 }

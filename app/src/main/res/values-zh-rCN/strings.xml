@@ -60,8 +60,7 @@
     <string name="note_restored">笔记已恢复</string>
     <string name="delete_or_restore">要永久删除还是恢复此笔记？（回收站中的笔记会在7天后自动删除。）</string>
     <string name="press_back_again_to_exit">再按一次返回键退出</string>
-    <string name="new_note">新建笔记</string>
-    <string name="secure_note_menu">新建安全笔记</string>
+    <string name="new_note_menu">新建笔记</string>
     <string name="trash_can_menu">回收站</string>
     <string name="my_notes">我的笔记</string>
     <string name="all_notes">所有笔记</string>
@@ -90,5 +89,15 @@
     <string name="synced">同步完成</string>
     <string name="syncing">正在同步…</string>
     <string name="ok">确定</string>
+    <string name="import_font">导入字体</string>
+    <string name="setting">设置</string>
+    <string name="create_note">创建笔记</string>
+    <string name="regular_note">普通笔记</string>
+    <string name="select_font">选择字体</string>
+    <string name="font_imported">字体已导入。</string>
+    <string name="unable_import_font">无法导入此字体。</string>
+    <string name="default_font">默认字体</string>
+    <string name="change_font">字体</string>
+    <string name="font_size">字体大小</string>
 
 </resources>

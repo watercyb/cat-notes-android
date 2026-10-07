@@ -15,11 +15,12 @@ object SyncQueue {
     const val DELAY: Long = 60000
     var isRunning = false
     var isUpdatingNotesFromApi = false
+    var queueId = 0
 
-    suspend fun startQueue() {
+    suspend fun startQueue(id: Int) {
         if (isRunning || isUpdatingNotesFromApi) return
         isRunning = true
-        while (!queue.isEmpty()) {
+        while (!queue.isEmpty() && id == queueId) {
             val id = queue.peekFirst()
             if (id == null) {
                 queue.pollFirst()
@@ -33,9 +34,9 @@ object SyncQueue {
                 } else {
                     val idx = Notes.getNoteById(id)
                     if (idx == -1) {
-                        success = mongoId == null || Notes.deleteNodeFromApi(mongoId)
+                        success = mongoId == null || Notes.deleteNoteFromApi(mongoId)
                     } else {
-                        val note: RecyclerViewItem = Notes.list[idx]
+                        val note: RecyclerViewItem = Notes.activeNotes[idx]
                         if (note.mongoId == null || note.mongoId.isEmpty()) {
                             Message.logW("Run createNote: $note " + note.title)
                             success = Notes.createNoteOnApi(note)
@@ -51,7 +52,8 @@ object SyncQueue {
                 if (!success) {
                     delay(DELAY.milliseconds)
                 } else {
-                    queue.pollFirst()
+                    if (queue.isNotEmpty())
+                        queue.pollFirst()
                     HM.remove(id)
                 }
             } catch (_: Exception) {
@@ -66,8 +68,9 @@ object SyncQueue {
             Message.logW("Add to queue: title ${note.title}, mongoId ${note.mongoId}")
             HM[note.id] = note.mongoId
             queue.offerLast(note.id)
+            val id = ++queueId
             CoroutineScope(Dispatchers.Main).launch {
-                startQueue()
+                startQueue(id)
             }
         }
     }
@@ -81,8 +84,9 @@ object SyncQueue {
         Message.logW("Add to queue: mongoId $mongoId")
         HM[id] = mongoId
         queue.offerLast(id)
+        val nextId = ++queueId
         CoroutineScope(Dispatchers.Main).launch {
-            startQueue()
+            startQueue(nextId)
         }
     }
 
@@ -92,8 +96,9 @@ object SyncQueue {
             clear()
         } else {
             SyncQueue.isUpdatingNotesFromApi = false
+            val id = ++queueId
             CoroutineScope(Dispatchers.Main).launch {
-                startQueue()
+                startQueue(id)
             }
         }
     }

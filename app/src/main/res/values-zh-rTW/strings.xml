@@ -60,8 +60,7 @@
     <string name="delete_or_restore">要永久刪除還是恢復此筆記？（資源回收筒中的筆記會在7天後自動刪除。）</string>
     <string name="press_back_again_to_exit">再按一次返回鍵退出</string>
     <string name="Note">輸入筆記內容…</string>
-    <string name="new_note">新建筆記</string>
-    <string name="secure_note_menu">新建安全筆記</string>
+    <string name="new_note_menu">新建筆記</string>
     <string name="trash_can_menu">資源回收筒</string>
     <string name="my_notes">我的筆記</string>
     <string name="all_notes">所有筆記</string>
@@ -90,4 +89,14 @@
     <string name="synced">同步完成</string>
     <string name="syncing">正在同步…</string>
     <string name="ok">確定</string>
+    <string name="import_font">匯入字體</string>
+    <string name="setting">設定</string>
+    <string name="create_note">建立筆記</string>
+    <string name="regular_note">一般筆記</string>
+    <string name="select_font">選擇字體</string>
+    <string name="font_imported">字體已匯入。</string>
+    <string name="unable_import_font">無法匯入此字體。</string>
+    <string name="default_font">預設字體</string>
+    <string name="change_font">字體</string>
+    <string name="font_size">字體大小</string>
 </resources>

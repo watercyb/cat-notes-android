@@ -2,7 +2,6 @@ package com.blueberryjoy.notes.auth
 
 import android.app.AlertDialog
 import android.content.Intent
-import android.graphics.Color
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
@@ -80,11 +79,10 @@ class Login : AppCompatActivity() {
                     layoutInflater.inflate(R.layout.dialog_login, null)
                 val dialog = AlertDialog.Builder(this@Login).setView(dialogView).create()
 
-                dialog.show()
-
-                val resetButton: Button = dialog.getButton(AlertDialog.BUTTON_NEGATIVE)
-                resetButton.setTextColor(Color.RED)
                 dialogView.findViewById<Button>(R.id.dialog_positive).setOnClickListener {
+                    dialog.dismiss()
+                }
+                dialogView.findViewById<Button>(R.id.dialog_negative).setOnClickListener {
                     lifecycleScope.launch {
                         if (AuthManager.forgotPassword(
                                 emailInput!!.getText().toString()
@@ -92,9 +90,8 @@ class Login : AppCompatActivity() {
                         ) dialog.dismiss()
                     }
                 }
-                dialogView.findViewById<Button>(R.id.dialog_negative).setOnClickListener {
-                    dialog.dismiss()
-                }
+
+                dialog.show()
             }
 
             loginButton?.isEnabled = true

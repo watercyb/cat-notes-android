@@ -15,11 +15,13 @@
 
         <TextView
             android:id="@+id/textViewTitle"
+            style="@style/bold"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:fontFamily="@font/text"
             android:maxLines="1"
+            android:tag="16"
             android:textSize="16sp" />
 
         <TextView
@@ -30,6 +32,7 @@
             android:ellipsize="end"
             android:fontFamily="@font/text"
             android:maxLines="5"
+            android:tag="14"
             android:textSize="14sp" />
 
         <LinearLayout
@@ -49,15 +52,15 @@
                 tools:ignore="ContentDescription" />
 
             <TextView
+                style="@style/bold"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:fontFamily="@font/menu"
                 android:paddingStart="0dp"
                 android:paddingEnd="15dp"
                 android:text="@string/locked"
-                android:fontFamily="@font/menu"
                 android:textColor="@color/pink_remove"
-                android:textSize="@dimen/locked_text_size"
-                style="@style/bold" />
+                android:textSize="@dimen/locked_text_size" />
         </LinearLayout>
 
 

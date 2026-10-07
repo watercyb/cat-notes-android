@@ -27,3 +27,4 @@ gradle.properties
 /logo
 /font
 /gradle/gradle-daemon-jvm.properties
+/.report

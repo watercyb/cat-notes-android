@@ -39,15 +39,15 @@ public class SQLite {
         return SQLNotes;
     }
 
-    public static void saveMongoId(RecyclerViewItem note) {
+    public static void saveMongoId(@NonNull RecyclerViewItem note) {
         executor.submit(() -> Objects.requireNonNull(db.pageDao()).updateMongoId(note.id, note.mongoId));
     }
 
-    public static void saveIdx(RecyclerViewItem note) {
+    public static void saveIdx(@NonNull RecyclerViewItem note) {
         executor.submit(() -> Objects.requireNonNull(db.pageDao()).updateIdx(note.id, note.idx));
     }
 
-    public static void saveRemoval(RecyclerViewItem note) {
+    public static void saveRemoval(@NonNull RecyclerViewItem note) {
         executor.submit(() -> Objects.requireNonNull(db.pageDao()).updateRemoval(note.id, note.mongoId, note.removeTime, note.isRemovedFromServer));
     }
 
@@ -55,12 +55,12 @@ public class SQLite {
         executor.submit(() -> Objects.requireNonNull(db.pageDao()).updateNote(note.id, note.title, note.content, note.mongoId, note.version, note.idx));
     }
 
-    public static void saveUserId(RecyclerViewItem note) {
+    public static void saveUserId(@NonNull RecyclerViewItem note) {
         executor.submit(() -> Objects.requireNonNull(db.pageDao()).updateUserId(note.id, note.userId));
     }
 
     @NonNull
-    public static SQLNote create(String title, String content, String mongoId, int version, int idx, int removeTime, boolean isRemovedFromServer, String userId, boolean isEncrypted) {
+    public static SQLNote create(@NonNull String title, @NonNull String content, @NonNull String mongoId, int version, int idx, int removeTime, boolean isRemovedFromServer, @NonNull String userId, boolean isEncrypted) {
         SQLNote SQLNote = new SQLNote(title, content, mongoId, version, idx, removeTime, isRemovedFromServer, userId, isEncrypted);
         Future<Long> future = executor.submit(() -> Objects.requireNonNull(db.pageDao()).insert(SQLNote));
         try {

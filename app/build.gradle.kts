@@ -38,8 +38,8 @@ android {
         applicationId = "com.blueberryjoy.notes"
         minSdk = 26
         targetSdk = 37
-        versionCode = 7
-        versionName = "1.2"
+        versionCode = 8
+        versionName = "1.2.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -49,6 +49,7 @@ android {
             isDebuggable = true
         }
         release {
+            manifestPlaceholders += mapOf()
             isMinifyEnabled = true
             isShrinkResources = true
 
@@ -80,6 +81,7 @@ configurations.all {
     }
 }
 dependencies {
+    implementation(libs.androidx.activity.ktx)
     implementation(libs.appcompat)
     implementation(libs.material)
     implementation(libs.activity)

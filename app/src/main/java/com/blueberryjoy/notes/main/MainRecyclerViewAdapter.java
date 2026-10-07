@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.blueberryjoy.notes.R;
 import com.blueberryjoy.notes.auth.AuthManager;
 import com.blueberryjoy.notes.sqlite.SQLite;
+import com.blueberryjoy.notes.utils.FontManager;
 import com.blueberryjoy.notes.utils.Message;
 import com.blueberryjoy.notes.utils.RecyclerViewItem;
 
@@ -49,6 +50,7 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
         } else {
             holder.textViewTitle.setVisibility(View.VISIBLE);
             holder.textViewTitle.setText(visibleList.get(position).title);
+            FontManager.INSTANCE.apply(holder.textViewTitle);
         }
 
         if (AuthManager.isOwner(visibleList.get(position).userId)) {
@@ -61,6 +63,7 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
             holder.textViewContent.setText(visibleList.get(position).content);
             holder.textViewContent.setVisibility(View.VISIBLE);
             holder.secureNote.setVisibility(View.GONE);
+            FontManager.INSTANCE.apply(holder.textViewContent);
         } else {
             holder.textViewContent.setVisibility(View.GONE);
             holder.secureNote.setVisibility(View.VISIBLE);
@@ -118,7 +121,7 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
         }
     }
 
-    public void addToList(RecyclerViewItem note) {
+    public void addToList(@NonNull RecyclerViewItem note) {
         list.add(note);
         if (AuthManager.isShowNote(note.userId)) {
             visibleList.add(note);
@@ -126,7 +129,7 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
         }
     }
 
-    public void noteChanged(RecyclerViewItem note) {
+    public void noteChanged(@NonNull RecyclerViewItem note) {
         for (int i = 0; i < visibleList.size(); i++) {
             if (visibleList.get(i).id == note.id) {
                 this.notifyItemChanged(i);
@@ -135,7 +138,7 @@ public class MainRecyclerViewAdapter extends RecyclerView.Adapter<MainRecyclerVi
         }
     }
 
-    public void removeNote(RecyclerViewItem note) {
+    public void removeNote(@NonNull RecyclerViewItem note) {
         for (int i = 0; i < visibleList.size(); i++) {
             if (visibleList.get(i).id == note.id) {
                 visibleList.remove(i);

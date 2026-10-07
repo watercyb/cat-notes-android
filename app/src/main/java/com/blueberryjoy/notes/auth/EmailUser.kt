@@ -69,8 +69,6 @@ class EmailUser : AppCompatActivity() {
 
             val dialog = AlertDialog.Builder(this).setView(dialogView).create()
 
-            dialog.show()
-
             dialogView.findViewById<MaterialButton>(R.id.buttonPositive).setOnClickListener {
                 val oldPassword = etOldPassword.text.toString()
                 val newPassword = etNewPassword.text.toString()
@@ -87,6 +85,8 @@ class EmailUser : AppCompatActivity() {
             dialogView.findViewById<MaterialButton>(R.id.buttonNegative).setOnClickListener {
                 dialog.dismiss()
             }
+
+            dialog.show()
         }
 
         logoutButton.setOnClickListener {

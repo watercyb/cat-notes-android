@@ -59,8 +59,7 @@
     <string name="note_restored">Note restored</string>
     <string name="delete_or_restore">Permanently delete or restore this note? (Notes in the Trash are automatically removed after 7 days.)</string>
     <string name="press_back_again_to_exit">Press back again to exit</string>
-    <string name="new_note">NEW NOTE</string>
-    <string name="secure_note_menu">SECURE NOTE</string>
+    <string name="new_note_menu">NEW NOTE</string>
     <string name="trash_can_menu">TRASH CAN</string>
     <string name="my_notes">MY NOTES</string>
     <string name="all_notes">ALL NOTES</string>
@@ -87,6 +86,16 @@
     <string name="about_description">A simple and secure app for creating and managing your notes.</string>
     <string name="sync_notes">SYNC NOTES</string>
     <string name="synced">Sync complete</string>
-    <string name="syncing">Syncing…</string>
+    <string name="syncing">SYNCING…</string>
     <string name="ok">OK</string>
+    <string name="import_font">Import Font</string>
+    <string name="setting">Setting</string>
+    <string name="create_note">Create Note</string>
+    <string name="regular_note">Regular Note</string>
+    <string name="select_font">SELECT FONT</string>
+    <string name="font_imported">Font imported.</string>
+    <string name="unable_import_font">Unable to import this font.</string>
+    <string name="default_font">Default Font</string>
+    <string name="change_font">Font</string>
+    <string name="font_size">Font size</string>
 </resources>

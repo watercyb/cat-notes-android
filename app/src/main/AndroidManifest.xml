@@ -12,8 +12,8 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_cat_notes_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Notes"
-        android:usesCleartextTraffic="true">
+        android:theme="@style/Theme.Notes">
+        <!-- android:usesCleartextTraffic="true" -->
         <activity
             android:name=".trash_can.TrashCan"
             android:exported="false" />
@@ -41,6 +41,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".setting.Setting"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
     </application>
 
 </manifest>

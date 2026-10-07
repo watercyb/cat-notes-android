@@ -17,6 +17,7 @@ import android.widget.ImageButton
 import android.widget.ScrollView
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
@@ -28,10 +29,10 @@ import com.blueberryjoy.notes.auth.AuthManager.getUserId
 import com.blueberryjoy.notes.notes.Notes
 import com.blueberryjoy.notes.notes.Notes.getNoteById
 import com.blueberryjoy.notes.notes.Notes.getOnNoteChangeHandler
-import com.blueberryjoy.notes.notes.Notes.list
 import com.blueberryjoy.notes.notes.SyncQueue
 import com.blueberryjoy.notes.sqlite.SQLite
 import com.blueberryjoy.notes.utils.Crypto
+import com.blueberryjoy.notes.utils.FontManager
 import com.blueberryjoy.notes.utils.Message
 import com.blueberryjoy.notes.utils.RecyclerViewItem
 import javax.crypto.spec.SecretKeySpec
@@ -54,9 +55,11 @@ class Editor : AppCompatActivity() {
     private var isSaved = false
     private var originContent: String? = null
 
-    private lateinit var note: RecyclerViewItem
-    private lateinit var salt: ByteArray
-    private lateinit var key: SecretKeySpec
+    private var note: RecyclerViewItem? = null
+    private var salt: ByteArray? = null
+    private var key: SecretKeySpec? = null
+
+    private val viewModel: EditorViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -96,22 +99,35 @@ class Editor : AppCompatActivity() {
             window.navigationBarColor = getColor(R.color.background)
         }
 
+        if (viewModel.note != null) {
+            id = viewModel.id
+            title = viewModel.title
+            content = viewModel.content
+            isSaved = viewModel.isSaved
+            originContent = viewModel.originContent
+            note = viewModel.note
+            salt = viewModel.salt
+            key = viewModel.key
 
-        val intent = getIntent()
-        id = intent.getIntExtra("ID", -1)
-        val idx = getNoteById(id)
-        if (idx == -1) {
-            Message.show(getInstance().getContext().getString(R.string.note_not_found))
-            isSaved = true
-            finish()
-        }
-        note = list[idx]
-        title = note.title
-        if (!note.isEncrypted) {
-            content = note.content
-            originContent = content
+            if (note!!.isEncrypted && originContent == null) showInputPassword()
         } else {
-            showInputPassword()
+            val intent = getIntent()
+            id = intent.getIntExtra("ID", -1)
+            val idx = getNoteById(id)
+            if (idx == -1) {
+                Message.show(getInstance().getContext().getString(R.string.note_not_found))
+                isSaved = true
+                finish()
+                return
+            }
+            note = Notes.activeNotes[idx]
+            title = note!!.title
+            if (!note!!.isEncrypted) {
+                content = note!!.content
+                originContent = content
+            } else {
+                showInputPassword()
+            }
         }
 
         initializeViews()
@@ -124,24 +140,38 @@ class Editor : AppCompatActivity() {
     }
 
     public override fun onDestroy() {
-        if (!isSaved) checkAndSave()
+        if (note != null && (!note!!.isEncrypted || originContent != null) && !isSaved) checkAndSave()
         super.onDestroy()
+    }
+
+    public override fun onPause() {
+        super.onPause()
+
+        viewModel.id = id
+        viewModel.title = title
+        viewModel.content = content
+        viewModel.isSaved = isSaved
+        viewModel.originContent = originContent
+        viewModel.note = note
+        viewModel.salt = salt
+        viewModel.key = key
     }
 
     private fun saveAndFinish() {
         checkAndSave()
-        getOnNoteChangeHandler().onChange(note)
+        getOnNoteChangeHandler().onChange(note!!)
         isSaved = true
         finish()
     }
 
     private fun checkAndSave() {
-        if (note.title != title || originContent != content) {
-            note.title = title
-            note.content = if (!note.isEncrypted) content else Crypto.encrypt(salt, key, content)
-            note.version++
-            SQLite.saveNote(note)
-            if (note.userId == getUserId()) SyncQueue.add(note)
+        if (note!!.title != title || originContent != content) {
+            note!!.title = title
+            note!!.content =
+                if (!note!!.isEncrypted) content else Crypto.encrypt(salt!!, key!!, content)
+            note!!.version++
+            SQLite.saveNote(note!!)
+            if (note!!.userId == getUserId()) SyncQueue.add(note!!)
         }
     }
 
@@ -158,7 +188,9 @@ class Editor : AppCompatActivity() {
         imageButtonPassword = findViewById(R.id.imageButtonPassword)
 
         editTextTitle.setText(title)
+        FontManager.apply(editTextTitle)
         editTextContent.setText(content)
+        FontManager.apply(editTextContent)
 
 
         editTextTitle.addTextChangedListener(object : TextWatcher {
@@ -215,12 +247,12 @@ class Editor : AppCompatActivity() {
             showChangePassword()
         }
 
-        if (!note.isEncrypted) {
+        if (!note!!.isEncrypted) {
             val userId = getUserId()
-            if (!userId.isEmpty() && userId != note.userId) imageButtonClone.visibility =
+            if (userId.isNotEmpty() && userId != note!!.userId) imageButtonClone.visibility =
                 View.VISIBLE
         } else {
-            if (AuthManager.isOwner(note.userId)) imageButtonPassword.visibility = View.VISIBLE
+            if (AuthManager.isOwner(note!!.userId)) imageButtonPassword.visibility = View.VISIBLE
         }
     }
 
@@ -235,15 +267,9 @@ class Editor : AppCompatActivity() {
         )
         inputPassword.post {
             inputPassword.requestFocus()
-            //val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-            //imm.showSoftInput(inputPassword, InputMethodManager.SHOW_IMPLICIT)
-
             val controller = WindowCompat.getInsetsController(window, inputPassword)
             controller.show(WindowInsetsCompat.Type.ime())
         }
-
-        dialog.show()
-
         inputPassword.setOnEditorActionListener { _, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_DONE || event?.keyCode == KeyEvent.KEYCODE_ENTER) {
                 dialogView.findViewById<Button>(R.id.buttonPositive).performClick()
@@ -252,21 +278,17 @@ class Editor : AppCompatActivity() {
                 false
             }
         }
-
         dialogView.findViewById<Button>(R.id.buttonNeutral).setOnClickListener {
             deleteAndClose()
         }
-
         dialogView.findViewById<Button>(R.id.buttonNegative).setOnClickListener {
             isSaved = true
             finish()
         }
-
         dialogView.findViewById<Button>(R.id.buttonPositive).setOnClickListener {
             try {
                 val (salt, key, content) = Crypto.decrypt(
-                    inputPassword.text.toString(),
-                    note.content
+                    inputPassword.text.toString(), note!!.content
                 )
                 this.salt = salt
                 this.key = key
@@ -280,6 +302,8 @@ class Editor : AppCompatActivity() {
                 finish()
             }
         }
+
+        dialog.show()
     }
 
     fun showChangePassword() {
@@ -299,8 +323,6 @@ class Editor : AppCompatActivity() {
             controller.show(WindowInsetsCompat.Type.ime())
         }
 
-        dialog.show()
-
         dialogView.findViewById<Button>(R.id.buttonPositive).setOnClickListener {
             try {
                 val password = inputPassword.text.toString()
@@ -318,41 +340,42 @@ class Editor : AppCompatActivity() {
                 this.salt = salt
                 this.key = key
                 val encryptedContent = Crypto.encrypt(salt, key, content)
-                note.content = encryptedContent
+                note!!.content = encryptedContent
                 originContent = null
-                note.version++
-                SQLite.saveNote(note)
+                note!!.version++
+                SQLite.saveNote(note!!)
                 Message.show(getString(R.string.password_updated))
 
                 dialog.dismiss()
             } catch (_: Exception) {
                 Message.show(getString(R.string.unable_update_password))
             }
-
-            dialogView.findViewById<Button>(R.id.buttonNegative).setOnClickListener {
-                dialog.dismiss()
-            }
         }
 
+        dialogView.findViewById<Button>(R.id.buttonNegative).setOnClickListener {
+            dialog.dismiss()
+        }
 
         confirmPassword.setOnEditorActionListener { _, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_DONE || event?.keyCode == KeyEvent.KEYCODE_ENTER) {
-                dialog.getButton(AlertDialog.BUTTON_POSITIVE).performClick()
+                dialogView.findViewById<Button>(R.id.buttonPositive).performClick()
                 true
             } else {
                 false
             }
         }
+
+        dialog.show()
     }
 
     fun deleteAndClose() {
-        Notes.moveToTrashCan(note)
+        Notes.moveToTrashCan(note!!)
         Message.show(getString(R.string.note_to_trash))
         isSaved = true
         finish()
     }
 
     fun duplicate() {
-        Notes.create(note)
+        Notes.create(note!!)
     }
 }

@@ -48,7 +48,7 @@ class TrashCan : AppCompatActivity() {
     }
 
     private fun initializeRecyclerView() {
-        val list = Notes.removedList
+        val list = Notes.trashedNotes
 
         recyclerView.setLayoutManager(LinearLayoutManager(this@TrashCan))
         recyclerViewAdapter = RemovedRecyclerViewAdapter(this@TrashCan, list)
@@ -71,7 +71,6 @@ class TrashCan : AppCompatActivity() {
             recyclerViewAdapter.setVisibleList()
             recyclerViewAdapter.notifyDataSetChanged()
             dialog.dismiss()
-
             if (recyclerViewAdapter.itemCount == 0) setRecyclerViewEmpty()
         }
         view.findViewById<Button>(R.id.dialog_positive).setOnClickListener {
@@ -79,7 +78,6 @@ class TrashCan : AppCompatActivity() {
             recyclerViewAdapter.setVisibleList()
             recyclerViewAdapter.notifyDataSetChanged()
             dialog.dismiss()
-
             if (recyclerViewAdapter.itemCount == 0) setRecyclerViewEmpty()
         }
         dialog.show()

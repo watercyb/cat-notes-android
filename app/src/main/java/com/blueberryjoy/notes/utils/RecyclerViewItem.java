@@ -38,7 +38,7 @@ public class RecyclerViewItem {
         this.isRemovedFromServer = isRemovedFromServer;
     }
 
-    public boolean equals(ApiNote note) {
+    public boolean equals(@NonNull ApiNote note) {
         return Objects.equals(note.getTitle(), title) && Objects.equals(note.getContent(), content) && note.getMongoId().equals(mongoId) && note.getVersion() == version;
     }
 
@@ -51,6 +51,7 @@ public class RecyclerViewItem {
         }
     }
 
+    @NonNull
     public String getDate() {
         return java.time.Instant.ofEpochMilli(removeTime).atZone(ZoneId.systemDefault()).toLocalDateTime().toString();
     }

@@ -21,36 +21,37 @@ import java.util.function.ToIntFunction
 
 object Notes {
     @JvmStatic
-    var list: MutableList<RecyclerViewItem> = ArrayList()
+    var activeNotes: MutableList<RecyclerViewItem> = ArrayList()
         private set
-    var removedList: MutableList<RecyclerViewItem> = ArrayList()
+    var trashedNotes: MutableList<RecyclerViewItem> = ArrayList()
     private lateinit var onNoteChangeHandler: OnNoteChangeHandler
     private var deletedFromServer: HashSet<Int> = HashSet()
 
     fun initialize(onNoteChangeHandler: OnNoteChangeHandler) {
         val notes = SQLite.initialize()
-        list = ArrayList()
+        activeNotes.clear()
         deletedFromServer.clear()
+        trashedNotes.clear()
         for (note in notes) {
             if (note.removeTime == 0L) {
-                list.add(RecyclerViewItem(note))
-                Message.logW("${list[list.size - 1]}")
+                activeNotes.add(RecyclerViewItem(note))
+                Message.logW("${activeNotes[activeNotes.size - 1]}")
             } else {
                 val recNote = RecyclerViewItem(note)
                 if (recNote.removeTime < System.currentTimeMillis() && recNote.isRemovedFromServer) {
                     SQLite.delete(recNote)
                 } else {
-                    removedList.add(recNote)
-                    Message.logW("${removedList[removedList.size - 1]}")
+                    trashedNotes.add(recNote)
+                    Message.logW("${trashedNotes[trashedNotes.size - 1]}")
                 }
             }
         }
-        //for (note in list) {
+        //for (note in activeNotes) {
         //note.userId = ""
         //}
-        list.sortWith(Comparator.comparingInt(ToIntFunction { a: RecyclerViewItem? -> a!!.idx }))
-        for (i in list.indices) {
-            list[i].idx = i * 10000
+        activeNotes.sortWith(Comparator.comparingInt(ToIntFunction { a: RecyclerViewItem? -> a!!.idx }))
+        for (i in activeNotes.indices) {
+            activeNotes[i].idx = i * 10000
         }
         this.onNoteChangeHandler = onNoteChangeHandler
     }
@@ -62,15 +63,15 @@ object Notes {
 
     @JvmStatic
     fun getNoteById(id: Int): Int {
-        for (i in list.indices) {
-            if (list[i].id == id) return i
+        for (i in activeNotes.indices) {
+            if (activeNotes[i].id == id) return i
         }
         return -1
     }
 
     fun getNoteByMongoId(mongoId: String): Int {
-        for (i in list.indices) {
-            if (list[i].mongoId.equals(mongoId)) return i
+        for (i in activeNotes.indices) {
+            if (activeNotes[i].mongoId.equals(mongoId)) return i
         }
         return -1
     }
@@ -85,7 +86,7 @@ object Notes {
         userId: String,
         isEncrypted: Boolean
     ): Int {
-        val idx = (if (list.isEmpty()) 0 else list[list.size - 1].idx) + 10000
+        val idx = (if (activeNotes.isEmpty()) 0 else activeNotes[activeNotes.size - 1].idx) + 10000
         val note = SQLite.create(
             title,
             content,
@@ -129,7 +130,7 @@ object Notes {
         SyncQueue.setIsUpdatingNotesFromApi(true)
         val mongoIdToNotes: HashMap<String, RecyclerViewItem> = HashMap()
 
-        for (note in list) {
+        for (note in activeNotes) {
             if (note.userId.isEmpty()) {
                 note.userId = AuthManager.getUserId()
                 SQLite.saveUserId(note)
@@ -144,14 +145,14 @@ object Notes {
             }
         }
 
-        for (note in removedList) {
+        for (note in trashedNotes) {
             if (note.userId.isEmpty()) {
                 note.userId = AuthManager.getUserId()
                 SQLite.saveUserId(note)
             } else if (note.userId != AuthManager.getUserId()) {
                 continue
             }
-            if (note.mongoId != null && !note.mongoId.isEmpty()) mongoIdToNotes[note.mongoId] = note
+            if (note.mongoId != null && note.mongoId.isNotEmpty()) mongoIdToNotes[note.mongoId] = note
         }
 
         for (note in notes) {
@@ -167,7 +168,7 @@ object Notes {
         for (note in mongoIdToNotes.values) {
             if (note.removeTime == 0L) {
                 CoroutineScope(Dispatchers.Main).launch {
-                    setNoteAsRemovedOnServer(note)
+                    resolveServerRemovedNote(note)
                 }
             } else {
                 note.mongoId = ""
@@ -227,7 +228,7 @@ object Notes {
         }
     }
 
-    suspend fun deleteNodeFromApi(mongoId: String): Boolean {
+    suspend fun deleteNoteFromApi(mongoId: String): Boolean {
         if (!checkAndGetToken()) return false
 
         try {
@@ -293,7 +294,7 @@ object Notes {
                 return false
             } else {
                 if (response.code() == 403) {
-                    setNoteAsRemovedOnServer(note)
+                    resolveServerRemovedNote(note)
                 } else {
                     ErrorHandler.res(response)
                 }
@@ -336,7 +337,7 @@ object Notes {
         SyncQueue.setIsUpdatingNotesFromApi(true)
         val mongoIdToNotes: HashMap<String, RecyclerViewItem> = HashMap()
 
-        for (note in list) {
+        for (note in activeNotes) {
             if (note.userId.isEmpty()) {
                 note.userId = AuthManager.getUserId()
                 SQLite.saveUserId(note)
@@ -350,32 +351,32 @@ object Notes {
             }
         }
 
-        for (note in removedList) {
+        for (note in trashedNotes) {
             if (note.userId.isEmpty()) {
                 note.userId = AuthManager.getUserId()
                 SQLite.saveUserId(note)
             } else if (note.userId != AuthManager.getUserId()) {
                 continue
             }
-            if (note.mongoId != null && !note.mongoId.isEmpty()) mongoIdToNotes[note.mongoId] = note
+            if (note.mongoId != null && note.mongoId.isNotEmpty()) mongoIdToNotes[note.mongoId] = note
         }
 
-        for (note in notes) {
-            val recNote = mongoIdToNotes[note.mongoId]
+        for ((mongoId, _, _, version) in notes) {
+            val recNote = mongoIdToNotes[mongoId]
             if (recNote != null) {
-                if (recNote.version != note.version || recNote.removeTime != 0L) SyncQueue.add(
+                if (recNote.version != version || recNote.removeTime != 0L) SyncQueue.add(
                     recNote
                 )
                 mongoIdToNotes.remove(recNote.mongoId)
             } else {
-                SyncQueue.add(note.mongoId)
+                SyncQueue.add(mongoId)
             }
         }
 
         for (note in mongoIdToNotes.values) {
             if (note.removeTime == 0L) {
                 CoroutineScope(Dispatchers.Main).launch {
-                    setNoteAsRemovedOnServer(note)
+                    resolveServerRemovedNote(note)
                 }
             } else {
                 note.mongoId = ""
@@ -398,7 +399,7 @@ object Notes {
                     val apiNote = res.note ?: return true
                     val idx = getNoteByMongoId(apiNote.mongoId)
                     if (idx >= 0) {
-                        val recNote = list[idx]
+                        val recNote = activeNotes[idx]
                         compareNoteAndUpdateWithSameMongoId(recNote, apiNote)
                     } else {
                         create(apiNote)
@@ -422,7 +423,7 @@ object Notes {
         }
     }
 
-    private suspend fun setNoteAsRemovedOnServer(note: RecyclerViewItem) {
+    private suspend fun resolveServerRemovedNote(note: RecyclerViewItem) {
         if (!deletedFromServer.add(note.id)) return
         val isConfirmedToRemove = onNoteChangeHandler.onRemovedFromServer(note.title)
         if (isConfirmedToRemove) {
@@ -446,11 +447,11 @@ object Notes {
                 SyncQueue.add(note)
             }, 500)
         }
-        removedList.add(note)
+        trashedNotes.add(note)
     }
 
     private fun findAndSaveAsRemoved(mongoId: String) {
-        for (note in removedList) {
+        for (note in trashedNotes) {
             if (note.mongoId == mongoId) {
                 note.mongoId = ""
                 note.isRemovedFromServer = true
@@ -465,7 +466,7 @@ object Notes {
         if (note.isRemovedFromServer) {
             val idx = getRemovedNoteById(note.id)
             if (idx >= 0) {
-                removedList.removeAt(idx)
+                trashedNotes.removeAt(idx)
                 Message.show(
                     App.getInstance().getContext().getString(R.string.note_permanently_deleted)
                 )
@@ -482,7 +483,7 @@ object Notes {
         SQLite.saveRemoval(note)
         val idx = getRemovedNoteById(note.id)
         if (idx >= 0) {
-            removedList.removeAt(idx)
+            trashedNotes.removeAt(idx)
             Message.show(
                 App.getInstance().getContext().getString(R.string.note_restored)
             )
@@ -497,7 +498,7 @@ object Notes {
 
     private suspend fun checkAndGetToken(): Boolean {
         return if (AuthManager.getType() == AuthType.EMAIL) {
-            !AuthManager.getToken().isEmpty() || !AuthManager.getRefreshToken().isEmpty()
+            AuthManager.getToken().isNotEmpty() || AuthManager.getRefreshToken().isNotEmpty()
         } else if (AuthManager.getType() == AuthType.GOOGLE) {
             ClerkAuth.getToken()
         } else {
@@ -506,8 +507,8 @@ object Notes {
     }
 
     private fun getRemovedNoteById(id: Int): Int {
-        for (i in removedList.indices) {
-            if (removedList[i].id == id) {
+        for (i in trashedNotes.indices) {
+            if (trashedNotes[i].id == id) {
                 return i
             }
         }
@@ -515,13 +516,13 @@ object Notes {
     }
 
     fun showNotes() {
-        Message.debug("list: ${list.size}, removedList: ${removedList.size}")
+        Message.debug("activeNotes: ${activeNotes.size}, trashedNotes: ${trashedNotes.size}")
         Message.logW("List:")
-        for (note in list) {
+        for (note in activeNotes) {
             Message.logW("$note")
         }
         Message.logW("RemovedList:")
-        for (note in removedList) {
+        for (note in trashedNotes) {
             Message.logW("$note")
         }
     }

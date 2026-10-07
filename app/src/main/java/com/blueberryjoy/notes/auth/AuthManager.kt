@@ -31,7 +31,7 @@ object AuthManager {
     private var token: String? = ""
     private var refreshToken: String? = ""
 
-    private var type: AuthType? = AuthType.NULL
+    private var authType: AuthType? = AuthType.NULL
     private var email: String? = ""
     private var username: String? = ""
     private var isVerified: Boolean = false
@@ -47,7 +47,7 @@ object AuthManager {
         token = sharedPref!!.getString("TOKEN", "")
         refreshToken = sharedPref!!.getString("REFRESH_TOKEN", "")
         val typeCode = sharedPref!!.getInt("TYPE", 0)
-        type = when (typeCode) {
+        authType = when (typeCode) {
             1 -> {
                 //CheckAuth when it is email login immediately.
                 CoroutineScope(Dispatchers.Main).launch {
@@ -119,7 +119,7 @@ object AuthManager {
     fun setEmailLogin(
         email: String, username: String, token: String, refreshToken: String, isVerified: Boolean
     ) {
-        type = AuthType.EMAIL
+        authType = AuthType.EMAIL
         AuthManager.email = email
         AuthManager.username = username
         AuthManager.isVerified = isVerified
@@ -139,7 +139,7 @@ object AuthManager {
 
     @JvmStatic
     fun setGoogleLogin() {
-        type = AuthType.GOOGLE
+        authType = AuthType.GOOGLE
         username = ""
         email = user?.emailAddresses?.get(0)?.emailAddress.toString()
         CoroutineScope(Dispatchers.Main).launch {
@@ -155,7 +155,7 @@ object AuthManager {
 
     @JvmStatic
     fun setLogout() {
-        type = AuthType.NULL
+        authType = AuthType.NULL
         email = ""
         username = ""
         token = ""
@@ -176,7 +176,7 @@ object AuthManager {
 
     @JvmStatic
     fun getUsername(): String? {
-        if (type == AuthType.NULL) return null
+        if (authType == AuthType.NULL) return null
         return username
     }
 
@@ -194,7 +194,7 @@ object AuthManager {
 
     @JvmStatic
     fun getIsVerified(): Boolean {
-        return type != AuthType.EMAIL || isVerified
+        return authType != AuthType.EMAIL || isVerified
     }
 
     @JvmStatic
@@ -205,7 +205,7 @@ object AuthManager {
 
     @JvmStatic
     fun getEmail(): String? {
-        if (type == AuthType.NULL) return null
+        if (authType == AuthType.NULL) return null
         return email
     }
 
@@ -216,10 +216,10 @@ object AuthManager {
     }
 
     suspend fun getAvatar(): Bitmap? {
-        when (type) {
+        when (authType) {
             AuthType.GOOGLE -> {
                 val url = user?.imageUrl ?: ""
-                if (!url.isEmpty()) {
+                if (url.isNotEmpty()) {
                     val image = loadClerkImage(url)
                     if (image != null) {
                         saveClerkAvatarToFile(image)
@@ -291,7 +291,7 @@ object AuthManager {
 
     @JvmStatic
     fun getType(): AuthType? {
-        return type
+        return authType
     }
 
     suspend fun emailLogin(email: String, password: String): Boolean {
@@ -321,7 +321,7 @@ object AuthManager {
     }
 
     suspend fun emailLogout(): Boolean {
-        if (type != AuthType.EMAIL) return false
+        if (authType != AuthType.EMAIL) return false
         try {
             val response = RetrofitInstance.api.emailLogout()
             if (response.isSuccessful) {
@@ -349,7 +349,7 @@ object AuthManager {
                 val res = response.body()
                 if (res?.success == true && res.user != null) {
                     Notes.updateNote(res.user.notes)
-                    if (type == AuthType.GOOGLE) {
+                    if (authType == AuthType.GOOGLE) {
                         setEmail(user?.emailAddresses?.get(0)?.emailAddress.toString())
                     } else {
                         setEmail(res.user.email)
@@ -400,7 +400,7 @@ object AuthManager {
     }
 
     suspend fun changeUsername(name: String): Boolean {
-        if (type != AuthType.EMAIL) return false
+        if (authType != AuthType.EMAIL) return false
         val apiReq = ApiReq(name = name)
         try {
             val response = RetrofitInstance.api.changeUsername(apiReq)
@@ -429,7 +429,7 @@ object AuthManager {
     }
 
     suspend fun changePassword(oldPassword: String, newPassword: String): Boolean {
-        if (type != AuthType.EMAIL) return false
+        if (authType != AuthType.EMAIL) return false
         val apiReq = ApiReq(oldPassword = oldPassword, newPassword = newPassword)
         try {
             val response = RetrofitInstance.api.changePassword(apiReq)
@@ -459,7 +459,7 @@ object AuthManager {
     }
 
     suspend fun verifyEmail(code: String): Boolean {
-        if (type != AuthType.EMAIL) return false
+        if (authType != AuthType.EMAIL) return false
         val apiReq = ApiReq(code = code)
         try {
             val response = RetrofitInstance.api.verifyEmail(apiReq)
@@ -486,7 +486,7 @@ object AuthManager {
     }
 
     suspend fun resendVerifyEmail(): Boolean {
-        if (type != AuthType.EMAIL) return false
+        if (authType != AuthType.EMAIL) return false
         try {
             val response = RetrofitInstance.api.resendVerifyEmail()
             if (response.isSuccessful) {
@@ -535,8 +535,8 @@ object AuthManager {
 
     @JvmStatic
     fun getUserId(): String {
-        if (type == AuthType.NULL) return ""
-        return "$email#$type"
+        if (authType == AuthType.NULL) return ""
+        return "$email#$authType"
     }
 
     @JvmStatic

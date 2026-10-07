@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.blueberryjoy.notes.BuildConfig;
 import com.blueberryjoy.notes.R;
 import com.blueberryjoy.notes.main.MainRecyclerViewAdapter;
+import com.blueberryjoy.notes.utils.FontManager;
 import com.blueberryjoy.notes.utils.RecyclerViewItem;
 
 import java.text.MessageFormat;
@@ -47,6 +48,7 @@ public class RemovedRecyclerViewAdapter extends RecyclerView.Adapter<RemovedRecy
         } else {
             holder.textViewTitle.setVisibility(View.VISIBLE);
             holder.textViewTitle.setText(visibleList.get(position).title);
+            FontManager.INSTANCE.apply(holder.textViewTitle);
         }
         holder.textViewContent.setText(visibleList.get(position).content);
         if (BuildConfig.DEBUG) {
@@ -59,6 +61,7 @@ public class RemovedRecyclerViewAdapter extends RecyclerView.Adapter<RemovedRecy
             holder.textViewContent.setText(visibleList.get(position).content);
             holder.textViewContent.setVisibility(View.VISIBLE);
             holder.secureNote.setVisibility(View.GONE);
+            FontManager.INSTANCE.apply(holder.textViewContent);
         } else {
             holder.textViewContent.setVisibility(View.GONE);
             holder.secureNote.setVisibility(View.VISIBLE);
@@ -106,6 +109,7 @@ public class RemovedRecyclerViewAdapter extends RecyclerView.Adapter<RemovedRecy
         }
     }
 
+    @NonNull
     public List<RecyclerViewItem> getVisibleList() {
         return visibleList;
     }

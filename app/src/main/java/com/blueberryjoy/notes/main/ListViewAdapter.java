@@ -8,6 +8,7 @@ import android.widget.ArrayAdapter;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.blueberryjoy.notes.BuildConfig;
 import com.blueberryjoy.notes.R;
@@ -16,13 +17,13 @@ import java.util.List;
 
 public class ListViewAdapter extends ArrayAdapter<ListViewItem> {
 
-    public ListViewAdapter(Context context, List<ListViewItem> data) {
+    public ListViewAdapter(@NonNull Context context, @NonNull List<ListViewItem> data) {
         super(context, 0, data);
     }
 
     @NonNull
     @Override
-    public View getView(int position, View convertView, @NonNull ViewGroup parent) {
+    public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
 
         if (convertView == null) {
             convertView = LayoutInflater.from(getContext())

@@ -38,7 +38,7 @@ public class Message {
         toast.show();
     }
 
-    public static void debug(String str) {
+    public static void debug(@NonNull String str) {
         if (BuildConfig.DEBUG) {
             Handler handler = new Handler(Looper.getMainLooper());
             handler.post(() -> toast(str));

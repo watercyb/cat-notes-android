@@ -36,12 +36,12 @@ data class ApiRes(
     }
 
     override fun hashCode(): Int {
-        var result = success?.hashCode() ?: 0
-        result = 31 * result + (message?.hashCode() ?: 0)
-        result = 31 * result + (user?.hashCode() ?: 0)
-        result = 31 * result + (note?.hashCode() ?: 0)
-        result = 31 * result + (noteFromServer?.hashCode() ?: 0)
-        result = 31 * result + (newNote?.hashCode() ?: 0)
+        var result = success.hashCode()
+        result = 31 * result + message.hashCode()
+        result = 31 * result + user.hashCode()
+        result = 31 * result + note.hashCode()
+        result = 31 * result + noteFromServer.hashCode()
+        result = 31 * result + newNote.hashCode()
         result = 31 * result + notes.contentHashCode()
         return result
     }
