@@ -7,5 +7,4 @@
 -->
 <full-backup-content>
     <include domain="database" path="."/>
-    <exclude domain="sharedpref" path=""/>
 </full-backup-content>

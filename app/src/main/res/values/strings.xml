@@ -92,7 +92,7 @@
     <string name="setting">Setting</string>
     <string name="create_note">Create Note</string>
     <string name="regular_note">Regular Note</string>
-    <string name="select_font">SELECT FONT</string>
+    <string name="select_font">Select Font</string>
     <string name="font_imported">Font imported.</string>
     <string name="unable_import_font">Unable to import this font.</string>
     <string name="default_font">Default Font</string>
