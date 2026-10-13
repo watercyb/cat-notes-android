@@ -31,6 +31,7 @@ import com.blueberryjoy.notes.notes.Notes.getNoteById
 import com.blueberryjoy.notes.notes.Notes.getOnNoteChangeHandler
 import com.blueberryjoy.notes.notes.SyncQueue
 import com.blueberryjoy.notes.sqlite.SQLite
+import com.blueberryjoy.notes.utils.ClickAnimation
 import com.blueberryjoy.notes.utils.Crypto
 import com.blueberryjoy.notes.utils.FontManager
 import com.blueberryjoy.notes.utils.Message
@@ -48,6 +49,8 @@ class Editor : AppCompatActivity() {
     lateinit var frameLayoutNote: FrameLayout
     lateinit var imageButtonClone: ImageButton
     lateinit var imageButtonPassword: ImageButton
+    lateinit var imageButtonUndo: ImageButton
+    lateinit var imageButtonRedo: ImageButton
 
     private var id: Int = -1
     private var title: String = ""
@@ -60,6 +63,8 @@ class Editor : AppCompatActivity() {
     private var key: SecretKeySpec? = null
 
     private val viewModel: EditorViewModel by viewModels()
+
+    lateinit var undoRedoHelper: UndoRedoHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -186,12 +191,15 @@ class Editor : AppCompatActivity() {
         frameLayoutNote = findViewById(R.id.frameLayoutNote)
         imageButtonClone = findViewById(R.id.imageButtonClone)
         imageButtonPassword = findViewById(R.id.imageButtonPassword)
+        imageButtonUndo = findViewById(R.id.imageButtonUndo)
+        imageButtonRedo = findViewById(R.id.imageButtonRedo)
 
         editTextTitle.setText(title)
         FontManager.apply(editTextTitle)
         editTextContent.setText(content)
         FontManager.apply(editTextContent)
 
+        undoRedoHelper = UndoRedoHelper(editTextContent, imageButtonUndo, imageButtonRedo)
 
         editTextTitle.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(editable: Editable) {
@@ -217,35 +225,39 @@ class Editor : AppCompatActivity() {
             }
         })
 
-        imageButtonBack.setOnClickListener { view: View? ->
-            view!!.animate().scaleX(0.85f).scaleY(0.85f).setDuration(80).withEndAction {
-                view.animate().scaleX(1f).scaleY(1f).setDuration(80).start()
-            }.start()
+        imageButtonBack.setOnClickListener {
+            //view!!.animate().scaleX(0.85f).scaleY(0.85f).setDuration(80).withEndAction {
+            //view.animate().scaleX(1f).scaleY(1f).setDuration(80).start()
+            //}.start()
             saveAndFinish()
         }
+        ClickAnimation.set(imageButtonBack)
 
-        imageButtonRemove.setOnClickListener { view: View? ->
-            view!!.animate().scaleX(0.85f).scaleY(0.85f).setDuration(80).withEndAction {
-                view.animate().scaleX(1f).scaleY(1f).setDuration(80).start()
-            }.start()
-            deleteAndClose()
+        imageButtonRemove.setOnClickListener {
+            //view!!.animate().scaleX(0.85f).scaleY(0.85f).setDuration(80).withEndAction {
+            //view.animate().scaleX(1f).scaleY(1f).setDuration(80).start()
+            //}.start()
+            showDeleteNote()
         }
+        ClickAnimation.set(imageButtonRemove)
 
-        imageButtonClone.setOnClickListener { view: View? ->
-            view!!.animate().scaleX(0.85f).scaleY(0.85f).setDuration(80).withEndAction {
-                view.animate().scaleX(1f).scaleY(1f).setDuration(80).start()
-            }.start()
+        imageButtonClone.setOnClickListener {
+            //view!!.animate().scaleX(0.85f).scaleY(0.85f).setDuration(80).withEndAction {
+            //view.animate().scaleX(1f).scaleY(1f).setDuration(80).start()
+            //}.start()
             duplicate()
             Message.show(getString(R.string.copy_created))
             finish()
         }
+        ClickAnimation.set(imageButtonClone)
 
-        imageButtonPassword.setOnClickListener { view: View? ->
-            view!!.animate().scaleX(0.85f).scaleY(0.85f).setDuration(80).withEndAction {
-                view.animate().scaleX(1f).scaleY(1f).setDuration(80).start()
-            }.start()
+        imageButtonPassword.setOnClickListener {
+            //view!!.animate().scaleX(0.85f).scaleY(0.85f).setDuration(80).withEndAction {
+            //view.animate().scaleX(1f).scaleY(1f).setDuration(80).start()
+            //}.start()
             showChangePassword()
         }
+        ClickAnimation.set(imageButtonPassword)
 
         if (!note!!.isEncrypted) {
             val userId = getUserId()
@@ -254,6 +266,16 @@ class Editor : AppCompatActivity() {
         } else {
             if (AuthManager.isOwner(note!!.userId)) imageButtonPassword.visibility = View.VISIBLE
         }
+
+        imageButtonUndo.setOnClickListener {
+            undoRedoHelper.undo()
+        }
+        ClickAnimation.set(imageButtonUndo)
+
+        imageButtonRedo.setOnClickListener {
+            undoRedoHelper.redo()
+        }
+        ClickAnimation.set(imageButtonRedo)
     }
 
     fun showInputPassword() {
@@ -370,12 +392,24 @@ class Editor : AppCompatActivity() {
 
     fun deleteAndClose() {
         Notes.moveToTrashCan(note!!)
-        Message.show(getString(R.string.note_to_trash))
+        Message.showWithDelay(getString(R.string.note_to_trash))
         isSaved = true
         finish()
     }
 
     fun duplicate() {
         Notes.create(note!!)
+    }
+
+    fun showDeleteNote() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_editor_delete, null)
+        val dialog = AlertDialog.Builder(this).setView(dialogView).create()
+        dialogView.findViewById<Button>(R.id.dialog_positive).setOnClickListener {
+            deleteAndClose()
+        }
+        dialogView.findViewById<Button>(R.id.dialog_negative).setOnClickListener {
+            dialog.dismiss()
+        }
+        dialog.show()
     }
 }

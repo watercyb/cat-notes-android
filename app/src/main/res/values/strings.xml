@@ -98,4 +98,6 @@
     <string name="default_font">Default Font</string>
     <string name="change_font">Font</string>
     <string name="font_size">Font size</string>
+    <string name="delete_note_title">Delete Note?</string>
+    <string name="delete_note_text">This note will be moved to the Trash Can.</string>
 </resources>

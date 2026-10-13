@@ -99,5 +99,7 @@
     <string name="default_font">默认字体</string>
     <string name="change_font">字体</string>
     <string name="font_size">字体大小</string>
+    <string name="delete_note_title">删除笔记？</string>
+    <string name="delete_note_text">此笔记将移至回收站。</string>
 
 </resources>

@@ -99,4 +99,6 @@
     <string name="default_font">預設字體</string>
     <string name="change_font">字體</string>
     <string name="font_size">字體大小</string>
+    <string name="delete_note_title">刪除筆記？</string>
+    <string name="delete_note_text">此筆記將移至資源回收筒。</string>
 </resources>

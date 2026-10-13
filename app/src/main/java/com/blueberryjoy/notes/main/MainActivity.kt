@@ -66,6 +66,7 @@ import kotlin.coroutines.resume
 import androidx.core.net.toUri
 import com.blueberryjoy.notes.auth.AuthManager.emailLogout
 import com.blueberryjoy.notes.setting.Setting
+import com.blueberryjoy.notes.utils.ClickAnimation
 import kotlin.jvm.java
 
 
@@ -250,7 +251,10 @@ class MainActivity : AppCompatActivity() {
 
                     val version: TextView = view.findViewById(R.id.textViewVersion)
                     version.text = java.lang.String.format(
-                        "%s%s", getString(R.string.about_version), BuildConfig.VERSION_NAME
+                        "%s%s%s",
+                        getString(R.string.about_version),
+                        BuildConfig.VERSION_NAME,
+                        if (BuildConfig.DEBUG) " (debug)" else ""
                     )
                     val contact: TextView = view.findViewById(R.id.textViewContact)
                     contact.setOnClickListener { _: View? ->
@@ -341,15 +345,16 @@ class MainActivity : AppCompatActivity() {
         swipeRefresh = findViewById(R.id.swipeRefresh)
         menuContainer = findViewById(R.id.menuContainer)
 
-        imageButtonSetting.setOnClickListener { v: View? ->
-            v!!.animate().scaleX(0.85f).scaleY(0.85f).setDuration(80)
-                .withEndAction { v.animate().scaleX(1f).scaleY(1f).setDuration(80).start() }.start()
+        imageButtonSetting.setOnClickListener {
+            //v!!.animate().scaleX(0.85f).scaleY(0.85f).setDuration(80)
+            //.withEndAction { v.animate().scaleX(1f).scaleY(1f).setDuration(80).start() }.start()
             if (menuContainer.isVisible) {
                 hideMenu()
             } else {
                 showMenu()
             }
         }
+        ClickAnimation.set(imageButtonSetting)
         imageButtonAvatar.setOnClickListener {
             if (!AuthManager.getIsVerified()) {
                 showVerifyEmailDialog()
@@ -364,6 +369,7 @@ class MainActivity : AppCompatActivity() {
                 startActivity(intent)
             }
         }
+        ClickAnimation.set(imageButtonAvatar)
 
         swipeRefresh.setOnRefreshListener {
             // Trigger your refresh logic
