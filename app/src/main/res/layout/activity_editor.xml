@@ -9,101 +9,105 @@
     tools:context=".editor.Editor"
     tools:ignore="Overdraw">
 
-    <ImageButton
-        android:id="@+id/imageButtonBack"
-        android:layout_width="45dp"
-        android:layout_height="35dp"
-        android:layout_marginStart="10dp"
-        android:background="@null"
-        android:scaleType="center"
-        android:contentDescription="@string/back"
-        android:paddingTop="3dp"
-        android:paddingBottom="5dp"
-        android:scaleX="1"
-        android:scaleY="1"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@mipmap/back" />
-
-    <ImageButton
-        android:id="@+id/imageButtonPassword"
-        android:layout_width="35dp"
-        android:layout_height="35dp"
-        android:layout_marginEnd="25dp"
-        android:background="@null"
-        android:contentDescription="@string/password"
-        android:scaleX="1"
-        android:scaleY="1"
-        android:visibility="gone"
-        app:layout_constraintEnd_toStartOf="@+id/imageButtonClone"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@mipmap/password" />
-
-    <ImageButton
-        android:id="@+id/imageButtonClone"
-        android:layout_width="35dp"
-        android:layout_height="35dp"
-        android:layout_marginEnd="25dp"
-        android:background="@null"
-        android:contentDescription="@string/clone"
-        android:scaleX="1"
-        android:scaleY="1"
-        android:visibility="gone"
-        app:layout_constraintEnd_toStartOf="@+id/imageButtonRemove"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@mipmap/clone" />
-
-    <ImageButton
-        android:id="@+id/imageButtonRemove"
-        android:layout_width="35dp"
-        android:layout_height="35dp"
-        android:layout_marginEnd="10dp"
-        android:background="@null"
-        android:contentDescription="@string/remove"
-        android:scaleX="1"
-        android:scaleY="1"
-        android:scaleType="center"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@mipmap/remove" />
-
     <LinearLayout
-        android:layout_width="wrap_content"
+        android:id="@+id/linearLayoutTopbar"
+        android:layout_width="match_parent"
         android:layout_height="35dp"
-        android:layout_marginStart="10dp"
-        android:layout_marginEnd="10dp"
+        android:gravity="center_vertical"
         android:orientation="horizontal"
-        app:layout_constraintEnd_toStartOf="@+id/imageButtonRemove"
-        app:layout_constraintStart_toEndOf="@+id/imageButtonBack"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageButton
-            android:id="@+id/imageButtonUndo"
+            android:id="@+id/imageButtonBack"
+            android:layout_width="45dp"
+            android:layout_height="35dp"
+            android:layout_marginStart="10dp"
+            android:background="@null"
+            android:contentDescription="@string/back"
+            android:paddingTop="3dp"
+            android:paddingBottom="5dp"
+            android:scaleType="center"
+            app:srcCompat="@mipmap/back" />
+
+        <View
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_weight="1" />
+
+        <ImageButton
+            android:id="@+id/imageButtonPassword"
             android:layout_width="35dp"
             android:layout_height="35dp"
+            android:layout_marginEnd="25dp"
             android:background="@null"
+            android:contentDescription="@string/password"
+            android:visibility="gone"
+            app:srcCompat="@mipmap/password" />
+
+        <ImageButton
+            android:id="@+id/imageButtonClone"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_marginEnd="25dp"
+            android:background="@null"
+            android:contentDescription="@string/clone"
+            android:visibility="gone"
+            app:srcCompat="@mipmap/clone" />
+
+        <ImageButton
+            android:id="@+id/imageButtonRemove"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
             android:layout_marginEnd="10dp"
+            android:background="@null"
+            android:contentDescription="@string/remove"
+            android:scaleType="center"
+            app:srcCompat="@mipmap/remove" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/toolbar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:paddingBottom="5dp"
+        android:translationZ="1dp"
+        android:visibility="visible"
+        app:layout_constraintBottom_toTopOf="@id/frameLayoutBottom"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageButton
+            android:id="@+id/imageButtonUndo"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="5dp"
+            android:background="@drawable/circle_button_background"
+            android:paddingStart="1dp"
+            android:paddingEnd="2dp"
             android:importantForAccessibility="no"
             android:scaleType="fitCenter"
-            app:layout_constraintEnd_toStartOf="@+id/imageButtonRemove"
-            app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@mipmap/ic_undo" />
 
         <ImageButton
             android:id="@+id/imageButtonRedo"
-            android:layout_width="35dp"
-            android:layout_height="35dp"
-            android:background="@null"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/circle_button_background"
+            android:paddingStart="2dp"
+            android:paddingEnd="1dp"
             android:importantForAccessibility="no"
+            android:scaleType="fitCenter"
             android:scaleX="1"
             android:scaleY="1"
-            android:scaleType="fitCenter"
-            app:layout_constraintEnd_toStartOf="@+id/imageButtonRemove"
-            app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@mipmap/ic_redo" />
 
     </LinearLayout>
-
 
     <FrameLayout
         android:id="@+id/frameLayoutTitle"
@@ -112,14 +116,14 @@
         android:background="@color/background"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/imageButtonBack">
+        app:layout_constraintTop_toBottomOf="@id/linearLayoutTopbar">
 
     </FrameLayout>
 
     <EditText
         android:id="@+id/editTextTitle"
         android:layout_width="0dp"
-        android:layout_height="30dp"
+        android:layout_height="wrap_content"
         android:background="@color/background"
         android:fontFamily="@font/text"
         android:hint="@string/title"
@@ -153,7 +157,7 @@
         android:background="@color/background"
         app:layout_constraintBottom_toTopOf="@id/frameLayoutBottom"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/frameLayoutNote"
         app:layout_constraintVertical_bias="1.0">

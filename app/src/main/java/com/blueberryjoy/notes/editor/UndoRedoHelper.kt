@@ -1,6 +1,5 @@
 package com.blueberryjoy.notes.editor
 
-import android.media.Image
 import android.text.Editable
 import android.text.Selection
 import android.text.TextWatcher
@@ -45,7 +44,6 @@ class UndoRedoHelper(
 
             override fun afterTextChanged(s: Editable) {}
         })
-        checkButton()
     }
 
     val canUndo: Boolean get() = undoStack.isNotEmpty()
@@ -80,6 +78,7 @@ class UndoRedoHelper(
     fun clearHistory() {
         undoStack.clear()
         redoStack.clear()
+        checkButton()
     }
 
     fun checkButton() {

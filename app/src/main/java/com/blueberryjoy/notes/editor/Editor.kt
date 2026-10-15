@@ -1,7 +1,6 @@
 package com.blueberryjoy.notes.editor
 
 import android.app.AlertDialog
-import android.graphics.Rect
 import android.os.Build
 import android.os.Bundle
 import android.text.Editable
@@ -14,6 +13,7 @@ import android.widget.Button
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.ScrollView
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.enableEdgeToEdge
@@ -37,6 +37,7 @@ import com.blueberryjoy.notes.utils.FontManager
 import com.blueberryjoy.notes.utils.Message
 import com.blueberryjoy.notes.utils.RecyclerViewItem
 import javax.crypto.spec.SecretKeySpec
+import kotlin.math.max
 
 class Editor : AppCompatActivity() {
     lateinit var frameLayoutBottom: FrameLayout
@@ -45,12 +46,13 @@ class Editor : AppCompatActivity() {
     lateinit var editTextContent: EditText
     lateinit var imageButtonBack: ImageButton
     lateinit var imageButtonRemove: ImageButton
-    lateinit var frameLayoutTitle: FrameLayout
+    lateinit var toolbar: LinearLayout
     lateinit var frameLayoutNote: FrameLayout
     lateinit var imageButtonClone: ImageButton
     lateinit var imageButtonPassword: ImageButton
     lateinit var imageButtonUndo: ImageButton
     lateinit var imageButtonRedo: ImageButton
+    lateinit var frameLayoutTitle: FrameLayout
 
     private var id: Int = -1
     private var title: String = ""
@@ -64,7 +66,8 @@ class Editor : AppCompatActivity() {
 
     private val viewModel: EditorViewModel by viewModels()
 
-    lateinit var undoRedoHelper: UndoRedoHelper
+    lateinit var undoRedoHelperContent: UndoRedoHelper
+    lateinit var undoRedoHelperTitle: UndoRedoHelper
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -79,19 +82,19 @@ class Editor : AppCompatActivity() {
             //Resize edittext Keyboard shows
             val isKeyboardVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
             if (isKeyboardVisible) {
-                val decorView = window.decorView
-                val rect = Rect()
-                decorView.getWindowVisibleDisplayFrame(rect)
+                toolbar.visibility = View.VISIBLE
 
-                val params = frameLayoutBottom.layoutParams
-                params.height =
-                    scrollView.height + editTextTitle.height + imageButtonBack.height + frameLayoutTitle.height + frameLayoutNote.height - rect.height()
-
+                val totalImeBottom = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
+                val navBarBottom = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
+                val actualKeyboardHeight = max(0, totalImeBottom - navBarBottom)
+                frameLayoutBottom.layoutParams.height = actualKeyboardHeight
                 frameLayoutBottom.post { frameLayoutBottom.requestLayout() }
             } else {
-                val params = frameLayoutBottom.layoutParams
-                params.height = 0
+                editTextTitle.clearFocus()
+                editTextContent.clearFocus()
+                toolbar.visibility = View.GONE
 
+                frameLayoutBottom.layoutParams.height = 0
                 frameLayoutBottom.post { frameLayoutBottom.requestLayout() }
             }
             insets
@@ -187,19 +190,21 @@ class Editor : AppCompatActivity() {
         editTextContent = findViewById(R.id.editTextContent)
         imageButtonBack = findViewById(R.id.imageButtonBack)
         imageButtonRemove = findViewById(R.id.imageButtonRemove)
-        frameLayoutTitle = findViewById(R.id.frameLayoutTitle)
+        toolbar = findViewById(R.id.toolbar)
         frameLayoutNote = findViewById(R.id.frameLayoutNote)
         imageButtonClone = findViewById(R.id.imageButtonClone)
         imageButtonPassword = findViewById(R.id.imageButtonPassword)
         imageButtonUndo = findViewById(R.id.imageButtonUndo)
         imageButtonRedo = findViewById(R.id.imageButtonRedo)
+        frameLayoutTitle = findViewById(R.id.frameLayoutTitle)
 
         editTextTitle.setText(title)
         FontManager.apply(editTextTitle)
         editTextContent.setText(content)
         FontManager.apply(editTextContent)
 
-        undoRedoHelper = UndoRedoHelper(editTextContent, imageButtonUndo, imageButtonRedo)
+        undoRedoHelperTitle = UndoRedoHelper(editTextTitle, imageButtonUndo, imageButtonRedo)
+        undoRedoHelperContent = UndoRedoHelper(editTextContent, imageButtonUndo, imageButtonRedo)
 
         editTextTitle.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(editable: Editable) {
@@ -212,6 +217,10 @@ class Editor : AppCompatActivity() {
             override fun onTextChanged(charSequence: CharSequence?, i: Int, i1: Int, i2: Int) {
             }
         })
+        editTextTitle.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus)
+                undoRedoHelperTitle.checkButton()
+        }
 
         editTextContent.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(editable: Editable) {
@@ -224,6 +233,10 @@ class Editor : AppCompatActivity() {
             override fun onTextChanged(charSequence: CharSequence?, i: Int, i1: Int, i2: Int) {
             }
         })
+        editTextContent.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus)
+                undoRedoHelperContent.checkButton()
+        }
 
         imageButtonBack.setOnClickListener {
             //view!!.animate().scaleX(0.85f).scaleY(0.85f).setDuration(80).withEndAction {
@@ -268,12 +281,20 @@ class Editor : AppCompatActivity() {
         }
 
         imageButtonUndo.setOnClickListener {
-            undoRedoHelper.undo()
+            if (editTextTitle.hasFocus()) {
+                undoRedoHelperTitle.undo()
+            } else if (editTextContent.hasFocus()) {
+                undoRedoHelperContent.undo()
+            }
         }
         ClickAnimation.set(imageButtonUndo)
 
         imageButtonRedo.setOnClickListener {
-            undoRedoHelper.redo()
+            if (editTextTitle.hasFocus()) {
+                undoRedoHelperTitle.redo()
+            } else if (editTextContent.hasFocus()) {
+                undoRedoHelperContent.redo()
+            }
         }
         ClickAnimation.set(imageButtonRedo)
     }

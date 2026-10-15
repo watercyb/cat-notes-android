@@ -10,4 +10,5 @@
     <color name="toast_background">#303030</color>
     <color name="toast_text">#FFFFFF</color>
     <color name="current_font_background">#505050</color>
+    <color name="button_background">#FF303247</color>
 </resources>
