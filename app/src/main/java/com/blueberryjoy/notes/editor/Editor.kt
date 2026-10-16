@@ -53,6 +53,7 @@ class Editor : AppCompatActivity() {
     lateinit var imageButtonUndo: ImageButton
     lateinit var imageButtonRedo: ImageButton
     lateinit var frameLayoutTitle: FrameLayout
+    lateinit var viewContentPadding: View
 
     private var id: Int = -1
     private var title: String = ""
@@ -83,6 +84,7 @@ class Editor : AppCompatActivity() {
             val isKeyboardVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
             if (isKeyboardVisible) {
                 toolbar.visibility = View.VISIBLE
+                viewContentPadding.visibility=View.VISIBLE
 
                 val totalImeBottom = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
                 val navBarBottom = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
@@ -93,6 +95,7 @@ class Editor : AppCompatActivity() {
                 editTextTitle.clearFocus()
                 editTextContent.clearFocus()
                 toolbar.visibility = View.GONE
+                viewContentPadding.visibility=View.GONE
 
                 frameLayoutBottom.layoutParams.height = 0
                 frameLayoutBottom.post { frameLayoutBottom.requestLayout() }
@@ -197,6 +200,7 @@ class Editor : AppCompatActivity() {
         imageButtonUndo = findViewById(R.id.imageButtonUndo)
         imageButtonRedo = findViewById(R.id.imageButtonRedo)
         frameLayoutTitle = findViewById(R.id.frameLayoutTitle)
+        viewContentPadding = findViewById(R.id.viewContentPadding)
 
         editTextTitle.setText(title)
         FontManager.apply(editTextTitle)

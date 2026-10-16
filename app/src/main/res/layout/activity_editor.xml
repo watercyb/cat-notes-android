@@ -88,9 +88,9 @@
             android:layout_height="40dp"
             android:layout_marginEnd="5dp"
             android:background="@drawable/circle_button_background"
+            android:importantForAccessibility="no"
             android:paddingStart="1dp"
             android:paddingEnd="2dp"
-            android:importantForAccessibility="no"
             android:scaleType="fitCenter"
             app:srcCompat="@mipmap/ic_undo" />
 
@@ -99,9 +99,9 @@
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:background="@drawable/circle_button_background"
+            android:importantForAccessibility="no"
             android:paddingStart="2dp"
             android:paddingEnd="1dp"
-            android:importantForAccessibility="no"
             android:scaleType="fitCenter"
             android:scaleX="1"
             android:scaleY="1"
@@ -162,24 +162,38 @@
         app:layout_constraintTop_toBottomOf="@id/frameLayoutNote"
         app:layout_constraintVertical_bias="1.0">
 
-        <EditText
-            android:id="@+id/editTextContent"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/background"
-            android:fontFamily="@font/text"
-            android:gravity="top"
-            android:hint="@string/Note"
-            android:importantForAutofill="no"
-            android:inputType="textMultiLine"
-            android:minHeight="48dp"
-            android:paddingStart="10dp"
-            android:paddingEnd="10dp"
-            android:scrollbars="vertical"
-            android:tag="18"
-            android:text=""
-            android:textSize="18sp"
-            tools:ignore="LabelFor" />
+            android:orientation="vertical">
+
+            <EditText
+                android:id="@+id/editTextContent"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/background"
+                android:fontFamily="@font/text"
+                android:gravity="top"
+                android:hint="@string/Note"
+                android:importantForAutofill="no"
+                android:inputType="textMultiLine"
+                android:minHeight="48dp"
+                android:paddingStart="10dp"
+                android:paddingEnd="10dp"
+                android:scrollbars="vertical"
+                android:tag="18"
+                android:text=""
+                android:textSize="18sp"
+                tools:ignore="LabelFor" />
+
+            <View
+                android:id="@+id/viewContentPadding"
+                android:layout_width="match_parent"
+                android:visibility="gone"
+                android:layout_height="45dp" />
+
+        </LinearLayout>
+
     </ScrollView>
 
     <FrameLayout
