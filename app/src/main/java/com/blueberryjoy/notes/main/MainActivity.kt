@@ -124,6 +124,7 @@ class MainActivity : AppCompatActivity() {
     public override fun onResume() {
         super.onResume()
         checkTime()
+        Message.logW("onResume")
         if (!AuthManager.getIsVerified()) {
             setNotificationDotVisible(View.VISIBLE)
         } else {
@@ -505,6 +506,7 @@ class MainActivity : AppCompatActivity() {
         if (lastActiveTime != -1L && now - lastActiveTime >= 5 * 60 * 1000) {
             lifecycleScope.launch {
                 Notes.getNotesFromApi()
+                Message.show("Auto synced.")
             }
         }
 
