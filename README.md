@@ -15,11 +15,13 @@ A native Android note-taking application for creating, managing, and organizing 
 
 ## Technologies
 
+- Kotlin
 - Java
 - Android SDK
 - Retrofit
 - Gson
 - Clerk
+- SQLite
 - REST APIs
 - Gradle
 
