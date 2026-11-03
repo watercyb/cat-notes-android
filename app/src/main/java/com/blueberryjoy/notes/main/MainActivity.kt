@@ -30,6 +30,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.net.toUri
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.isVisible
@@ -43,6 +44,7 @@ import com.blueberryjoy.notes.App.Companion.getInstance
 import com.blueberryjoy.notes.BuildConfig
 import com.blueberryjoy.notes.R
 import com.blueberryjoy.notes.auth.AuthManager
+import com.blueberryjoy.notes.auth.AuthManager.emailLogout
 import com.blueberryjoy.notes.auth.AuthManager.getType
 import com.blueberryjoy.notes.auth.AuthManager.initialize
 import com.blueberryjoy.notes.auth.AuthType
@@ -53,7 +55,9 @@ import com.blueberryjoy.notes.clerk.OAuthViewModel
 import com.blueberryjoy.notes.editor.Editor
 import com.blueberryjoy.notes.notes.Notes
 import com.blueberryjoy.notes.notes.OnNoteChangeHandler
+import com.blueberryjoy.notes.setting.Setting
 import com.blueberryjoy.notes.trash_can.TrashCan
+import com.blueberryjoy.notes.utils.ClickAnimation
 import com.blueberryjoy.notes.utils.Crypto
 import com.blueberryjoy.notes.utils.Message
 import com.blueberryjoy.notes.utils.RecyclerViewItem
@@ -63,11 +67,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
-import androidx.core.net.toUri
-import com.blueberryjoy.notes.auth.AuthManager.emailLogout
-import com.blueberryjoy.notes.setting.Setting
-import com.blueberryjoy.notes.utils.ClickAnimation
-import kotlin.jvm.java
 
 
 class MainActivity : AppCompatActivity() {
@@ -91,6 +90,11 @@ class MainActivity : AppCompatActivity() {
     private var syncButton: ListViewItem? = null
 
     private lateinit var settingLauncher: ActivityResultLauncher<Intent>
+
+    //debug
+    private var h: Int = 0
+
+    private val handler = Handler(Looper.getMainLooper())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -119,17 +123,36 @@ class MainActivity : AppCompatActivity() {
         initializeRecyclerView()
         initializeSettingLauncher()
         checkTime()
+        startTimer()
     }
 
     public override fun onResume() {
         super.onResume()
         checkTime()
-        Message.logW("onResume")
+        if (h != 0) {
+            Message.show("onResume: $h")
+            h = 0
+        }
         if (!AuthManager.getIsVerified()) {
             setNotificationDotVisible(View.VISIBLE)
         } else {
             setNotificationDotVisible(View.GONE)
         }
+        startTimer()
+    }
+
+    //TODO debug
+    public override fun onPause() {
+        super.onPause()
+        h = h xor 1
+        stopTimer()
+    }
+
+    //TODO debug
+    public override fun onStop() {
+        super.onStop()
+        h = h xor 1
+        stopTimer()
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
@@ -501,16 +524,16 @@ class MainActivity : AppCompatActivity() {
 
     private fun checkTime() {
         val now = System.currentTimeMillis()
-
         //Do not sync at the first time when app opened since it maybe before the auth check.
-        if (lastActiveTime != -1L && now - lastActiveTime >= 5 * 60 * 1000) {
+        if (lastActiveTime != -1L) {
+            lastActiveTime = now
+        } else if (now - lastActiveTime >= 5 * 60 * 1000) {
             lifecycleScope.launch {
                 Notes.getNotesFromApi()
                 Message.show("Auto synced.")
             }
+            lastActiveTime = now
         }
-
-        lastActiveTime = now
     }
 
     private fun setNotificationDotVisible(visible: Int) {
@@ -765,5 +788,29 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
+    }
+
+    private val timerRunnable = object : Runnable {
+        override fun run() {
+            onTimerTriggered()
+            handler.postDelayed(this, 5 * 60 * 1000L)
+        }
+    }
+
+    private fun startTimer() {
+        handler.removeCallbacks(timerRunnable)
+        handler.postDelayed(timerRunnable, 5 * 60 * 1000L)
+    }
+
+    private fun stopTimer() {
+        handler.removeCallbacks(timerRunnable)
+    }
+
+    private fun onTimerTriggered() {
+        lifecycleScope.launch {
+            Notes.getNotesFromApi()
+            Message.show("Auto synced.")
+        }
+        lastActiveTime = System.currentTimeMillis()
     }
 }
