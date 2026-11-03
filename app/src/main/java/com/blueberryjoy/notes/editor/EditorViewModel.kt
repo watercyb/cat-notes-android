@@ -13,4 +13,5 @@ class EditorViewModel : ViewModel() {
     var note: RecyclerViewItem? = null
     var salt: ByteArray? = null
     var key: SecretKeySpec? = null
+    var version: Int = -1
 }

@@ -60,6 +60,7 @@ class Editor : AppCompatActivity() {
     private var content: String = ""
     private var isSaved = false
     private var originContent: String? = null
+    private var version: Int = -1
 
     private var note: RecyclerViewItem? = null
     private var salt: ByteArray? = null
@@ -84,7 +85,7 @@ class Editor : AppCompatActivity() {
             val isKeyboardVisible = insets.isVisible(WindowInsetsCompat.Type.ime())
             if (isKeyboardVisible) {
                 toolbar.visibility = View.VISIBLE
-                viewContentPadding.visibility=View.VISIBLE
+                viewContentPadding.visibility = View.VISIBLE
 
                 val totalImeBottom = insets.getInsets(WindowInsetsCompat.Type.ime()).bottom
                 val navBarBottom = insets.getInsets(WindowInsetsCompat.Type.navigationBars()).bottom
@@ -95,7 +96,7 @@ class Editor : AppCompatActivity() {
                 editTextTitle.clearFocus()
                 editTextContent.clearFocus()
                 toolbar.visibility = View.GONE
-                viewContentPadding.visibility=View.GONE
+                viewContentPadding.visibility = View.GONE
 
                 frameLayoutBottom.layoutParams.height = 0
                 frameLayoutBottom.post { frameLayoutBottom.requestLayout() }
@@ -106,8 +107,7 @@ class Editor : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             window.isNavigationBarContrastEnforced = false
         } else {
-            @Suppress("DEPRECATION")
-            window.navigationBarColor = getColor(R.color.background)
+            @Suppress("DEPRECATION") window.navigationBarColor = getColor(R.color.background)
         }
 
         if (viewModel.note != null) {
@@ -119,6 +119,7 @@ class Editor : AppCompatActivity() {
             note = viewModel.note
             salt = viewModel.salt
             key = viewModel.key
+            version = viewModel.version
 
             if (note!!.isEncrypted && originContent == null) showInputPassword()
         } else {
@@ -132,6 +133,7 @@ class Editor : AppCompatActivity() {
                 return
             }
             note = Notes.activeNotes[idx]
+            version = note!!.version
             title = note!!.title
             if (!note!!.isEncrypted) {
                 content = note!!.content
@@ -166,6 +168,7 @@ class Editor : AppCompatActivity() {
         viewModel.note = note
         viewModel.salt = salt
         viewModel.key = key
+        viewModel.version = version
     }
 
     private fun saveAndFinish() {
@@ -180,7 +183,7 @@ class Editor : AppCompatActivity() {
             note!!.title = title
             note!!.content =
                 if (!note!!.isEncrypted) content else Crypto.encrypt(salt!!, key!!, content)
-            note!!.version++
+            note!!.version = version + 1
             SQLite.saveNote(note!!)
             if (note!!.userId == getUserId()) SyncQueue.add(note!!)
         }
@@ -222,8 +225,7 @@ class Editor : AppCompatActivity() {
             }
         })
         editTextTitle.setOnFocusChangeListener { _, hasFocus ->
-            if (hasFocus)
-                undoRedoHelperTitle.checkButton()
+            if (hasFocus) undoRedoHelperTitle.checkButton()
         }
 
         editTextContent.addTextChangedListener(object : TextWatcher {
@@ -238,8 +240,7 @@ class Editor : AppCompatActivity() {
             }
         })
         editTextContent.setOnFocusChangeListener { _, hasFocus ->
-            if (hasFocus)
-                undoRedoHelperContent.checkButton()
+            if (hasFocus) undoRedoHelperContent.checkButton()
         }
 
         imageButtonBack.setOnClickListener {

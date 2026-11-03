@@ -38,13 +38,13 @@ object SyncQueue {
                     } else {
                         val note: RecyclerViewItem = Notes.activeNotes[idx]
                         if (note.mongoId == null || note.mongoId.isEmpty()) {
-                            Message.logW("Run createNote: $note " + note.title)
+                            //Message.logW("Run createNote: $note " + note.title)
                             success = Notes.createNoteOnApi(note)
                         } else if (note.mongoId.equals("REMOVED FROM SERVER")) {
                             Message.logW("Should not be called: $note " + note.title)
                             success = Notes.createNoteOnApi(note)
                         } else {
-                            Message.logW("Run updateNote: $note " + note.title)
+                            //Message.logW("Run updateNote: $note " + note.title)
                             success = Notes.updateNoteToApi(note)
                         }
                     }
@@ -65,7 +65,6 @@ object SyncQueue {
 
     fun add(note: RecyclerViewItem) {
         if (!HM.containsKey(note.id)) {
-            Message.logW("Add to queue: title ${note.title}, mongoId ${note.mongoId}")
             HM[note.id] = note.mongoId
             queue.offerLast(note.id)
             val id = ++queueId
@@ -81,7 +80,6 @@ object SyncQueue {
             if (!HM.containsKey(id)) break
             id--
         }
-        Message.logW("Add to queue: mongoId $mongoId")
         HM[id] = mongoId
         queue.offerLast(id)
         val nextId = ++queueId

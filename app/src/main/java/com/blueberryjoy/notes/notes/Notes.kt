@@ -35,14 +35,14 @@ object Notes {
         for (note in notes) {
             if (note.removeTime == 0L) {
                 activeNotes.add(RecyclerViewItem(note))
-                Message.logW("${activeNotes[activeNotes.size - 1]}")
+                //Message.logW("${activeNotes[activeNotes.size - 1]}")
             } else {
                 val recNote = RecyclerViewItem(note)
                 if (recNote.removeTime < System.currentTimeMillis() && recNote.isRemovedFromServer) {
                     SQLite.delete(recNote)
                 } else {
                     trashedNotes.add(recNote)
-                    Message.logW("${trashedNotes[trashedNotes.size - 1]}")
+                    //Message.logW("${trashedNotes[trashedNotes.size - 1]}")
                 }
             }
         }
@@ -152,7 +152,8 @@ object Notes {
             } else if (note.userId != AuthManager.getUserId()) {
                 continue
             }
-            if (note.mongoId != null && note.mongoId.isNotEmpty()) mongoIdToNotes[note.mongoId] = note
+            if (note.mongoId != null && note.mongoId.isNotEmpty()) mongoIdToNotes[note.mongoId] =
+                note
         }
 
         for (note in notes) {
@@ -236,7 +237,6 @@ object Notes {
             if (response.isSuccessful) {
                 val res = response.body()
                 if (res?.success == true) {
-                    Message.logW("Note deleted")
                     findAndSaveAsRemoved(mongoId)
                     return true
                 }
@@ -266,7 +266,7 @@ object Notes {
             if (response.isSuccessful) {
                 val res = response.body()
                 if (res?.success == true) {
-                    Message.logW("Note updated: $res")
+                    //Message.logW("Note updated: $res")
                     if (res.note != null) {
                         note.mongoId = res.note.mongoId
                         note.title = res.note.title
@@ -358,7 +358,8 @@ object Notes {
             } else if (note.userId != AuthManager.getUserId()) {
                 continue
             }
-            if (note.mongoId != null && note.mongoId.isNotEmpty()) mongoIdToNotes[note.mongoId] = note
+            if (note.mongoId != null && note.mongoId.isNotEmpty()) mongoIdToNotes[note.mongoId] =
+                note
         }
 
         for ((mongoId, _, _, version) in notes) {
